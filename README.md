@@ -66,28 +66,28 @@ This project separates responsibilities into two components:
 
 ```text
 obs-duel-recorder/
-├── app/
-│   ├── plugin/
-│   ├── worker/
-│   └── ui/
-│
-├── docs/
-│   ├── requirements/
-│   ├── architecture/
-│   └── user/
-│
-├── scripts/
-│
-├── user_data/
-│   ├── config/
-│   ├── data/
-│   │   ├── db/
-│   │   ├── videos/
-│   │   ├── screenshots/
-│   │   └── exports/
-│   └── logs/
-│
-└── .github/
+|-- app/
+|   |-- plugin/
+|   |-- worker/
+|   `-- ui/
+|
+|-- docs/
+|   |-- requirements/
+|   |-- architecture/
+|   `-- user/
+|
+|-- scripts/
+|
+|-- user_data/
+|   |-- config/
+|   |-- data/
+|   |   |-- db/
+|   |   |-- videos/
+|   |   |-- screenshots/
+|   |   `-- exports/
+|   `-- logs/
+|
+`-- .github/
 ```
 
 ---
@@ -114,7 +114,14 @@ obs-duel-recorder/
 
 ## Documentation
 
-User documentation and architecture documents are located under `docs/`.
+Documentation starts at [docs/README.md](docs/README.md).
+
+Key documents:
+- [Roadmap](docs/roadmap.md)
+- [Requirements](docs/requirements/requirements.md)
+- [v0.1 acceptance checklist](docs/requirements/v0.1-acceptance.md)
+- [Architecture docs](docs/architecture/)
+- [User docs](docs/user/)
 
 Planned GitHub Pages support is also included in the roadmap.
 

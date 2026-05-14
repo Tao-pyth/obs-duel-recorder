@@ -38,15 +38,19 @@ Thumbs.db
 # Logs
 # =========================================
 logs/
-user_data/logs/
+user_data/logs/*
+!user_data/logs/.gitkeep
 *.log
 
 # =========================================
 # Runtime Data
 # =========================================
-user_data/data/videos/
-user_data/data/screenshots/
-user_data/data/exports/
+user_data/data/videos/*
+!user_data/data/videos/.gitkeep
+user_data/data/screenshots/*
+!user_data/data/screenshots/.gitkeep
+user_data/data/exports/*
+!user_data/data/exports/.gitkeep
 
 # =========================================
 # SQLite / DB
@@ -54,7 +58,8 @@ user_data/data/exports/
 *.sqlite
 *.sqlite3
 *.db
-user_data/data/db/
+user_data/data/db/*
+!user_data/data/db/.gitkeep
 
 # =========================================
 # OAuth / Secrets
