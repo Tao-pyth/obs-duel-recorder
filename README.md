@@ -141,13 +141,3 @@ Detection templates are intended to be generated locally by users.
 ## License
 
 MIT License
-
----
-
-## Disclaimer
-
-This project is an unofficial fan-made tool.
-
-This project is not affiliated with KONAMI.
-
-Yu-Gi-Oh! Master Duel assets are not distributed with this software.
