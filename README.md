@@ -16,6 +16,8 @@ The project is designed around an OBS Plugin + Python Worker architecture.
 | Minor | planned roadmap features |
 | Patch | bug fixes and non-roadmap changes |
 
+Major and minor release completions are tagged as `vMajor.Minor.Patch`. See [Release and tag policy](docs/release.md).
+
 ---
 
 ## Current Development
@@ -119,6 +121,7 @@ Documentation starts at [docs/README.md](docs/README.md).
 Key documents:
 - [Roadmap](docs/roadmap.md)
 - [Requirements](docs/requirements/requirements.md)
+- [Release and tag policy](docs/release.md)
 - [v0.1 acceptance checklist](docs/requirements/v0.1-acceptance.md)
 - [Architecture docs](docs/architecture/)
 - [User docs](docs/user/)
