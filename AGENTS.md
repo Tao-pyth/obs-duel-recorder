@@ -332,6 +332,27 @@ Patch versions are intended for:
 - runtime fixes
 - non-roadmap adjustments
 
+## Tag Rules
+
+Major and minor version releases MUST be tagged in Git after the release PR is merged.
+
+Tag format:
+```text
+vMajor.Minor.Patch
+```
+
+Required tags:
+- Major release: tag the merged release commit as `vX.0.0` unless the release plan explicitly defines a different minor or patch number.
+- Minor release: tag the merged release commit as `vX.Y.0`.
+
+Patch tags are optional and SHOULD be created when a patch release is packaged, published, or otherwise used as a recovery/update boundary.
+
+Agents SHOULD create release tags when a major or minor roadmap milestone is completed and merged into `main`, if the GitHub tooling available in the session supports tag creation. If tag creation is not available, agents MUST report the intended tag name and target commit SHA so the maintainer can create it.
+
+Agents MUST NOT move or overwrite an existing tag without explicit user approval.
+
+See `docs/release.md` for the release tagging procedure.
+
 ---
 
 # Runtime Rules
