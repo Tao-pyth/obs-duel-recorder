@@ -21,4 +21,8 @@ A minimal package scaffold exists under `app/worker/odr_worker/`.
 - Print version: `python -m odr_worker --version`
 - Placeholder run: `python -m odr_worker`
 
+Configuration scaffold (v0.2):
+- default config path: `user_data/config/worker.toml`
+- docs: `docs/architecture/worker-config.md`
+
 Implementation work is tracked by issues #11-#16.
