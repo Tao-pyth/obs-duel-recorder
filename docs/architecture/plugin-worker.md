@@ -91,6 +91,9 @@ flowchart LR
 
 Plugin and Worker communicate using localhost HTTP APIs.
 
+For Dock UI behavior and actionable diagnostics, see:
+- `docs/architecture/worker-diagnostics.md`
+
 Example:
 - GET /health
 - POST /events/recording-started
