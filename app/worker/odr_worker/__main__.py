@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import argparse
+import logging
 import sys
 
+from .logging_setup import init_worker_logging
 from .runtime_dirs import RuntimeDirError, ensure_runtime_dirs
 from .version import __version__
 
@@ -27,6 +29,9 @@ def main(argv: list[str] | None = None) -> int:
         print(f"Runtime directory initialization failed: {exc}", file=sys.stderr)
         return 2
 
+    log_path = init_worker_logging(runtime_dirs.logs_dir)
+    logging.getLogger(__name__).info("Worker startup initialized")
+
     print(
         "OBS Duel Recorder Worker (v0.2 scaffold)\n"
         "\n"
@@ -34,6 +39,7 @@ def main(argv: list[str] | None = None) -> int:
         "Implementation is tracked by issues #11-#16.\n"
         "\n"
         f"Runtime directories ensured under: {runtime_dirs.user_data_dir}\n"
+        f"Logging initialized: {log_path}\n"
     )
     return 0
 
