@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import argparse
+import sys
 
+from .runtime_dirs import RuntimeDirError, ensure_runtime_dirs
 from .version import __version__
 
 
@@ -19,11 +21,19 @@ def main(argv: list[str] | None = None) -> int:
         print(__version__)
         return 0
 
+    try:
+        runtime_dirs = ensure_runtime_dirs()
+    except RuntimeDirError as exc:
+        print(f"Runtime directory initialization failed: {exc}", file=sys.stderr)
+        return 2
+
     print(
         "OBS Duel Recorder Worker (v0.2 scaffold)\n"
         "\n"
         "This is a placeholder entrypoint added by the v0.2 skeleton issue.\n"
         "Implementation is tracked by issues #11-#16.\n"
+        "\n"
+        f"Runtime directories ensured under: {runtime_dirs.user_data_dir}\n"
     )
     return 0
 
