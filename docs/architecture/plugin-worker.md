@@ -94,6 +94,9 @@ Plugin and Worker communicate using localhost HTTP APIs.
 For Dock UI behavior and actionable diagnostics, see:
 - `docs/architecture/worker-diagnostics.md`
 
+For runtime directory rules and startup-safe directory creation, see:
+- `docs/architecture/runtime-dirs.md`
+
 Example:
 - GET /health
 - POST /events/recording-started
