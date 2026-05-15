@@ -9,6 +9,62 @@
 
 ---
 
+## Plugin / Worker Architecture
+
+This diagram shows the responsibility boundary between the lightweight OBS Plugin and the Python Worker.
+
+```mermaid
+flowchart LR
+    subgraph OBS["OBS Studio"]
+        Frontend["OBS Frontend API"]
+        Dock["Dock UI"]
+        TextSources["Text Sources / Overlays"]
+        Recording["Recording Control"]
+    end
+
+    subgraph Plugin["OBS Plugin"]
+        PluginCore["Plugin Core"]
+        WorkerLifecycle["Worker Lifecycle"]
+        Heartbeat["Heartbeat Monitor"]
+        ApiClient["Localhost API Client"]
+    end
+
+    subgraph Worker["Python Worker"]
+        Api["FastAPI Localhost API"]
+        Queue["Queue Processing"]
+        Database["SQLite Management"]
+        Detection["Template Matching / OCR"]
+        Upload["YouTube Upload"]
+        Recovery["Recovery Processing"]
+    end
+
+    subgraph Runtime["user_data/"]
+        Config["config/"]
+        Data["data/"]
+        Logs["logs/"]
+    end
+
+    Frontend --> PluginCore
+    Dock --> PluginCore
+    PluginCore --> TextSources
+    PluginCore --> Recording
+    PluginCore --> WorkerLifecycle
+    WorkerLifecycle --> Api
+    Heartbeat --> ApiClient
+    ApiClient --> Api
+
+    Api --> Queue
+    Api --> Recovery
+    Queue --> Database
+    Detection --> Queue
+    Upload --> Queue
+    Worker --> Config
+    Worker --> Data
+    Worker --> Logs
+```
+
+---
+
 ## Plugin Responsibilities
 
 - OBS Frontend API
