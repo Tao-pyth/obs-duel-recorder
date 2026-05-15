@@ -14,4 +14,11 @@ The Worker is responsible for:
 
 The Worker must support restart-safe execution.
 
-Implementation code is intentionally not added in v0.1 Repository Foundation.
+## v0.2 scaffold
+
+A minimal package scaffold exists under `app/worker/odr_worker/`.
+
+- Print version: `python -m odr_worker --version`
+- Placeholder run: `python -m odr_worker`
+
+Implementation work is tracked by issues #11-#16.
