@@ -94,6 +94,9 @@ Plugin and Worker communicate using localhost HTTP APIs.
 For Dock UI behavior and actionable diagnostics, see:
 - `docs/architecture/worker-diagnostics.md`
 
+For compatibility gating between the Plugin and Worker, see:
+- `docs/architecture/compatibility.md`
+
 For runtime directory rules and startup-safe directory creation, see:
 - `docs/architecture/runtime-dirs.md`
 
