@@ -11,6 +11,7 @@ from dataclasses import dataclass
 
 
 MARKDOWN_LINK_RE = re.compile(r"\[[^\]]*\]\(([^)]+)\)")
+FENCED_CODE_BLOCK_RE = re.compile(r"(?s)(```.*?```|~~~.*?~~~)")
 
 
 @dataclass(frozen=True)
@@ -22,7 +23,7 @@ class LinkProblem:
 
 def iter_markdown_files(root: pathlib.Path) -> list[pathlib.Path]:
     files: list[pathlib.Path] = []
-    for pattern in ("README.md", "docs/**/*.md"):
+    for pattern in ("README*.md", "docs/**/*.md"):
         files.extend(root.glob(pattern))
     # de-duplicate while preserving order
     seen: set[pathlib.Path] = set()
@@ -33,6 +34,10 @@ def iter_markdown_files(root: pathlib.Path) -> list[pathlib.Path]:
         seen.add(path)
         out.append(path)
     return out
+
+
+def scrub_fenced_code_blocks(text: str) -> str:
+    return FENCED_CODE_BLOCK_RE.sub("", text)
 
 
 def normalize_target(raw_target: str) -> str:
@@ -82,11 +87,13 @@ def check_links(root: pathlib.Path) -> list[LinkProblem]:
             )
             continue
 
-        for match in MARKDOWN_LINK_RE.finditer(text):
+        scrubbed = scrub_fenced_code_blocks(text)
+
+        for match in MARKDOWN_LINK_RE.finditer(scrubbed):
             raw_target = match.group(1)
 
             # ignore image links: ![alt](...)
-            if match.start() > 0 and text[match.start() - 1] == "!":
+            if match.start() > 0 and scrubbed[match.start() - 1] == "!":
                 continue
 
             target = normalize_target(raw_target)
