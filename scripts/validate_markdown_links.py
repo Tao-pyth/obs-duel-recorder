@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import pathlib
 import re
+import shlex
 import sys
 from dataclasses import dataclass
 
@@ -42,6 +43,20 @@ def normalize_target(raw_target: str) -> str:
         return ""
     if target.startswith("mailto:"):
         return ""
+
+    # handle optional title: [text](path "title")
+    if target.startswith("<") and ">" in target:
+        # Prefer the angle-bracket destination if present.
+        angle = target.split(">", 1)[0].lstrip("<").strip()
+        if angle:
+            target = angle
+    else:
+        try:
+            parts = shlex.split(target, posix=True)
+        except ValueError:
+            parts = []
+        if parts:
+            target = parts[0]
 
     # strip query / fragment
     target = target.split("#", 1)[0].split("?", 1)[0].strip()
