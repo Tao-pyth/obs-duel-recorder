@@ -39,7 +39,11 @@ def init_worker_logging(logs_dir: Path, level: int = logging.INFO) -> Path:
     )
     root.addHandler(file_handler)
 
-    if not any(isinstance(h, logging.StreamHandler) for h in root.handlers):
+    has_console_stream = any(
+        isinstance(h, logging.StreamHandler) and not isinstance(h, logging.FileHandler)
+        for h in root.handlers
+    )
+    if not has_console_stream:
         stream_handler = logging.StreamHandler()
         stream_handler.setLevel(level)
         stream_handler.setFormatter(logging.Formatter(fmt="%(levelname)s %(name)s: %(message)s"))
