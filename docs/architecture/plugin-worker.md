@@ -97,6 +97,9 @@ For Dock UI behavior and actionable diagnostics, see:
 For runtime directory rules and startup-safe directory creation, see:
 - `docs/architecture/runtime-dirs.md`
 
+For v0.2 Worker logging behavior, see:
+- `docs/architecture/worker-logging.md`
+
 Example:
 - GET /health
 - POST /events/recording-started
