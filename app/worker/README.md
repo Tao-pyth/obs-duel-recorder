@@ -19,7 +19,23 @@ The Worker must support restart-safe execution.
 A minimal package scaffold exists under `app/worker/odr_worker/`.
 
 - Print version: `python -m odr_worker --version`
-- Placeholder run: `python -m odr_worker`
+- Run API server (default host/port): `python -m odr_worker`
+
+### Quick start (Windows PowerShell)
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+python -m pip install -e app/worker
+python -m odr_worker
+```
+
+Health check:
+
+```powershell
+Invoke-WebRequest http://127.0.0.1:8787/health | Select-Object -ExpandProperty Content
+```
 
 Configuration scaffold (v0.2):
 - default config path: `user_data/config/worker.toml`
