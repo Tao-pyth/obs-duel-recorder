@@ -68,7 +68,7 @@ function Get-HeadingAnchors([string]$markdown) {
 
 if ([string]::IsNullOrWhiteSpace($Root)) {
   $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-  $Root = (Resolve-Path (Join-Path $scriptDir "..\\.."))..Path
+  $Root = (Resolve-Path (Join-Path $scriptDir "..\\..")).Path
 }
 
 $rootPath = (Resolve-Path $Root).Path
