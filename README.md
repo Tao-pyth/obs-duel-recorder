@@ -124,7 +124,8 @@ Key documents:
 - [Release and tag policy](docs/release.md)
 - [v0.1 acceptance checklist](docs/requirements/v0.1-acceptance.md)
 - [Architecture docs](docs/architecture/)
-- [User docs](docs/user/)
+- [User docs (language selector / 日本語)](docs/user/index.md)
+- [Japanese user docs](docs/user/ja/index.md)
 
 Planned GitHub Pages support is also included in the roadmap.
 
