@@ -105,6 +105,7 @@ def main(argv: list[str]) -> int:
                 Problem(
                     f"Missing Japanese coverage for '{english_rel}': expected {', '.join(missing)}"
                 )
+            )
 
     # Best-effort check: Japanese index should link to the expected JP entrypoints.
     jp_index_file = root / JP_INDEX_PATH
