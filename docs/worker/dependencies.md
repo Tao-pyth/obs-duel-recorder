@@ -6,6 +6,13 @@ Scope:
 - Developer setup and verification only.
 - No runtime data (`user_data/**`) is created or committed by this policy.
 
+## Responsibility boundaries (handoff)
+
+This document is a **docs-only policy** for dependency declaration/installation/verification. To keep handoff clear:
+
+- **Planned paths are made real elsewhere**: creating `app/**` / `app/worker/**`, adding `requirements*.txt`, and wiring entrypoints belong to the Worker skeleton tasks (e.g. #11 / #13).
+- **Smoke / `requirements-dev.txt` usage is owned by the smoke plan**: defining the canonical smoke steps (including when to install `requirements-dev.txt`, and what checks to run) belongs to the smoke/verification work (e.g. #16).
+
 ## Principles
 
 - Keep v0.2 dependency management **simple and Windows-friendly**.
