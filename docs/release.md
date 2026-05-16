@@ -39,6 +39,14 @@ Do not tag an unmerged feature branch as a release.
 
 Do not move or overwrite an existing tag without explicit maintainer approval.
 
+## Release Readiness
+
+Use a version-scoped readiness checklist before tagging:
+
+- v0.2: `docs/release/v0.2-release-readiness.md`
+
+Do not retroactively create a `v0.1.0` tag unless explicitly approved.
+
 ## Agent Responsibilities
 
 When a major or minor roadmap milestone is completed:
