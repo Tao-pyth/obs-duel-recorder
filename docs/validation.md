@@ -23,6 +23,14 @@ Validate:
 
 External URLs (`https://...`) are best-effort and may be skipped when network access is unavailable.
 
+### Recommended check script (PowerShell)
+
+Run the repository’s link validator (includes best-effort anchor checking):
+
+```powershell
+powershell -ExecutionPolicy Bypass -File docs/tools/validate_markdown_links.ps1
+```
+
 ### Local-only check (PowerShell, best-effort)
 
 This snippet is intentionally self-contained (no extra tooling). It detects missing local link targets.
