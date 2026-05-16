@@ -8,6 +8,8 @@ This directory is the documentation entry point for OBS Duel Recorder.
 - [Requirements](requirements/requirements.md)
 - [Traceability](traceability.md)
 - [Release and tag policy](release.md)
+- [Release history](release-history.md)
+- [Version tracking issue template](release/version-tracking-issue-template.md)
 - [v0.2 release readiness checklist](release/v0.2-release-readiness.md)
 - [v0.1 Repository Foundation acceptance checklist](requirements/v0.1-acceptance.md)
 
@@ -33,4 +35,5 @@ User-facing setup and usage documents live under `docs/user/`.
 - Keep important design decisions under `docs/`.
 - Keep user-facing documentation under `docs/user/`.
 - Keep architecture and runtime behavior under `docs/architecture/`.
+- Keep completed release point information in `docs/release-history.md` or a version-specific release summary.
 - Do not use documentation pages to store runtime data, credentials, screenshots, or game assets.
