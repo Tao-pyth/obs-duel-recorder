@@ -1,0 +1,58 @@
+name: Feature request
+description: Propose a scoped enhancement for OBS Duel Recorder
+title: "[Feature]: "
+labels:
+  - enhancement
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or workflow
+      description: What user or maintainer workflow should this improve?
+      placeholder: When reviewing recorded duels, it is hard to...
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: Describe the smallest useful behavior change.
+      placeholder: Add...
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - OBS Plugin
+        - Python Worker
+        - Dock UI / overlay
+        - SQLite / runtime data
+        - YouTube upload
+        - Packaging / release
+        - Documentation
+        - Cross-component
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      placeholder: Manual workaround, smaller scope, or reason this belongs later.
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      placeholder: |
+        - ...
+        - ...
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checks
+      options:
+        - label: This is a concrete enhancement, not only an open-ended idea.
+          required: true
+        - label: I searched existing issues before opening this request.
+          required: true

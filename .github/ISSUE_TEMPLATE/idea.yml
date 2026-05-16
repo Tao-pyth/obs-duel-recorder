@@ -1,0 +1,54 @@
+name: Idea
+description: Capture an early concept that is not ready as a scoped feature
+title: "[Idea]: "
+labels:
+  - Idea
+body:
+  - type: textarea
+    id: concept
+    attributes:
+      label: Idea
+      description: Describe the concept in a few sentences.
+      placeholder: It might be useful if...
+    validations:
+      required: true
+  - type: textarea
+    id: motivation
+    attributes:
+      label: Motivation
+      description: Why might this be valuable for OBS Duel Recorder?
+      placeholder: This could help because...
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Possible area
+      options:
+        - OBS Plugin
+        - Python Worker
+        - Dock UI / overlay
+        - SQLite / runtime data
+        - YouTube upload
+        - Documentation
+        - Release / packaging
+        - Cross-component
+        - Not sure yet
+    validations:
+      required: true
+  - type: textarea
+    id: questions
+    attributes:
+      label: Open questions
+      placeholder: |
+        - Is this needed before v1.0?
+        - Does this belong in Worker or Plugin?
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checks
+      options:
+        - label: This is intentionally exploratory and may need refinement before implementation.
+          required: true
+        - label: I searched existing issues before opening this idea.
+          required: true
