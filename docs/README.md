@@ -6,6 +6,7 @@ This directory is the documentation entry point for OBS Duel Recorder.
 
 - [Roadmap](roadmap.md)
 - [Requirements](requirements/requirements.md)
+- [Traceability](traceability.md)
 - [Release and tag policy](release.md)
 - [v0.1 Repository Foundation acceptance checklist](requirements/v0.1-acceptance.md)
 
