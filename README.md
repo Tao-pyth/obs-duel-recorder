@@ -109,7 +109,7 @@ obs-duel-recorder/
 - Template matching
 - Upload automation
 - Recovery system
-- GitHub Actions packaging
+- GitHub Actions based packaging
 - GitHub Pages documentation
 
 ---
@@ -124,7 +124,8 @@ Key documents:
 - [Release and tag policy](docs/release.md)
 - [v0.1 acceptance checklist](docs/requirements/v0.1-acceptance.md)
 - [Architecture docs](docs/architecture/)
-- [User docs](docs/user/)
+- [User docs (entry)](docs/user/index.md)
+- [User docs (日本語)](docs/user/ja/index.md)
 
 Planned GitHub Pages support is also included in the roadmap.
 
