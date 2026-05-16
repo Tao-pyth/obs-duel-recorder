@@ -42,5 +42,5 @@ python scripts/validate_markdown_links.py
 ```
 
 Notes:
-- Checks `README.md` and `docs/**/*.md`.
+- Checks `README*.md` and `docs/**/*.md`.
 - Ignores `http(s)` and `mailto:` targets.
