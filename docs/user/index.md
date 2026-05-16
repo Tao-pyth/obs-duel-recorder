@@ -12,3 +12,9 @@ These pages remain the current source of truth until `docs/user/en/**` is introd
 - [Installation](install.md)
 - [First setup](setup.md)
 - [Usage](usage.md)
+
+## Localization policy
+
+- English documents are the canonical source of truth for user docs and design docs.
+- Japanese documents under `docs/user/ja/` are translated/expanded from the English source and must not contradict it.
+- Japanese pages may split a single English page into multiple guides (e.g. setup), but the **major sections** should remain traceable.

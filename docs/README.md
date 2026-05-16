@@ -30,10 +30,16 @@ User-facing setup and usage documents live under `docs/user/`.
 - [First setup](user/setup.md)
 - [Usage](user/usage.md)
 
+## Validation
+
+Documentation validation policy lives at:
+- [Documentation validation policy](validation.md)
+
 ## Documentation Rules
 
 - Keep important design decisions under `docs/`.
 - Keep user-facing documentation under `docs/user/`.
 - Keep architecture and runtime behavior under `docs/architecture/`.
+- Treat English documents as canonical; translations should not contradict the English source.
 - Keep completed release point information in `docs/release-history.md` or a version-specific release summary.
 - Do not use documentation pages to store runtime data, credentials, screenshots, or game assets.
