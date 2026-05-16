@@ -60,3 +60,20 @@ Validate, at a minimum:
 - Japanese pages exist for the user-facing topics described by the English user docs.
 - Major sections remain traceable (Japanese may split an English page into multiple guides, but should cover the same core topics).
 - “TODO-only” pages are allowed early, but they should still contain the intended section structure and a link back to the Japanese index.
+
+### Automated check (Python)
+
+Run:
+
+```powershell
+python scripts/validate_jp_user_docs_coverage.py
+```
+
+This check:
+
+- Treats the list under `docs/user/index.md` → “Current user docs (English-base, pre-multilingual)” as canonical user topics.
+- Requires minimum v0.2 Japanese entrypoints for those topics:
+  - `docs/user/ja/install.md`
+  - `docs/user/ja/first-setup.md`
+  - `docs/user/ja/usage.md`
+- Emits warnings if `docs/user/ja/index.md` does not link to expected pages.
