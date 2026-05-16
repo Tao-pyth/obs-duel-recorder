@@ -103,6 +103,9 @@ For runtime directory rules and startup-safe directory creation, see:
 For v0.2 Worker logging behavior, see:
 - `docs/architecture/worker-logging.md`
 
+For the v0.2 Worker API contract, see:
+- `docs/architecture/worker-api.md`
+
 Example:
 - GET /health
 - POST /events/recording-started
