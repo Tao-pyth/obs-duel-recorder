@@ -32,3 +32,15 @@ User-facing setup and usage documents live under `docs/user/`.
 - Keep user-facing documentation under `docs/user/`.
 - Keep architecture and runtime behavior under `docs/architecture/`.
 - Do not use documentation pages to store runtime data, credentials, screenshots, or game assets.
+
+## Validation
+
+Validate internal Markdown links (files within the repository):
+
+```powershell
+python scripts/validate_markdown_links.py
+```
+
+Notes:
+- Checks `README.md` and `docs/**/*.md`.
+- Ignores `http(s)` and `mailto:` targets.
