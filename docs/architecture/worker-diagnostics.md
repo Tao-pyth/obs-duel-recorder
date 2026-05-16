@@ -7,7 +7,7 @@ Goals:
 - Enable actionable user guidance (config fix vs runtime permissions vs version mismatch).
 - Keep the Worker/Plugin responsibility boundary intact.
 
-This is **not** a UI spec. It is a shared vocabulary for Plugin↔Worker lifecycle diagnostics.
+This is **not** a UI spec. It is a shared vocabulary for Plugin→Worker lifecycle diagnostics.
 
 ---
 
@@ -84,6 +84,9 @@ Recommended user action:
 ## Mapping Guidance (high level)
 
 This section is guidance only; the concrete field names live in the v0.2 `/health` contract and related docs.
+
+For the minimal compatibility contract and gating rules, see:
+- `docs/architecture/compatibility.md`
 
 The Plugin can map to a diagnostic state using (in priority order):
 
