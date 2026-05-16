@@ -7,7 +7,7 @@ import sys
 import uvicorn
 
 from .api import create_app
-from .config import load_worker_config
+from .config import get_default_config_path, load_worker_config
 from .logging_setup import init_worker_logging
 from .runtime_dirs import RuntimeDirError, ensure_runtime_dirs
 from .version import __version__
@@ -33,10 +33,17 @@ def main(argv: list[str] | None = None) -> int:
         print(f"Runtime directory initialization failed: {exc}", file=sys.stderr)
         return 2
 
-    loaded_config = load_worker_config(runtime_dirs.user_data_dir)
-
     log_path = init_worker_logging(runtime_dirs.logs_dir)
     logger = logging.getLogger(__name__)
+
+    try:
+        loaded_config = load_worker_config(runtime_dirs.user_data_dir)
+    except Exception as exc:
+        config_path = get_default_config_path(runtime_dirs.user_data_dir)
+        logger.exception("Failed to load worker config", extra={"config_path": str(config_path)})
+        print(f"Failed to load Worker config: {config_path}\nReason: {exc}", file=sys.stderr)
+        print(f"Logs: {log_path}", file=sys.stderr)
+        return 3
 
     logger.info("Worker startup initialized")
     logger.info("version=%s", __version__)
