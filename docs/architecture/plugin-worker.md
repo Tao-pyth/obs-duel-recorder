@@ -95,6 +95,10 @@ Tracking:
 - Child issue: #120
 - Parent tracking issue: #110
 
+Related design inputs:
+- #126 instance identity and port ownership
+- #127 single-instance and port-collision contract
+
 ### Ownership
 
 - The OBS plugin owns the Worker process lifecycle (spawn / stop).
@@ -128,6 +132,24 @@ If the plugin embeds Python or launches via `python -m`, the command must still 
 - After spawning the Worker, the plugin must wait until the API becomes ready.
 - Readiness signal: successful response from `GET /health`.
 - The plugin should apply a bounded timeout and surface actionable diagnostics when startup fails.
+
+### Single-instance and Port-Collision Handling
+
+The plugin must avoid accidentally talking to the wrong localhost process.
+
+Minimum policy (v0.4):
+
+- Preflight check: before spawning, try `GET /health` on the target `host:port`.
+- If `/health` is reachable and the response is compatible with the plugin expectation, the plugin may treat it as an already-running Worker and reuse it.
+- If `/health` is reachable but is not compatible, or the plugin cannot confirm it is the intended Worker instance, treat it as a **launch failure** (port collision / foreign process) and do not continue as "running".
+- If the port is in use but `/health` is not reachable or returns invalid responses, treat it as a **launch failure** (stale/unknown process) and do not automatically kill the process.
+
+The definition of "intended Worker instance" may be minimal initially (e.g. same `ODR_USER_DATA_DIR` and compatible `/health` fields) and can be tightened later.
+
+### Handoff to Other v0.4 Concerns
+
+- Heartbeat cadence/timeout and failure handling lives in #121.
+- Diagnostics mapping and wrapper behavior for collision cases lives in #123.
 
 ### Shutdown Contract
 
