@@ -22,11 +22,13 @@ Major and minor release completions are tagged as `vMajor.Minor.Patch`. See [Rel
 
 ## Current Development
 
-Current release target:
+Latest released version:
 - `v0.2.0` - Worker Core API
 
-Next roadmap targets:
+Current development target:
 - `v0.3` - SQLite Foundation
+
+Next roadmap target:
 - `v0.4` - OBS Plugin Skeleton
 
 ---
@@ -97,15 +99,16 @@ obs-duel-recorder/
 
 ## Current Status
 
-### Current Release Candidate
+### Latest Release
 
 - Version: `v0.2.0`
 - Scope: Worker Core API
-- Status: pending release tag creation
+- Status: released
+- Tag target: `f64c8a5cdeecadfcc4d5406045d9ea4af9e268a0`
 - Tracking issue: [#72](https://github.com/Tao-pyth/obs-duel-recorder/issues/72)
 - Release record: [docs/release-history.md](docs/release-history.md)
 
-### Planned for v0.2
+### Completed in v0.2
 
 - FastAPI Worker foundation
 - Localhost HTTP API
