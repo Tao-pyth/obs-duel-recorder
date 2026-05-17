@@ -44,6 +44,6 @@ The version tracking issue may contain the working release summary, but finalize
 - Intended tag target: `5b51a33454f469d6a782387ece8f5afba13b0d49`
 - Release summary: `docs/release/v0.3-release-summary.md`
 - Major PRs: #101, #104, #107
-- Deferred items: none
+- Follow-up PR: #118 (align Worker distribution metadata version to `0.3.0`; re-identify tag target after merge)
 - Next version tracking issue: #110
 - Status: ready_to_tag
