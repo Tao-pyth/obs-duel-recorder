@@ -28,6 +28,8 @@ No release records have been finalized yet.
 - Version tracking issue: #72
 - Milestone: `v0.2`
 - Release readiness checklist: `docs/release/v0.2-release-readiness.md`
-- Expected tag: `v0.2.0`
-- Release summary: `docs/release/v0.2-release-summary.md` if created
-- Status: in progress
+- Intended tag: `v0.2.0`
+- Tag target (main HEAD): `f64c8a5cdeecadfcc4d5406045d9ea4af9e268a0`
+- Release summary: `docs/release/v0.2-release-summary.md`
+- Deferred item: #50 (workflow change required; post-release)
+- Status: pending tag creation
