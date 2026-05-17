@@ -38,7 +38,7 @@ Goals:
 - Roadmap: `docs/roadmap.md` -> **v0.3 - SQLite Foundation**
 - Version tracking issue: `#88` - `[v0.3] SQLite Foundation release tracking`
 - Acceptance checklist: `docs/requirements/v0.3-sqlite-foundation-acceptance.md`
-- Release readiness checklist: TBD
+- Release readiness checklist: `docs/release/v0.3-release-readiness.md`
 - Requirements (relevant sections):
   - `docs/requirements/requirements.md` -> Architecture / Platform / Runtime Rules
   - `AGENTS.md` -> Runtime Directory Rules / Responsibility Separation
