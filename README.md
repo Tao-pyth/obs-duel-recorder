@@ -25,11 +25,14 @@ Major and minor release completions are tagged as `vMajor.Minor.Patch`. See [Rel
 Latest released version:
 - `v0.2.0` - Worker Core API
 
+Release pending:
+- `v0.3.0` - SQLite Foundation (ready_to_tag; tag creation pending)
+
 Current development target:
-- `v0.3` - SQLite Foundation
+- `v0.4` - OBS Plugin Skeleton
 
 Next roadmap target:
-- `v0.4` - OBS Plugin Skeleton
+- `v0.5` - Overlay Integration
 
 ---
 
