@@ -43,6 +43,16 @@ Goals:
   - `docs/requirements/requirements.md` -> Architecture / Platform / Runtime Rules
   - `AGENTS.md` -> Runtime Directory Rules / Responsibility Separation
 
+### v0.4 - OBS Plugin Skeleton
+
+- Roadmap: `docs/roadmap.md` -> **v0.4 - OBS Plugin Skeleton**
+- Version tracking issue: `#110` - `[v0.4] OBS Plugin Skeleton release tracking`
+- Acceptance checklist: `docs/requirements/v0.4-obs-plugin-skeleton-acceptance.md`
+- Release readiness checklist: `docs/release/v0.4-release-readiness.md`
+- Requirements (relevant sections):
+  - `docs/requirements/requirements.md` -> Architecture / Platform / Runtime Rules
+  - `AGENTS.md` -> Runtime Directory Rules / Responsibility Separation
+
 ---
 
 ## Policy
@@ -81,3 +91,4 @@ The version tracking issue itself is not an implementation work item.
 - Refs #56
 - Refs #72
 - Refs #88
+- Refs #110
