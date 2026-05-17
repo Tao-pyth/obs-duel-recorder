@@ -7,7 +7,7 @@ from pathlib import Path
 from .version import __version__
 
 
-API_VERSION = "0.2"
+API_VERSION = "0.3"
 _START_TIME = time.monotonic()
 
 
@@ -20,14 +20,21 @@ class WorkerPaths:
     logs_dir: Path
 
 
+@dataclass(frozen=True)
+class WorkerDb:
+    db_path: Path
+    schema_version: int
+    applied_migrations: tuple[str, ...]
+
+
 def _as_posix(path: Path) -> str:
     return path.resolve().as_posix()
 
 
-def build_health_payload(*, paths: WorkerPaths, config_loaded: bool) -> dict[str, object]:
+def build_health_payload(*, paths: WorkerPaths, config_loaded: bool, db: WorkerDb | None = None) -> dict[str, object]:
     uptime_seconds = int(max(0.0, time.monotonic() - _START_TIME))
 
-    return {
+    payload: dict[str, object] = {
         "status": "ok",
         "version": __version__,
         "api_version": API_VERSION,
@@ -42,3 +49,12 @@ def build_health_payload(*, paths: WorkerPaths, config_loaded: bool) -> dict[str
             "logs_dir": _as_posix(paths.logs_dir),
         },
     }
+
+    if db is not None:
+        payload["db"] = {
+            "path": _as_posix(db.db_path),
+            "schema_version": db.schema_version,
+            "applied_migrations": list(db.applied_migrations),
+        }
+
+    return payload
