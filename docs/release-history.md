@@ -21,15 +21,16 @@ The version tracking issue may contain the working release summary, but finalize
 
 ## Releases
 
-No release records have been finalized yet.
-
-### Planned: v0.2.0 - Worker Core API
+### v0.2.0 - Worker Core API
 
 - Version tracking issue: #72
 - Milestone: `v0.2`
 - Release readiness checklist: `docs/release/v0.2-release-readiness.md`
-- Intended tag: `v0.2.0`
-- Tag target (main HEAD): `f64c8a5cdeecadfcc4d5406045d9ea4af9e268a0`
+- Tag: `v0.2.0`
+- Tag target: `f64c8a5cdeecadfcc4d5406045d9ea4af9e268a0`
 - Release summary: `docs/release/v0.2-release-summary.md`
-- Deferred item: #50 (workflow change required; post-release)
-- Status: pending tag creation
+- Major PRs: #84, #87, #89
+- Version cleanup PR: #99 (merged after the existing tag target; tag was intentionally kept unchanged)
+- Deferred item: #97 (workflow validation automation; post-release because it changes `.github/workflows/**`)
+- Next version tracking issue: #88
+- Status: released
