@@ -11,6 +11,7 @@ from .config import (
     get_default_config_path,
     load_worker_config,
 )
+from .db import DbInitError, init_db
 from .logging_setup import init_worker_logging
 from .runtime_dirs import RuntimeDirError, ensure_runtime_dirs
 from .version import __version__
@@ -66,6 +67,14 @@ def main(argv: list[str] | None = None) -> int:
         return 3
 
     try:
+        db_info = init_db(runtime_dirs=runtime_dirs, logger=logger)
+    except DbInitError as exc:
+        logger.error("SQLite initialization failed: %s", exc, extra={"db_dir": str(runtime_dirs.db_dir)})
+        print(f"SQLite initialization failed: {exc}", file=sys.stderr)
+        print(f"Logs: {log_path}", file=sys.stderr)
+        return 3
+
+    try:
         import uvicorn  # type: ignore
         from .api import create_app
     except Exception:  # pragma: no cover
@@ -88,7 +97,7 @@ def main(argv: list[str] | None = None) -> int:
         runtime_dirs.logs_dir,
     )
 
-    app = create_app(runtime_dirs=runtime_dirs, loaded_config=loaded_config)
+    app = create_app(runtime_dirs=runtime_dirs, loaded_config=loaded_config, db_info=db_info)
 
     logger.info("Starting API server host=%s port=%s", loaded_config.config.host, loaded_config.config.port)
     logger.info("logs=%s", log_path)
