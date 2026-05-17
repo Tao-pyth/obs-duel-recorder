@@ -96,8 +96,8 @@ def init_db(*, runtime_dirs: RuntimeDirs, logger: logging.Logger | None = None) 
 
     try:
         conn = sqlite3.connect(db_path)
-    except OSError as exc:
-        raise DbInitError(f"Failed to open SQLite DB: {db_path}") from exc
+    except (sqlite3.Error, OSError) as exc:
+        raise DbInitError(f"Failed to open SQLite DB: {db_path}: {exc}") from exc
 
     try:
         conn.execute("PRAGMA foreign_keys = ON;")
@@ -126,7 +126,11 @@ def init_db(*, runtime_dirs: RuntimeDirs, logger: logging.Logger | None = None) 
                 conn.execute("COMMIT;")
                 current_version = new_version
             except sqlite3.DatabaseError as exc:
-                conn.execute("ROLLBACK;")
+                if conn.in_transaction:
+                    try:
+                        conn.execute("ROLLBACK;")
+                    except sqlite3.DatabaseError:
+                        pass
                 raise DbInitError(f"SQLite migration failed: {migration_id}: {exc}") from exc
 
             applied_in_order.append(migration_id)
