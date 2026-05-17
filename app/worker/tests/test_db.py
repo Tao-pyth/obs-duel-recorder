@@ -92,6 +92,10 @@ class SqliteFoundationTests(unittest.TestCase):
         from odr_worker.runtime_dirs import ensure_runtime_dirs
 
         def read_sql(migration_id: str) -> str:
+            if migration_id == "0001_init":
+                return (WORKER_ROOT / "odr_worker" / "migrations" / "0001_init.sql").read_text(
+                    encoding="utf-8"
+                )
             if migration_id == "0002_tables":
                 return "THIS IS INVALID SQL;"
             raise AssertionError("unexpected migration id")
