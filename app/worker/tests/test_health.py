@@ -55,6 +55,32 @@ class HealthEndpointTests(unittest.TestCase):
             ):
                 self.assertIn(path_key, data["paths"])
 
+    def test_version_endpoint_has_required_fields(self) -> None:
+        from fastapi.testclient import TestClient
+
+        from odr_worker.api import create_app
+        from odr_worker.config import LoadedWorkerConfig, WorkerConfig
+        from odr_worker.runtime_dirs import ensure_runtime_dirs
+
+        with tempfile.TemporaryDirectory() as tmp:
+            user_data_dir = Path(tmp)
+            runtime_dirs = ensure_runtime_dirs(user_data_dir=user_data_dir)
+            loaded_config = LoadedWorkerConfig(
+                config=WorkerConfig(),
+                config_path=runtime_dirs.config_dir / "worker.toml",
+                config_loaded=False,
+            )
+
+            app = create_app(runtime_dirs=runtime_dirs, loaded_config=loaded_config)
+
+            client = TestClient(app)
+            resp = client.get("/version")
+            self.assertEqual(resp.status_code, 200)
+
+            data = resp.json()
+            for key in ("version", "api_version"):
+                self.assertIn(key, data)
+
 
 if __name__ == "__main__":
     unittest.main()

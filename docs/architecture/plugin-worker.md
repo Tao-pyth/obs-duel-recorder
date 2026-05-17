@@ -190,5 +190,6 @@ For the v0.2 Worker API contract, see:
 
 Example:
 - GET /health
+- GET /version
 - POST /events/recording-started
 - POST /events/recording-stopped

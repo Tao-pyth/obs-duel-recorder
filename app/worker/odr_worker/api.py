@@ -8,7 +8,7 @@ from fastapi.responses import JSONResponse
 
 from .config import LoadedWorkerConfig, get_repo_root
 from .db import DbInfo
-from .health import WorkerDb, WorkerPaths, build_health_payload
+from .health import API_VERSION, WorkerDb, WorkerPaths, build_health_payload
 from .runtime_dirs import RuntimeDirs
 from .version import __version__
 
@@ -47,6 +47,10 @@ def create_app(*, runtime_dirs: RuntimeDirs, loaded_config: LoadedWorkerConfig, 
     @app.get("/health")
     def health() -> dict[str, object]:
         return build_health_payload(paths=app.state.paths, config_loaded=app.state.config_loaded, db=app.state.db)
+
+    @app.get("/version")
+    def version() -> dict[str, object]:
+        return {"version": __version__, "api_version": API_VERSION}
 
     @app.exception_handler(Exception)
     async def unhandled_exception_handler(request: Request, exc: Exception):
