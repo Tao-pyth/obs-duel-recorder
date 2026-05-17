@@ -1,6 +1,6 @@
 # Documentation validation policy
 
-This page defines what “documentation validation” means for this repository.
+This page defines what "documentation validation" means for this repository.
 
 ## Canonical source and translations
 
@@ -25,7 +25,7 @@ External URLs (`https://...`) are best-effort and may be skipped when network ac
 
 ### Recommended check script (PowerShell)
 
-Run the repository’s link validator (includes best-effort anchor checking):
+Run the repository's link validator (includes best-effort anchor checking):
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File docs/tools/validate_markdown_links.ps1
@@ -61,13 +61,13 @@ $fail | Format-Table -AutoSize
 if ($fail.Count -gt 0) { exit 1 }
 ```
 
-## Localization coverage (English → Japanese)
+## Localization coverage (English -> Japanese)
 
 Validate, at a minimum:
 
 - Japanese pages exist for the user-facing topics described by the English user docs.
 - Major sections remain traceable (Japanese may split an English page into multiple guides, but should cover the same core topics).
-- “TODO-only” pages are allowed early, but they should still contain the intended section structure and a link back to the Japanese index.
+- "TODO-only" pages are allowed early, but they should still contain the intended section structure and a link back to the Japanese index.
 
 ### Automated check (Python)
 
@@ -79,7 +79,7 @@ python scripts/validate_jp_user_docs_coverage.py
 
 This check:
 
-- Treats the list under `docs/user/index.md` → “Current user docs (English-base, pre-multilingual)” as canonical user topics.
+- Treats the list under `docs/user/index.md` -> "Current user docs (English-base, pre-multilingual)" as canonical user topics.
 - Requires minimum v0.2 Japanese entrypoints for those topics:
   - `docs/user/ja/install.md`
   - `docs/user/ja/first-setup.md`
@@ -92,7 +92,7 @@ This section defines the recommended **reporting behavior** for scheduled docume
 
 ### Recommended reporting contract
 
-Define one stable “report unit” per validator run:
+Define one stable "report unit" per validator run:
 
 - `validator_name`: e.g. `markdown-links`, `jp-user-docs-coverage`
 - `checked_scope`: e.g. `README* + docs/**`
@@ -109,7 +109,7 @@ Suggested fingerprints:
 
 - On success: do not post anything (avoid noise).
 - On failure:
-  - Prefer commenting on an existing “documentation validation tracking” issue if one exists.
+  - Prefer commenting on an existing "documentation validation tracking" issue if one exists.
   - Otherwise create a new issue titled `Docs validation failed: <validator_name>` and include the full failure list.
 - Re-notify only when the `failure_fingerprint` changes, or when the failure persists beyond a human-defined stale window (e.g. weekly reminder).
 
