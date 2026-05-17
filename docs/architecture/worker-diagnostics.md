@@ -83,7 +83,7 @@ Recommended user action:
 
 ## Mapping Guidance (high level)
 
-This section is guidance only; the concrete field names live in the v0.2 `/health` contract and related docs.
+This section is guidance only; the concrete field names live in the version-scoped `/health` contract and related docs.
 
 For the minimal compatibility contract and gating rules, see:
 - `docs/architecture/compatibility.md`
@@ -97,11 +97,19 @@ The Plugin can map to a diagnostic state using (in priority order):
 2. **API reachability**
    - `GET /health` fails consistently while process is running → `starting` (early) or `unhealthy` (after timeout)
 
-3. **/health semantics** (when available)
+   Notes:
+   - If `GET /version` is implemented, the Plugin may use it as an earlier/lighter reachability signal.
+   - `GET /version` success with `GET /health` failure should still be treated as startup/health diagnostics (not an automatic mismatch).
+
+3. **/health (and /version) semantics** (when available)
    - Health OK → `running`
    - Health not OK with a config-related reason → `config_error`
    - Health not OK with a runtime dir/path reason → `runtime_dir_error`
-   - Compatibility/version fields indicate mismatch → `version_mismatch` or `api_incompatible`
+   - Compatibility fields indicate mismatch → `version_mismatch` or `api_incompatible`
+
+Compatibility guidance:
+- Prefer `api_incompatible` when `api_version` does not match expected.
+- Reserve `version_mismatch` for cases where the Plugin explicitly defines a version range/matrix beyond API version gating.
 
 ---
 
