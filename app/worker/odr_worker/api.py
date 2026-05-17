@@ -7,7 +7,8 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
 from .config import LoadedWorkerConfig, get_repo_root
-from .health import WorkerPaths, build_health_payload
+from .db import DbInfo
+from .health import WorkerDb, WorkerPaths, build_health_payload
 from .runtime_dirs import RuntimeDirs
 from .version import __version__
 
@@ -19,7 +20,7 @@ def _error_payload(*, code: str, message: str, details: object | None = None) ->
     return payload
 
 
-def create_app(*, runtime_dirs: RuntimeDirs, loaded_config: LoadedWorkerConfig) -> FastAPI:
+def create_app(*, runtime_dirs: RuntimeDirs, loaded_config: LoadedWorkerConfig, db_info: DbInfo | None = None) -> FastAPI:
     app = FastAPI(title="OBS Duel Recorder Worker", version=__version__)
 
     app_dir = (get_repo_root() / "app").resolve()
@@ -35,9 +36,17 @@ def create_app(*, runtime_dirs: RuntimeDirs, loaded_config: LoadedWorkerConfig) 
     app.state.paths = worker_paths
     app.state.config_loaded = loaded_config.config_loaded
 
+    app.state.db = None
+    if db_info is not None:
+        app.state.db = WorkerDb(
+            db_path=db_info.db_path,
+            schema_version=db_info.schema_version,
+            applied_migrations=db_info.applied_migrations,
+        )
+
     @app.get("/health")
     def health() -> dict[str, object]:
-        return build_health_payload(paths=app.state.paths, config_loaded=app.state.config_loaded)
+        return build_health_payload(paths=app.state.paths, config_loaded=app.state.config_loaded, db=app.state.db)
 
     @app.exception_handler(Exception)
     async def unhandled_exception_handler(request: Request, exc: Exception):
