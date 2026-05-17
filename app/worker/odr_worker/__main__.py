@@ -4,10 +4,13 @@ import argparse
 import logging
 import sys
 
-import uvicorn
-
-from .api import create_app
-from .config import get_default_config_path, load_worker_config
+from .config import (
+    LoadedWorkerConfig,
+    WorkerConfig,
+    WorkerConfigError,
+    get_default_config_path,
+    load_worker_config,
+)
 from .logging_setup import init_worker_logging
 from .runtime_dirs import RuntimeDirError, ensure_runtime_dirs
 from .version import __version__
@@ -16,7 +19,24 @@ from .version import __version__
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="odr-worker")
     parser.add_argument("--version", action="store_true", help="Print worker version and exit")
+    parser.add_argument("--host", help="Override bind host (default: config or 127.0.0.1)")
+    parser.add_argument("--port", type=int, help="Override bind port (default: config or 8787)")
     return parser
+
+
+def _apply_cli_overrides(loaded_config: LoadedWorkerConfig, args: argparse.Namespace) -> LoadedWorkerConfig:
+    if args.host is None and args.port is None:
+        return loaded_config
+
+    config = WorkerConfig(
+        host=args.host or loaded_config.config.host,
+        port=args.port if args.port is not None else loaded_config.config.port,
+    )
+    return LoadedWorkerConfig(
+        config=config,
+        config_path=loaded_config.config_path,
+        config_loaded=loaded_config.config_loaded,
+    )
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -37,12 +57,23 @@ def main(argv: list[str] | None = None) -> int:
     logger = logging.getLogger(__name__)
 
     try:
-        loaded_config = load_worker_config(runtime_dirs.user_data_dir)
-    except Exception as exc:
+        loaded_config = _apply_cli_overrides(load_worker_config(runtime_dirs.user_data_dir), args)
+    except WorkerConfigError as exc:
         config_path = get_default_config_path(runtime_dirs.user_data_dir)
-        logger.exception("Failed to load worker config", extra={"config_path": str(config_path)})
+        logger.error("Failed to load worker config: %s", exc, extra={"config_path": str(config_path)})
         print(f"Failed to load Worker config: {config_path}\nReason: {exc}", file=sys.stderr)
         print(f"Logs: {log_path}", file=sys.stderr)
+        return 3
+
+    try:
+        import uvicorn  # type: ignore
+        from .api import create_app
+    except Exception:  # pragma: no cover
+        print(
+            "Worker HTTP server dependencies are missing.\n"
+            "Install dependencies: python -m pip install -e app/worker\n",
+            file=sys.stderr,
+        )
         return 3
 
     logger.info("Worker startup initialized")

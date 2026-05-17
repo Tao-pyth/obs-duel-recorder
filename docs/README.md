@@ -22,6 +22,10 @@ Architecture documents describe technical behavior and responsibility boundaries
 - [Queue design](architecture/queue.md)
 - [Upload flow](architecture/upload.md)
 
+## Worker (Developer)
+
+- [v0.2 Worker quickstart (smoke)](worker/v0.2-quickstart.md)
+
 ## User Documentation
 
 User-facing setup and usage documents live under `docs/user/`.
