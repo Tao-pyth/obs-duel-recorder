@@ -9,6 +9,7 @@ from fastapi.responses import JSONResponse
 from .config import LoadedWorkerConfig, get_repo_root
 from .health import WorkerPaths, build_health_payload
 from .runtime_dirs import RuntimeDirs
+from .version import __version__
 
 
 def _error_payload(*, code: str, message: str, details: object | None = None) -> dict[str, object]:
@@ -19,7 +20,7 @@ def _error_payload(*, code: str, message: str, details: object | None = None) ->
 
 
 def create_app(*, runtime_dirs: RuntimeDirs, loaded_config: LoadedWorkerConfig) -> FastAPI:
-    app = FastAPI(title="OBS Duel Recorder Worker", version="0.2.0-dev")
+    app = FastAPI(title="OBS Duel Recorder Worker", version=__version__)
 
     app_dir = (get_repo_root() / "app").resolve()
 

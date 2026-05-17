@@ -1,6 +1,6 @@
 [project]
 name = "obs-duel-recorder-worker"
-version = "0.2.0-dev"
+version = "0.2.0"
 description = "Python Worker for OBS Duel Recorder"
 readme = "README.md"
 requires-python = ">=3.11"
