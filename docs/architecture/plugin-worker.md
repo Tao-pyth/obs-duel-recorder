@@ -144,6 +144,9 @@ Minimum policy (v0.4):
 - If `/health` is reachable but is not compatible, or the plugin cannot confirm it is the intended Worker instance, treat it as a **launch failure** (port collision / foreign process) and do not continue as "running".
 - If the port is in use but `/health` is not reachable or returns invalid responses, treat it as a **launch failure** (stale/unknown process) and do not automatically kill the process.
 
+Optional refinement:
+- If the Worker implements `GET /version`, the plugin may use it as a lighter preflight (read `version` / `api_version`) before calling `/health`.
+
 The definition of "intended Worker instance" may be minimal initially (e.g. same `ODR_USER_DATA_DIR` and compatible `/health` fields) and can be tightened later.
 
 ### Handoff to Other v0.4 Concerns
