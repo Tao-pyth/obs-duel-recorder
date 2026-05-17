@@ -1,0 +1,27 @@
+name: Documentation validation
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Weekly, Sunday 03:20 UTC. Keep this low-frequency to avoid noisy docs checks.
+    - cron: "20 3 * * 0"
+
+permissions:
+  contents: read
+
+jobs:
+  validate-docs:
+    name: Validate documentation
+    runs-on: windows-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Validate Markdown links
+        shell: powershell
+        run: powershell -ExecutionPolicy Bypass -File docs/tools/validate_markdown_links.ps1
+
+      - name: Validate Japanese user docs coverage
+        shell: powershell
+        run: python scripts/validate_jp_user_docs_coverage.py --root .
