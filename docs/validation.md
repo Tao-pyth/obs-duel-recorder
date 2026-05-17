@@ -23,6 +23,14 @@ Validate:
 
 External URLs (`https://...`) are best-effort and may be skipped when network access is unavailable.
 
+### Recommended check script (PowerShell)
+
+Run the repository’s link validator (includes best-effort anchor checking):
+
+```powershell
+powershell -ExecutionPolicy Bypass -File docs/tools/validate_markdown_links.ps1
+```
+
 ### Local-only check (PowerShell, best-effort)
 
 This snippet is intentionally self-contained (no extra tooling). It detects missing local link targets.
@@ -77,3 +85,39 @@ This check:
   - `docs/user/ja/first-setup.md`
   - `docs/user/ja/usage.md`
 - Emits warnings if `docs/user/ja/index.md` does not link to expected pages.
+
+## Recurring validation (planned)
+
+This section defines the recommended **reporting behavior** for scheduled documentation validation runs.
+
+### Recommended reporting contract
+
+Define one stable “report unit” per validator run:
+
+- `validator_name`: e.g. `markdown-links`, `jp-user-docs-coverage`
+- `checked_scope`: e.g. `README* + docs/**`
+- `failure_fingerprint`: a stable, deterministic fingerprint of the failure set (examples below)
+- `report_destination`: where to post (issue / comment)
+- `re_notify_condition`: when to post again for the same fingerprint
+
+Suggested fingerprints:
+
+- Markdown link validation: sorted list of `file + link_target + failure_type`
+- JP coverage validation: sorted list of `missing_page + missing_major_section` (if the validator models sections)
+
+### Low-noise reporting rules
+
+- On success: do not post anything (avoid noise).
+- On failure:
+  - Prefer commenting on an existing “documentation validation tracking” issue if one exists.
+  - Otherwise create a new issue titled `Docs validation failed: <validator_name>` and include the full failure list.
+- Re-notify only when the `failure_fingerprint` changes, or when the failure persists beyond a human-defined stale window (e.g. weekly reminder).
+
+### Suggested GitHub Actions steps (outline)
+
+This repository already defines the local commands; a scheduled workflow can run them:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File docs/tools/validate_markdown_links.ps1
+python scripts/validate_jp_user_docs_coverage.py
+```

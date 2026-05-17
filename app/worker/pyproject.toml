@@ -7,8 +7,11 @@ requires-python = ">=3.11"
 license = { text = "MIT" }
 authors = [{ name = "Tao-pyth" }]
 
-# v0.2 skeleton: keep dependencies minimal. Later issues add FastAPI/uvicorn.
-dependencies = []
+# v0.2: minimal localhost HTTP API foundation.
+dependencies = [
+  "fastapi>=0.110",
+  "uvicorn>=0.27",
+]
 
 [project.scripts]
 odr-worker = "odr_worker.__main__:main"

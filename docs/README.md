@@ -47,3 +47,15 @@ Documentation validation policy lives at:
 - Treat English documents as canonical; translations should not contradict the English source.
 - Keep completed release point information in `docs/release-history.md` or a version-specific release summary.
 - Do not use documentation pages to store runtime data, credentials, screenshots, or game assets.
+
+## Validation
+
+Validate internal Markdown links (files within the repository):
+
+```powershell
+python scripts/validate_markdown_links.py
+```
+
+Notes:
+- Checks `README*.md` and `docs/**/*.md`.
+- Ignores `http(s)` and `mailto:` targets.

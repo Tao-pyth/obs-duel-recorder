@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import sys
 import tempfile
-import time
 import unittest
 from pathlib import Path
 
@@ -16,31 +15,20 @@ class HealthEndpointTests(unittest.TestCase):
     def test_health_payload_has_required_fields(self) -> None:
         from fastapi.testclient import TestClient
 
-        from odr_worker.health import RuntimePaths
-        from odr_worker.http_api import HealthState, create_app
+        from odr_worker.api import create_app
+        from odr_worker.config import LoadedWorkerConfig, WorkerConfig
         from odr_worker.runtime_dirs import ensure_runtime_dirs
-        from odr_worker.version import __version__
 
         with tempfile.TemporaryDirectory() as tmp:
             user_data_dir = Path(tmp)
             runtime_dirs = ensure_runtime_dirs(user_data_dir=user_data_dir)
-
-            paths = RuntimePaths(
-                app_dir=(WORKER_ROOT.parent / "app").resolve(),
-                user_data_dir=runtime_dirs.user_data_dir,
-                config_dir=runtime_dirs.config_dir,
-                data_dir=runtime_dirs.data_dir,
-                logs_dir=runtime_dirs.logs_dir,
-            )
-
-            state = HealthState(
-                started_at_monotonic=time.monotonic(),
-                version=__version__,
+            loaded_config = LoadedWorkerConfig(
+                config=WorkerConfig(),
+                config_path=runtime_dirs.config_dir / "worker.toml",
                 config_loaded=False,
-                runtime_dirs_ok=True,
-                paths=paths,
             )
-            app = create_app(health_state=state)
+
+            app = create_app(runtime_dirs=runtime_dirs, loaded_config=loaded_config)
 
             client = TestClient(app)
             resp = client.get("/health")
@@ -50,6 +38,7 @@ class HealthEndpointTests(unittest.TestCase):
             for key in (
                 "status",
                 "version",
+                "api_version",
                 "uptime_seconds",
                 "config_loaded",
                 "runtime_dirs_ok",
