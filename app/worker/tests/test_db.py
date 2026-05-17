@@ -5,6 +5,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 
 # Ensure `app/worker` is on sys.path so `import odr_worker` works without install.
@@ -37,7 +38,10 @@ class SqliteFoundationTests(unittest.TestCase):
 
                 conn.execute("INSERT INTO matches DEFAULT VALUES;")
                 match_id = conn.execute("SELECT id FROM matches ORDER BY id DESC LIMIT 1;").fetchone()[0]
-                conn.execute("INSERT INTO upload_queue(match_id, state) VALUES(?, ?);", (match_id, "ready_upload"))
+                conn.execute(
+                    "INSERT INTO upload_queue(match_id, state) VALUES(?, ?);",
+                    (match_id, "ready_upload"),
+                )
                 conn.commit()
 
                 row = conn.execute("SELECT state FROM upload_queue WHERE match_id = ?;", (match_id,)).fetchone()
@@ -59,6 +63,48 @@ class SqliteFoundationTests(unittest.TestCase):
             self.assertEqual(first.db_path, second.db_path)
             self.assertEqual(first.schema_version, second.schema_version)
             self.assertEqual(first.applied_migrations, second.applied_migrations)
+
+    def test_init_db_wraps_sqlite_open_failures(self) -> None:
+        from odr_worker.db import DbInitError, init_db
+        from odr_worker.runtime_dirs import RuntimeDirs
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            not_a_dir = root / "not-a-dir"
+            not_a_dir.write_text("x", encoding="utf-8")
+
+            runtime_dirs = RuntimeDirs(
+                user_data_dir=root,
+                config_dir=root,
+                data_dir=root,
+                logs_dir=root,
+                db_dir=not_a_dir,
+                videos_dir=root,
+                screenshots_dir=root,
+                exports_dir=root,
+            )
+
+            with self.assertRaises(DbInitError):
+                init_db(runtime_dirs=runtime_dirs)
+
+    def test_init_db_preserves_migration_failure_diagnostics(self) -> None:
+        from odr_worker.db import DbInitError, init_db
+        from odr_worker.runtime_dirs import ensure_runtime_dirs
+
+        def read_sql(migration_id: str) -> str:
+            if migration_id == "0002_tables":
+                return "THIS IS INVALID SQL;"
+            raise AssertionError("unexpected migration id")
+
+        with tempfile.TemporaryDirectory() as tmp:
+            user_data_dir = Path(tmp)
+            runtime_dirs = ensure_runtime_dirs(user_data_dir=user_data_dir)
+
+            with mock.patch("odr_worker.db._read_migration_sql", side_effect=read_sql):
+                with self.assertRaises(DbInitError) as ctx:
+                    init_db(runtime_dirs=runtime_dirs)
+
+        self.assertIn("SQLite migration failed: 0002_tables", str(ctx.exception))
 
 
 if __name__ == "__main__":
