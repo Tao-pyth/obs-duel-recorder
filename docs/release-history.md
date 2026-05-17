@@ -34,3 +34,16 @@ The version tracking issue may contain the working release summary, but finalize
 - Deferred item: #97 (workflow validation automation; post-release because it changes `.github/workflows/**`)
 - Next version tracking issue: #88
 - Status: released
+
+### v0.3.0 - SQLite Foundation
+
+- Version tracking issue: #88
+- Milestone: `v0.3` (not set)
+- Release readiness checklist: `docs/release/v0.3-release-readiness.md`
+- Intended tag: `v0.3.0`
+- Intended tag target: `5b51a33454f469d6a782387ece8f5afba13b0d49`
+- Release summary: `docs/release/v0.3-release-summary.md`
+- Major PRs: #101, #104, #107
+- Deferred items: none
+- Next version tracking issue: #110
+- Status: ready_to_tag
