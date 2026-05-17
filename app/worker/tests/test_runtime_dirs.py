@@ -29,5 +29,20 @@ class RuntimeDirsTests(unittest.TestCase):
             self.assertTrue(dirs.exports_dir.is_dir())
 
 
+class WorkerConfigTests(unittest.TestCase):
+    def test_invalid_config_returns_clear_error(self) -> None:
+        from odr_worker.config import WorkerConfigError, load_worker_config
+        from odr_worker.runtime_dirs import ensure_runtime_dirs
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            dirs = ensure_runtime_dirs(user_data_dir=root)
+            config_path = dirs.config_dir / "worker.toml"
+            config_path.write_text("[worker]\nport = \"not-a-port\"\n", encoding="utf-8")
+
+            with self.assertRaisesRegex(WorkerConfigError, "Failed to load Worker config"):
+                load_worker_config(user_data_dir=root)
+
+
 if __name__ == "__main__":
     unittest.main()

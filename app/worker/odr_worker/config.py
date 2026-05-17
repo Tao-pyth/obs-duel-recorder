@@ -6,6 +6,10 @@ import os
 import tomllib
 
 
+class WorkerConfigError(RuntimeError):
+    """Raised when the Worker config file cannot be parsed or validated."""
+
+
 @dataclass(frozen=True)
 class WorkerConfig:
     """Worker configuration scaffold (v0.2).
@@ -69,11 +73,16 @@ def load_worker_config(user_data_dir: Path | None = None) -> LoadedWorkerConfig:
     if not config_path.exists():
         return LoadedWorkerConfig(config=WorkerConfig(), config_path=config_path, config_loaded=False)
 
-    raw = tomllib.loads(config_path.read_text(encoding="utf-8"))
-    config_table = raw.get("worker", {})
+    try:
+        raw = tomllib.loads(config_path.read_text(encoding="utf-8"))
+        config_table = raw.get("worker", {})
+        if not isinstance(config_table, dict):
+            raise ValueError("[worker] must be a TOML table")
 
-    host = str(config_table.get("host", WorkerConfig.host))
-    port = int(config_table.get("port", WorkerConfig.port))
+        host = str(config_table.get("host", WorkerConfig.host))
+        port = int(config_table.get("port", WorkerConfig.port))
+    except (OSError, tomllib.TOMLDecodeError, TypeError, ValueError) as exc:
+        raise WorkerConfigError(f"Failed to load Worker config from {config_path}: {exc}") from exc
 
     return LoadedWorkerConfig(
         config=WorkerConfig(host=host, port=port),

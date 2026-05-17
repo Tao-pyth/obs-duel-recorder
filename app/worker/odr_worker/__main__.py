@@ -5,7 +5,7 @@ import logging
 import sys
 import time
 
-from .config import get_repo_root, load_worker_config
+from .config import WorkerConfigError, get_repo_root, load_worker_config
 from .health import RuntimePaths
 from .logging_setup import init_worker_logging
 from .runtime_dirs import RuntimeDirError, ensure_runtime_dirs
@@ -34,7 +34,12 @@ def main(argv: list[str] | None = None) -> int:
         print(f"Runtime directory initialization failed: {exc}", file=sys.stderr)
         return 2
 
-    loaded = load_worker_config(runtime_dirs.user_data_dir)
+    try:
+        loaded = load_worker_config(runtime_dirs.user_data_dir)
+    except WorkerConfigError as exc:
+        print(f"Worker configuration error: {exc}", file=sys.stderr)
+        return 3
+
     host = args.host or loaded.config.host
     port = args.port or loaded.config.port
 
