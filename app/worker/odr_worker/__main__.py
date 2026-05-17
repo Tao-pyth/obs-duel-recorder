@@ -7,7 +7,6 @@ import time
 
 from .config import get_repo_root, load_worker_config
 from .health import RuntimePaths
-from .http_api import HealthState, create_app
 from .logging_setup import init_worker_logging
 from .runtime_dirs import RuntimeDirError, ensure_runtime_dirs
 from .version import __version__
@@ -80,9 +79,10 @@ def main(argv: list[str] | None = None) -> int:
 
     try:
         import uvicorn  # type: ignore
-    except Exception as exc:  # pragma: no cover
+        from .http_api import HealthState, create_app
+    except Exception:  # pragma: no cover
         print(
-            "uvicorn is required to run the Worker HTTP server.\n"
+            "Worker HTTP server dependencies are missing.\n"
             "Install dependencies: python -m pip install -r app/worker/requirements.txt\n",
             file=sys.stderr,
         )
