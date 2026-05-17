@@ -4,6 +4,10 @@ import argparse
 import logging
 import sys
 
+import uvicorn
+
+from .api import create_app
+from .config import get_default_config_path, load_worker_config
 from .logging_setup import init_worker_logging
 from .runtime_dirs import RuntimeDirError, ensure_runtime_dirs
 from .version import __version__
@@ -30,16 +34,40 @@ def main(argv: list[str] | None = None) -> int:
         return 2
 
     log_path = init_worker_logging(runtime_dirs.logs_dir)
-    logging.getLogger(__name__).info("Worker startup initialized")
+    logger = logging.getLogger(__name__)
 
-    print(
-        "OBS Duel Recorder Worker (v0.2 scaffold)\n"
-        "\n"
-        "This is a placeholder entrypoint added by the v0.2 skeleton issue.\n"
-        "Implementation is tracked by issues #11-#16.\n"
-        "\n"
-        f"Runtime directories ensured under: {runtime_dirs.user_data_dir}\n"
-        f"Logging initialized: {log_path}\n"
+    try:
+        loaded_config = load_worker_config(runtime_dirs.user_data_dir)
+    except Exception as exc:
+        config_path = get_default_config_path(runtime_dirs.user_data_dir)
+        logger.exception("Failed to load worker config", extra={"config_path": str(config_path)})
+        print(f"Failed to load Worker config: {config_path}\nReason: {exc}", file=sys.stderr)
+        print(f"Logs: {log_path}", file=sys.stderr)
+        return 3
+
+    logger.info("Worker startup initialized")
+    logger.info("version=%s", __version__)
+    logger.info("config_loaded=%s config_path=%s", loaded_config.config_loaded, loaded_config.config_path)
+    logger.info(
+        "paths app_dir=%s user_data_dir=%s config_dir=%s data_dir=%s logs_dir=%s",
+        (runtime_dirs.user_data_dir.parent / "app").resolve(),
+        runtime_dirs.user_data_dir,
+        runtime_dirs.config_dir,
+        runtime_dirs.data_dir,
+        runtime_dirs.logs_dir,
+    )
+
+    app = create_app(runtime_dirs=runtime_dirs, loaded_config=loaded_config)
+
+    logger.info("Starting API server host=%s port=%s", loaded_config.config.host, loaded_config.config.port)
+    logger.info("logs=%s", log_path)
+
+    uvicorn.run(
+        app,
+        host=loaded_config.config.host,
+        port=loaded_config.config.port,
+        log_config=None,
+        access_log=False,
     )
     return 0
 
