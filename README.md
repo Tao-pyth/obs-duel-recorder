@@ -22,11 +22,12 @@ Major and minor release completions are tagged as `vMajor.Minor.Patch`. See [Rel
 
 ## Current Development
 
-Current target:
-- v0.1 Repository Foundation
-- v0.2 Worker Core API
-- v0.3 SQLite Foundation
-- v0.4 OBS Plugin Skeleton
+Current release target:
+- `v0.2.0` - Worker Core API
+
+Next roadmap targets:
+- `v0.3` - SQLite Foundation
+- `v0.4` - OBS Plugin Skeleton
 
 ---
 
@@ -96,21 +97,30 @@ obs-duel-recorder/
 
 ## Current Status
 
-### Phase 1
+### Current Release Candidate
 
-- Repository scaffold
-- Worker API
-- SQLite schema
-- OBS Plugin skeleton
-- Documentation
+- Version: `v0.2.0`
+- Scope: Worker Core API
+- Status: pending release tag creation
+- Tracking issue: [#72](https://github.com/Tao-pyth/obs-duel-recorder/issues/72)
+- Release record: [docs/release-history.md](docs/release-history.md)
 
-### Planned
+### Planned for v0.2
 
-- Template matching
-- Upload automation
-- Recovery system
-- GitHub Actions packaging
-- GitHub Pages documentation
+- FastAPI Worker foundation
+- Localhost HTTP API
+- Worker startup flow
+- `GET /health` endpoint
+- Worker configuration loading
+- Logging initialization
+- Runtime directory creation
+- Smoke verification and developer notes
+
+### Planned After v0.2
+
+- `v0.3` - SQLite persistence and migration foundation
+- `v0.4` - OBS Plugin skeleton and Worker lifecycle management
+- Later roadmap items include overlay integration, queue recovery, template matching, upload automation, packaging, and GitHub Pages documentation.
 
 ---
 
