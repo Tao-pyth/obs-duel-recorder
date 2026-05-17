@@ -23,7 +23,7 @@ For v0.x, the API version is treated as a **minor-level contract**: patch releas
 
 ## Canonical fields
 
-The Worker SHOULD surface these fields via `GET /health`:
+The Worker SHOULD surface these fields via `GET /health` (canonical):
 
 - `version: string`
   - Worker version (SemVer recommended), e.g. `0.2.0`.
@@ -39,7 +39,7 @@ The Plugin SHOULD know its own:
 
 ## Where compatibility is surfaced
 
-### `GET /health`
+### `GET /health` (canonical)
 
 The Worker MUST expose a compatibility signal in `GET /health`.
 
@@ -53,13 +53,30 @@ Recommended minimal shape (illustrative):
 }
 ```
 
-The exact v0.2 `/health` payload is defined by v0.2 docs and acceptance criteria, but the compatibility fields above should be considered stable.
+The exact `/health` payload is version-scoped by acceptance criteria, but the compatibility fields above should be considered stable.
+
+### `GET /version` (optional)
+
+If the Worker exposes `GET /version`, it SHOULD include at least:
+
+```json
+{
+  "version": "0.2.0",
+  "api_version": "0.2"
+}
+```
+
+Notes:
+- `GET /version` is intended as a lightweight compatibility preflight.
+- `GET /version` must not be treated as a readiness/health signal by itself.
 
 ---
 
 ## Plugin behavior (high level)
 
-When the Plugin can reach the Worker API:
+### Compatibility gating
+
+When the Plugin can reach the Worker API and can read compatibility fields (via `/health` and/or `/version`):
 
 - If `api_version == expected_api_version`:
   - treat as compatible and continue.
@@ -69,14 +86,30 @@ When the Plugin can reach the Worker API:
   - avoid performing further API calls (do not attempt to continue with a mismatched contract).
   - show a clear action: update Plugin and/or Worker to a compatible pair.
 
-When the Worker is running but `GET /health` is unreachable:
+`version_mismatch` should be reserved for cases where a version range/matrix is explicitly defined. If no explicit rule exists yet, prefer using `api_incompatible` as the compatibility gate.
+
+### Port-collision / foreign process preflight
+
+Before spawning a Worker, the Plugin may do a preflight on the target `host:port`:
+
+- Preferred: call `GET /version` first (if available), then call `GET /health` if needed.
+- Fallback: call `GET /health` directly when `/version` is not implemented.
+
+If a response is reachable but is not compatible (or the Plugin cannot confirm it is the intended Worker instance), treat it as a **launch failure** (port collision / foreign process).
+
+### Startup vs mismatch
+
+When the Worker process is running but `GET /health` is unreachable:
 - treat as `starting` (early) or `unhealthy` (after timeout), not as a compatibility mismatch.
+
+Even if `GET /version` succeeds, a failing `GET /health` during startup should still map to startup/health diagnostics (not mismatch) unless an explicit compatibility mismatch is observed.
 
 ---
 
 ## Related docs
 
 - `docs/architecture/worker-diagnostics.md`
+- `docs/architecture/plugin-worker.md`
 - `docs/requirements/v0.2-worker-core-api-acceptance.md`
 
 Refs: #54
