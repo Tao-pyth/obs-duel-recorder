@@ -86,7 +86,10 @@ This check:
   - `docs/user/ja/usage.md`
 - Emits warnings if `docs/user/ja/index.md` does not link to expected pages.
 
-## Recurring validation (planned)
+## Recurring validation
+
+Scheduled documentation validation runs from `.github/workflows/docs-validation.yml`.
+It runs weekly and can also be started manually with `workflow_dispatch`.
 
 This section defines the recommended **reporting behavior** for scheduled documentation validation runs.
 
