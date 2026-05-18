@@ -27,6 +27,7 @@ Latest released version:
 
 Current development target:
 - `v0.4` - OBS Plugin Skeleton
+- Tracking issue: [#110](https://github.com/Tao-pyth/obs-duel-recorder/issues/110)
 
 Next roadmap target:
 - `v0.5` - Overlay Integration
