@@ -39,6 +39,21 @@ On startup, the Worker SHOULD:
 
 ---
 
+## Runtime-root Evidence (v0.4)
+
+When launched by the OBS Plugin, the Worker MUST log the resolved `ODR_USER_DATA_DIR` during startup.
+
+Minimum startup log evidence:
+
+- resolved `ODR_USER_DATA_DIR`
+- resolved log directory
+- whether the runtime root is the default `<repo>/user_data/` or an override
+- any manual-action diagnostic caused by a runtime-root continuity mismatch
+
+This evidence allows support and smoke verification to distinguish wrong runtime root, wrong persisted state, and wrong process / wrong port cases.
+
+---
+
 ## Scope Guardrails (v0.2)
 
 This document covers only minimal startup logging.
