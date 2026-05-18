@@ -106,6 +106,8 @@ Create persistent runtime storage.
 
 Establish OBS integration layer.
 
+Tracking issue: #110
+
 ### Planned
 
 - OBS Plugin scaffold
