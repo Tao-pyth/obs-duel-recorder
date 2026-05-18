@@ -4,6 +4,7 @@ import time
 from dataclasses import dataclass
 from pathlib import Path
 
+from .identity import INSTANCE_ID
 from .version import __version__
 
 
@@ -38,6 +39,7 @@ def build_health_payload(*, paths: WorkerPaths, config_loaded: bool, db: WorkerD
         "status": "ok",
         "version": __version__,
         "api_version": API_VERSION,
+        "instance_id": INSTANCE_ID,
         "uptime_seconds": uptime_seconds,
         "config_loaded": config_loaded,
         "runtime_dirs_ok": True,
