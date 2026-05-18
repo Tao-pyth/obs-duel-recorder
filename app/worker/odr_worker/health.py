@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import os
 import time
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from pathlib import Path
 
 from .identity import INSTANCE_ID
@@ -10,6 +12,8 @@ from .version import __version__
 
 API_VERSION = "0.3"
 _START_TIME = time.monotonic()
+PID = os.getpid()
+STARTED_AT = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
 
 
 @dataclass(frozen=True)
@@ -40,6 +44,8 @@ def build_health_payload(*, paths: WorkerPaths, config_loaded: bool, db: WorkerD
         "version": __version__,
         "api_version": API_VERSION,
         "instance_id": INSTANCE_ID,
+        "pid": PID,
+        "started_at": STARTED_AT,
         "uptime_seconds": uptime_seconds,
         "config_loaded": config_loaded,
         "runtime_dirs_ok": True,
