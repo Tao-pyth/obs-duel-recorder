@@ -38,6 +38,12 @@ Optional diagnostic fields:
   - A per-process unique identifier generated at Worker startup.
   - The Plugin can use this to diagnose stale-process, wrong-port, or singleton invariant violations.
   - `instance_id` is not the primary ownership gate in v0.4; the primary ownership scope is the singleton Worker for the resolved `ODR_USER_DATA_DIR`.
+- `pid: number`
+  - The Worker process id at the time the response is generated.
+  - Diagnostic evidence only (e.g. log correlation); it MUST NOT be treated as an ownership gate.
+- `started_at: string`
+  - Worker start timestamp in ISO 8601 format.
+  - Diagnostic evidence only (e.g. log correlation); it MUST NOT be treated as an ownership gate.
 
 - `pid: int`
   - The Worker process PID at the time of response.
