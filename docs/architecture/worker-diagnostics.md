@@ -105,11 +105,33 @@ The Plugin can map to a diagnostic state using (in priority order):
    - Health OK → `running`
    - Health not OK with a config-related reason → `config_error`
    - Health not OK with a runtime dir/path reason → `runtime_dir_error`
-   - Compatibility fields indicate mismatch → `version_mismatch` or `api_incompatible`
+   - Compatibility/version fields indicate mismatch → `version_mismatch` or `api_incompatible`
 
 Compatibility guidance:
 - Prefer `api_incompatible` when `api_version` does not match expected.
 - Reserve `version_mismatch` for cases where the Plugin explicitly defines a version range/matrix beyond API version gating.
+
+---
+
+## Failure Evidence (minimum)
+
+When transitioning into a failure-adjacent state (`starting` timeout, `unhealthy`, `config_error`, `runtime_dir_error`, `api_incompatible`, `crashed`), record a **minimal evidence bundle** so v0.4 smoke/release-readiness can be judged consistently.
+
+Principles:
+- Do not embed large logs into the Dock UI; **surface locations and identifiers**.
+- Keep “startup” (`starting`) evidence distinct from “mismatch” evidence (see `docs/architecture/compatibility.md`).
+
+Recommended minimum evidence items (per transition):
+- **When**: observation timestamp (wall-clock time).
+- **Where**: `host:port` probe target, resolved `ODR_USER_DATA_DIR`, and `<ODR_USER_DATA_DIR>/logs/`.
+- **Who**: `instance_id` (if available), `api_version`, and Worker version string.
+- **What**: last probe results (success/failure of `/version` and `/health`, plus status code / error kind).
+- **If crashed**: last known exit code (if available) and a note pointing to the Worker log directory.
+
+This evidence is expected to be present across:
+- OBS Plugin logs (primary for transitions and probe outcomes),
+- Worker logs under `user_data/logs/` (primary for internal exceptions),
+- v0.4 smoke notes (summary-level confirmation; see `docs/architecture/v0.4-smoke.md`).
 
 ---
 
