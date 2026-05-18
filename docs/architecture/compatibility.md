@@ -132,3 +132,4 @@ Even if `GET /version` succeeds, a failing `GET /health` during startup should s
 - `docs/requirements/v0.2-worker-core-api-acceptance.md`
 
 Refs: #54 #144
+Note: persisted DB / queue reuse boundary is tracked separately in #149.

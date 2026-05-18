@@ -100,6 +100,7 @@ Related design inputs:
 - #127 single-instance and port-collision contract
 - #144 instance_id adoption decision
 - #145 reused-Worker ownership contract
+- #149 persisted DB / queue reuse boundary (docs-first)
 
 ### Ownership
 
@@ -156,6 +157,26 @@ Optional refinement:
 - If the Worker implements `GET /version`, the plugin may use it as a lighter preflight (read `version` / `api_version` / `instance_id`) before calling `/health`.
 
 The definition of the intended Worker is the singleton Worker for the resolved `ODR_USER_DATA_DIR`. `instance_id` can help diagnose unexpected process changes, but the runtime-root singleton is the primary contract.
+
+### Persisted DB / Queue Reuse Boundary (docs-first)
+
+When the Plugin discovers an already-running healthy singleton Worker for the same `ODR_USER_DATA_DIR`, the Plugin should prefer reuse. However, **reusing the runtime root does not automatically mean every persisted state under it is safe to reuse**.
+
+Minimum policy (v0.4 docs-first):
+
+- The Plugin/Worker MUST treat `ODR_USER_DATA_DIR` as the persisted-state boundary (config, DB, queue, logs all live under this root).
+- The Worker SHOULD surface enough persisted-state evidence on startup (logs and/or diagnostics) so that "right runtime root / wrong persisted state" can be distinguished.
+- If the Worker detects a persisted-state condition it cannot safely interpret, it MUST fail closed (do not silently continue) and surface **manual action required** diagnostics instead.
+
+Recommended persisted-state evidence (v0.4):
+- resolved `ODR_USER_DATA_DIR`
+- `version` / `api_version` (from `/health`)
+- DB openability + `schema_version` (or an equivalent migration marker)
+- queue state summary (counts of in-flight items such as `uploading`, `need_manual_review`, etc., when available)
+
+This policy is intentionally minimal and is expanded/validated in:
+- persisted DB / queue reuse boundary: #149
+- SQLite migration/contract: #90
 
 ### Handoff to Other v0.4 Concerns
 
