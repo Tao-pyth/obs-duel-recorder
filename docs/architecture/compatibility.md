@@ -32,12 +32,20 @@ The Worker SHOULD surface these fields via `GET /health` (canonical):
 - `api_version: string`
   - API contract version (SemVer-like string), e.g. `0.2` for the v0.2 contract.
 
-Optional diagnostic field:
+Optional diagnostic fields:
 
 - `instance_id: string`
   - A per-process unique identifier generated at Worker startup.
   - The Plugin can use this to diagnose stale-process, wrong-port, or singleton invariant violations.
   - `instance_id` is not the primary ownership gate in v0.4; the primary ownership scope is the singleton Worker for the resolved `ODR_USER_DATA_DIR`.
+
+- `pid: int`
+  - The Worker process PID at the time of response.
+  - Use as an additional signal to distinguish stale/foreign processes; do not treat as an ownership gate.
+
+- `started_at: string`
+  - The Worker process start time in UTC ISO 8601 with `Z` suffix, e.g. `2026-05-18T04:06:26Z`.
+  - Helps wrapper/launch diagnostics correlate probes and avoid mistaking a foreign process for the singleton Worker; do not treat as an ownership gate.
 
 The Plugin SHOULD know its own:
 
@@ -60,7 +68,9 @@ Recommended minimal shape (illustrative):
   "status": "ok",
   "version": "0.2.0",
   "api_version": "0.2",
-  "instance_id": "c4dbf6b1b2a34f59a39f0bbaf43ad8a2"
+  "instance_id": "c4dbf6b1b2a34f59a39f0bbaf43ad8a2",
+  "pid": 12345,
+  "started_at": "2026-05-18T04:06:26Z"
 }
 ```
 
@@ -74,7 +84,9 @@ If the Worker exposes `GET /version`, it SHOULD include at least:
 {
   "version": "0.2.0",
   "api_version": "0.2",
-  "instance_id": "c4dbf6b1b2a34f59a39f0bbaf43ad8a2"
+  "instance_id": "c4dbf6b1b2a34f59a39f0bbaf43ad8a2",
+  "pid": 12345,
+  "started_at": "2026-05-18T04:06:26Z"
 }
 ```
 
