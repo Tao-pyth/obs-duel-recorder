@@ -58,7 +58,7 @@ function Get-HeadingAnchors([string]$markdown) {
   }
 
   # Also allow explicit HTML ids: <a id="..."></a>
-  foreach ($m in [regex]::Matches($markdown, "(?i)<a\s+[^>]*id\s*=\s*`\"([^`\"]+)`\"[^>]*>")) {
+  foreach ($m in [regex]::Matches($markdown, '(?i)<a\s+[^>]*id\s*=\s*"([^"]+)"[^>]*>')) {
     $id = $m.Groups[1].Value.Trim()
     if ($id) { [void]$anchors.Add($id) }
   }
@@ -68,7 +68,7 @@ function Get-HeadingAnchors([string]$markdown) {
 
 if ([string]::IsNullOrWhiteSpace($Root)) {
   $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-  $Root = (Resolve-Path (Join-Path $scriptDir "..\\..")).Path
+  $Root = (Resolve-Path (Join-Path $scriptDir "..\..")).Path
 }
 
 $rootPath = (Resolve-Path $Root).Path
