@@ -1,5 +1,7 @@
 # User Documentation
 
+Status note: These pages may include planned (not-yet-released) steps. Please confirm availability in the [Roadmap](../roadmap.md).
+
 Select language / 言語を選択してください。
 
 - 日本語: [`docs/user/ja/index.md`](ja/index.md)

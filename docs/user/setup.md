@@ -1,5 +1,7 @@
 # First Setup
 
+Status note: This page may include planned (not-yet-released) steps. Please confirm availability in the [Roadmap](../roadmap.md).
+
 ## Initial Startup
 
 If SQLite does not exist:

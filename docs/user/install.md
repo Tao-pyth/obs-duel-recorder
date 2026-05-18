@@ -1,5 +1,7 @@
 # Installation
 
+Status note: This page may include planned (not-yet-released) steps. Please confirm availability in the [Roadmap](../roadmap.md).
+
 ## Requirements
 
 - Windows
