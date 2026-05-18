@@ -39,6 +39,7 @@ class HealthEndpointTests(unittest.TestCase):
                 "status",
                 "version",
                 "api_version",
+                "instance_id",
                 "uptime_seconds",
                 "config_loaded",
                 "runtime_dirs_ok",
@@ -78,7 +79,7 @@ class HealthEndpointTests(unittest.TestCase):
             self.assertEqual(resp.status_code, 200)
 
             data = resp.json()
-            for key in ("version", "api_version"):
+            for key in ("version", "api_version", "instance_id"):
                 self.assertIn(key, data)
 
 
