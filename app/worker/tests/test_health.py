@@ -3,12 +3,21 @@ from __future__ import annotations
 import sys
 import tempfile
 import unittest
+from datetime import datetime
 from pathlib import Path
 
 
 # Ensure `app/worker` is on sys.path so `import odr_worker` works without install.
 WORKER_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(WORKER_ROOT))
+
+
+def _parse_started_at(value: object) -> None:
+    if not isinstance(value, str):
+        raise AssertionError("started_at must be a string")
+    if not value.endswith("Z"):
+        raise AssertionError("started_at must be in UTC (Z suffix)")
+    datetime.fromisoformat(value.replace("Z", "+00:00"))
 
 
 class HealthEndpointTests(unittest.TestCase):
@@ -40,12 +49,17 @@ class HealthEndpointTests(unittest.TestCase):
                 "version",
                 "api_version",
                 "instance_id",
+                "pid",
+                "started_at",
                 "uptime_seconds",
                 "config_loaded",
                 "runtime_dirs_ok",
                 "paths",
             ):
                 self.assertIn(key, data)
+
+            self.assertIsInstance(data["pid"], int)
+            _parse_started_at(data["started_at"])
 
             for path_key in (
                 "app_dir",
@@ -79,8 +93,11 @@ class HealthEndpointTests(unittest.TestCase):
             self.assertEqual(resp.status_code, 200)
 
             data = resp.json()
-            for key in ("version", "api_version", "instance_id"):
+            for key in ("version", "api_version", "instance_id", "pid", "started_at"):
                 self.assertIn(key, data)
+
+            self.assertIsInstance(data["pid"], int)
+            _parse_started_at(data["started_at"])
 
 
 if __name__ == "__main__":
