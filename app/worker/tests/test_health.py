@@ -118,13 +118,14 @@ class HealthEndpointTests(unittest.TestCase):
             version = client.get("/version").json()
             health2 = client.get("/health").json()
 
-            keys = ["instance_id"]
-            if all(k in health1 for k in ("pid", "started_at")) and all(
-                k in version for k in ("pid", "started_at")
-            ):
-                keys.extend(["pid", "started_at"])
+            for key in ("instance_id", "pid", "started_at"):
+                if key not in health1 and key not in version:
+                    continue
 
-            for key in keys:
+                self.assertIn(key, health1)
+                self.assertIn(key, version)
+                self.assertIn(key, health2)
+
                 self.assertEqual(health1[key], version[key])
                 self.assertEqual(health1[key], health2[key])
 
