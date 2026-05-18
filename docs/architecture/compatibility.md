@@ -16,6 +16,8 @@ Non-goals:
 
 - **Worker version**: the Worker binary/app version (SemVer).
 - **API version**: the localhost HTTP API contract version used for compatibility gating.
+- **Runtime root**: the resolved `ODR_USER_DATA_DIR` used by the Worker for config, data, and logs.
+- **Singleton Worker**: the only Worker process that should serve one runtime root.
 
 For v0.x, the API version is treated as a **minor-level contract**: patch releases must remain compatible.
 
@@ -30,16 +32,18 @@ The Worker SHOULD surface these fields via `GET /health` (canonical):
 - `api_version: string`
   - API contract version (SemVer-like string), e.g. `0.2` for the v0.2 contract.
 
-Optional (recommended for foreign-process / port-collision detection):
+Optional diagnostic field:
 
 - `instance_id: string`
   - A per-process unique identifier generated at Worker startup.
-  - The Plugin can use this to confirm the reachable localhost API is the intended Worker instance.
+  - The Plugin can use this to diagnose stale-process, wrong-port, or singleton invariant violations.
+  - `instance_id` is not the primary ownership gate in v0.4; the primary ownership scope is the singleton Worker for the resolved `ODR_USER_DATA_DIR`.
 
 The Plugin SHOULD know its own:
 
 - `plugin_version: string`
 - `expected_api_version: string`
+- resolved `ODR_USER_DATA_DIR`
 
 ---
 
@@ -96,14 +100,21 @@ When the Plugin can reach the Worker API and can read compatibility fields (via 
 
 `version_mismatch` should be reserved for cases where a version range/matrix is explicitly defined. If no explicit rule exists yet, prefer using `api_incompatible` as the compatibility gate.
 
-### Port-collision / foreign process preflight
+### Singleton and port-collision preflight
 
-Before spawning a Worker, the Plugin may do a preflight on the target `host:port`:
+Before spawning a Worker, the Plugin should do a preflight on the target `host:port`:
 
 - Preferred: call `GET /version` first (if available), then call `GET /health` if needed.
 - Fallback: call `GET /health` directly when `/version` is not implemented.
 
-If a response is reachable but is not compatible (or the Plugin cannot confirm it is the intended Worker instance), treat it as a **launch failure** (port collision / foreign process).
+If a response is reachable, compatible, and belongs to the same runtime-root singleton scope, the Plugin should reuse that Worker instead of spawning another one.
+
+If a response is reachable but is not compatible, or the Plugin cannot confirm the same runtime-root singleton scope, treat it as a **launch failure** (port collision / foreign process).
+
+`instance_id` handling:
+- Missing `instance_id` should not block v0.4 release readiness by itself.
+- If `instance_id` changes unexpectedly during the same runtime-root session, surface a diagnostic warning or error for stale-process / wrong-port investigation.
+- `instance_id` should support singleton diagnostics, not replace runtime-root singleton ownership.
 
 ### Startup vs mismatch
 
@@ -120,4 +131,4 @@ Even if `GET /version` succeeds, a failing `GET /health` during startup should s
 - `docs/architecture/plugin-worker.md`
 - `docs/requirements/v0.2-worker-core-api-acceptance.md`
 
-Refs: #54
+Refs: #54 #144
