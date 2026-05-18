@@ -30,6 +30,12 @@ The Worker SHOULD surface these fields via `GET /health` (canonical):
 - `api_version: string`
   - API contract version (SemVer-like string), e.g. `0.2` for the v0.2 contract.
 
+Optional (recommended for foreign-process / port-collision detection):
+
+- `instance_id: string`
+  - A per-process unique identifier generated at Worker startup.
+  - The Plugin can use this to confirm the reachable localhost API is the intended Worker instance.
+
 The Plugin SHOULD know its own:
 
 - `plugin_version: string`
@@ -49,7 +55,8 @@ Recommended minimal shape (illustrative):
 {
   "status": "ok",
   "version": "0.2.0",
-  "api_version": "0.2"
+  "api_version": "0.2",
+  "instance_id": "c4dbf6b1b2a34f59a39f0bbaf43ad8a2"
 }
 ```
 
@@ -62,7 +69,8 @@ If the Worker exposes `GET /version`, it SHOULD include at least:
 ```json
 {
   "version": "0.2.0",
-  "api_version": "0.2"
+  "api_version": "0.2",
+  "instance_id": "c4dbf6b1b2a34f59a39f0bbaf43ad8a2"
 }
 ```
 
