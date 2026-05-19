@@ -2,7 +2,7 @@
 
 OBS Duel Recorder is an OBS Studio based duel recording assistant for Yu-Gi-Oh! Master Duel.
 
-This project automatically records duel segments, manages match history, and uploads archived videos to YouTube.
+This project is being built to record duel segments, manage match history, and upload archived videos to YouTube.
 
 The project is designed around an OBS Plugin + Python Worker architecture.
 
@@ -44,16 +44,22 @@ Yu-Gi-Oh! Master Duel assets are not distributed with this software.
 
 ---
 
-## Features
+## Features (Roadmap Overview)
 
-- Automatic duel recording
-- Match queue management
-- YouTube archive upload
-- OBS overlay integration
-- Match memo support
-- SQLite based history management
-- Upload retry / recovery support
-- GitHub Actions based packaging
+Status note: This list includes current foundations and planned roadmap capabilities. For release availability, use [Current Development](#current-development), [Current Status](#current-status), and the [Roadmap](docs/roadmap.md) as the source of truth.
+
+Current released foundation:
+- SQLite runtime storage foundation
+- Worker runtime, health, logging, and migration foundations
+
+Planned roadmap capabilities:
+- Automatic duel recording (`v0.8`)
+- Match queue management (`v0.7`)
+- YouTube archive upload (`v1.0`)
+- OBS overlay integration (`v0.5`)
+- Match memo support (`v1.1`)
+- Upload retry / recovery support (`v0.7`)
+- GitHub Actions based packaging (`v1.4+`)
 
 ---
 

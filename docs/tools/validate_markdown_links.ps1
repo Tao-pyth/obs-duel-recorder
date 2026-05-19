@@ -31,7 +31,7 @@ function Get-HeadingAnchors([string]$markdown) {
       # Strip trailing hashes: "## Title ##"
       $heading = [regex]::Replace($heading, "\s#+\s*$", "")
       # Remove Markdown inline code/backticks.
-      $heading = [regex]::Replace($heading, "`{1,3}([^`]+)`{1,3}", '$1')
+      $heading = [regex]::Replace($heading, '`{1,3}([^`]+)`{1,3}', '$1')
       # Remove emphasis markers.
       $heading = $heading -replace "\*", ""
       $heading = $heading -replace "_", ""

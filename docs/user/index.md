@@ -1,6 +1,6 @@
 # User Documentation
 
-Status note: These pages may include planned (not-yet-released) steps. Please confirm availability in the [Roadmap](../roadmap.md).
+Status contract: These pages are roadmap-facing user docs and may include planned (not-yet-released) steps. Treat a step as currently available only when the latest release notes or [Roadmap](../roadmap.md) mark its version as released.
 
 Select language / 言語を選択してください。
 

@@ -1,6 +1,6 @@
 # Usage
 
-Status note: This page may include planned (not-yet-released) steps. Please confirm availability in the [Roadmap](../roadmap.md).
+Status note: This page may include planned (not-yet-released) usage flows, including automatic recording, manual controls, retry, and queue recovery. Confirm release availability in the [Roadmap](../roadmap.md) before treating a flow as current.
 
 ## Automatic Recording
 

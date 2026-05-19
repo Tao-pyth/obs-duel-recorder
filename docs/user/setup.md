@@ -1,6 +1,6 @@
 # First Setup
 
-Status note: This page may include planned (not-yet-released) steps. Please confirm availability in the [Roadmap](../roadmap.md).
+Status note: This page may include planned (not-yet-released) setup flows, including OAuth and overlay setup. Confirm release availability in the [Roadmap](../roadmap.md) before treating a step as current.
 
 ## Initial Startup
 
