@@ -1,6 +1,6 @@
 # Installation
 
-Status note: This page may include planned (not-yet-released) steps. Please confirm availability in the [Roadmap](../roadmap.md).
+Status note: This page may include planned (not-yet-released) installation steps. Confirm release availability in the [Roadmap](../roadmap.md) before treating a step as current.
 
 ## Requirements
 
