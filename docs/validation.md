@@ -9,10 +9,19 @@ This page defines what "documentation validation" means for this repository.
 
 ## Validation scope
 
-Validate these paths:
+Canonical doc inventory:
 
-- `README.md`, `README*`
-- `docs/**` (including `docs/user/**`)
+- `docs/doc-inventory.md`
+
+Canonical validator target set:
+
+- repo root `README*.md`
+- `docs/**/*.md` (includes `docs/user/**`)
+
+Canonical user-doc sources:
+
+- English topic list: `docs/user/index.md`
+- Japanese index: `docs/user/ja/index.md`
 
 ## Markdown link checks
 
@@ -61,7 +70,7 @@ $fail | Format-Table -AutoSize
 if ($fail.Count -gt 0) { exit 1 }
 ```
 
-## Localization coverage (English -> Japanese)
+## Localization coverage (English / Japanese)
 
 Validate, at a minimum:
 
@@ -79,7 +88,7 @@ python scripts/validate_jp_user_docs_coverage.py
 
 This check:
 
-- Treats the list under `docs/user/index.md` -> "Current user docs (English-base, pre-multilingual)" as canonical user topics.
+- Treats the list under `docs/user/index.md` ("Current user docs (English-base, pre-multilingual)") as canonical user topics.
 - Requires minimum v0.2 Japanese entrypoints for those topics:
   - `docs/user/ja/install.md`
   - `docs/user/ja/first-setup.md`
