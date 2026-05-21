@@ -184,6 +184,7 @@ Create recovery-safe queue processing.
 - network retry handling
 - quota_waiting state
 - need_manual_review state
+- manual adjudication contract for `need_manual_review` (docs/architecture/queue.md; tracked in #237)
 - startup recovery processing
 
 ### Deliverables
