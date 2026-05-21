@@ -14,6 +14,7 @@ This directory is the documentation entry point for OBS Duel Recorder.
 - [v0.3 release readiness checklist](release/v0.3-release-readiness.md)
 - [v0.4 release readiness checklist](release/v0.4-release-readiness.md)
 - [v0.1 Repository Foundation acceptance checklist](requirements/v0.1-acceptance.md)
+- [v0.2 Worker Core API acceptance checklist](requirements/v0.2-worker-core-api-acceptance.md)
 - [v0.3 SQLite Foundation acceptance checklist](requirements/v0.3-sqlite-foundation-acceptance.md)
 - [v0.4 OBS Plugin Skeleton acceptance checklist](requirements/v0.4-obs-plugin-skeleton-acceptance.md)
 
@@ -34,6 +35,7 @@ Architecture documents describe technical behavior and responsibility boundaries
 
 User-facing setup and usage documents live under `docs/user/`.
 
+- [User docs index (language selector / 言語選択)](user/index.md)
 - [Installation](user/install.md)
 - [First setup](user/setup.md)
 - [Usage](user/usage.md)
@@ -51,15 +53,3 @@ Documentation validation policy lives at:
 - Treat English documents as canonical; translations should not contradict the English source.
 - Keep completed release point information in `docs/release-history.md` or a version-specific release summary.
 - Do not use documentation pages to store runtime data, credentials, screenshots, or game assets.
-
-## Validation
-
-Validate internal Markdown links (files within the repository):
-
-```powershell
-python scripts/validate_markdown_links.py
-```
-
-Notes:
-- Checks `README*.md` and `docs/**/*.md`.
-- Ignores `http(s)` and `mailto:` targets.
