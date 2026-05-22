@@ -1,5 +1,6 @@
 #pragma once
 
+#include "plugin-settings.hpp"
 #include "worker-launcher.hpp"
 
 class QLabel;
