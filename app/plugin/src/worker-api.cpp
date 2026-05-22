@@ -56,7 +56,21 @@ struct HttpResponse {
 	std::string error;
 };
 
+HttpResponse http_request(const WorkerEndpoint &endpoint, const wchar_t *method, const wchar_t *path,
+			  const std::string &request_body);
+
 HttpResponse http_get(const WorkerEndpoint &endpoint, const wchar_t *path)
+{
+	return http_request(endpoint, L"GET", path, {});
+}
+
+HttpResponse http_post_json(const WorkerEndpoint &endpoint, const wchar_t *path, const std::string &body)
+{
+	return http_request(endpoint, L"POST", path, body);
+}
+
+HttpResponse http_request(const WorkerEndpoint &endpoint, const wchar_t *method, const wchar_t *path,
+			  const std::string &request_body)
 {
 	HttpResponse response;
 	HINTERNET session = WinHttpOpen(L"OBS Duel Recorder Plugin/0.4",
@@ -77,7 +91,7 @@ HttpResponse http_get(const WorkerEndpoint &endpoint, const wchar_t *path)
 		return response;
 	}
 
-	HINTERNET request = WinHttpOpenRequest(connection, L"GET", path, nullptr,
+	HINTERNET request = WinHttpOpenRequest(connection, method, path, nullptr,
 					      WINHTTP_NO_REFERER,
 					      WINHTTP_DEFAULT_ACCEPT_TYPES, 0);
 	if (!request) {
@@ -87,8 +101,14 @@ HttpResponse http_get(const WorkerEndpoint &endpoint, const wchar_t *path)
 		return response;
 	}
 
-	if (!WinHttpSendRequest(request, WINHTTP_NO_ADDITIONAL_HEADERS, 0,
-				WINHTTP_NO_REQUEST_DATA, 0, 0, 0) ||
+	const wchar_t *headers = request_body.empty() ? WINHTTP_NO_ADDITIONAL_HEADERS : L"Content-Type: application/json";
+	const DWORD headers_length = request_body.empty() ? 0 : static_cast<DWORD>(-1L);
+	LPVOID body_data = request_body.empty() ? WINHTTP_NO_REQUEST_DATA :
+					    const_cast<char *>(request_body.data());
+	const DWORD body_size = static_cast<DWORD>(request_body.size());
+
+	if (!WinHttpSendRequest(request, headers, headers_length,
+				body_data, body_size, body_size, 0) ||
 	    !WinHttpReceiveResponse(request, nullptr)) {
 		response.error = "Worker API did not respond";
 		WinHttpCloseHandle(request);
@@ -264,6 +284,61 @@ OverlayFetchResult LocalhostApiClient::fetch_overlay_state(const WorkerEndpoint 
 #else
 	result.status = OverlayFetchStatus::unavailable;
 	result.error = "Overlay state probing is only implemented on Windows";
+	return result;
+#endif
+}
+
+RecordingCommandResult LocalhostApiClient::send_recording_command(const WorkerEndpoint &endpoint,
+								  const std::string &action,
+								  const std::string &source) const
+{
+	RecordingCommandResult result;
+
+#ifdef _WIN32
+	const std::string body = "{\"action\":\"" + action + "\",\"source\":\"" + source + "\"}";
+	const HttpResponse response = http_post_json(endpoint, L"/recording/command", body);
+	result.http_status = response.status;
+	result.body = response.body;
+
+	if (!response.ok) {
+		result.status = RecordingCommandStatus::unavailable;
+		result.error = response.error;
+		return result;
+	}
+
+	if (response.status == 400 || response.status == 409) {
+		result.status = RecordingCommandStatus::rejected;
+		result.error = extract_json_string(response.body, "message");
+		if (result.error.empty()) {
+			result.error = "POST /recording/command rejected command";
+		}
+		return result;
+	}
+
+	if (response.status != 200) {
+		result.status = RecordingCommandStatus::invalid_response;
+		result.error = "POST /recording/command returned non-200 status";
+		return result;
+	}
+
+	result.state.state = extract_json_string(response.body, "state");
+	result.state.session_id = extract_json_string(response.body, "session_id");
+	result.state.command_source = extract_json_string(response.body, "command_source");
+	result.state.last_action = extract_json_string(response.body, "last_action");
+	result.state.reason = extract_json_string(response.body, "reason");
+	result.state.updated_at = extract_json_string(response.body, "updated_at");
+
+	if (result.state.state.empty() || result.state.updated_at.empty()) {
+		result.status = RecordingCommandStatus::invalid_response;
+		result.error = "POST /recording/command response is missing required fields";
+		return result;
+	}
+
+	result.status = RecordingCommandStatus::accepted;
+	return result;
+#else
+	result.status = RecordingCommandStatus::unavailable;
+	result.error = "Recording commands are only implemented on Windows";
 	return result;
 #endif
 }

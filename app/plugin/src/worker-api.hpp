@@ -58,12 +58,43 @@ struct OverlayFetchResult {
 	std::string body;
 };
 
+enum class RecordingCommandStatus {
+	accepted,
+	unavailable,
+	rejected,
+	invalid_response,
+};
+
+struct RecordingStatePayload {
+	std::string state;
+	std::string session_id;
+	std::string command_source;
+	std::string last_action;
+	std::string reason;
+	std::string updated_at;
+};
+
+struct RecordingCommandResult {
+	RecordingCommandStatus status = RecordingCommandStatus::unavailable;
+	unsigned long http_status = 0;
+	RecordingStatePayload state;
+	std::string error;
+	std::string body;
+
+	bool accepted() const
+	{
+		return status == RecordingCommandStatus::accepted;
+	}
+};
+
 class LocalhostApiClient {
 public:
 	explicit LocalhostApiClient(std::string expected_api_version, std::string expected_worker_version);
 
 	WorkerProbeResult probe_health(const WorkerEndpoint &endpoint, const std::wstring &expected_user_data_dir) const;
 	OverlayFetchResult fetch_overlay_state(const WorkerEndpoint &endpoint) const;
+	RecordingCommandResult send_recording_command(const WorkerEndpoint &endpoint, const std::string &action,
+						      const std::string &source) const;
 
 private:
 	std::string expected_api_version_;

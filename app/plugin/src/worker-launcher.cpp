@@ -376,6 +376,22 @@ WorkerStatusSnapshot WorkerProcessManager::status_snapshot() const
 	return status_;
 }
 
+RecordingCommandResult WorkerProcessManager::send_recording_command(const std::string &action, const std::string &source)
+{
+	WorkerEndpoint endpoint;
+	{
+		std::lock_guard<std::mutex> lock(mutex_);
+		endpoint = status_.endpoint;
+		if (status_.state != WorkerDiagnosticState::running) {
+			RecordingCommandResult result;
+			result.status = RecordingCommandStatus::unavailable;
+			result.error = "Worker is not running";
+			return result;
+		}
+	}
+	return api_client_.send_recording_command(endpoint, action, source);
+}
+
 void WorkerProcessManager::stop()
 {
 	stop_requested_ = true;

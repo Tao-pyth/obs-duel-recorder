@@ -18,9 +18,9 @@ The Plugin must not:
 - directly manipulate SQLite
 - directly upload to YouTube
 
-## Current v0.5 Overlay Integration
+## Current v0.6 Recording State Management
 
-The current scaffold keeps the v0.4 Worker lifecycle surface and adds the first v0.5 overlay source-management layer:
+The current scaffold keeps the v0.5 overlay surface and adds v0.6 manual recording lifecycle controls:
 
 - Build a loadable OBS module.
 - Register minimal OBS Frontend API lifecycle hooks.
@@ -33,9 +33,11 @@ The current scaffold keeps the v0.4 Worker lifecycle surface and adds the first 
 - Load additive `overlay` settings with v0.5 defaults.
 - Find or create the fixed OBS Text Sources for deck name, sequence number, result, opponent deck, and recording state display.
 - Log stable overlay diagnostics for missing, duplicated, unsupported, unavailable, or failed source operations.
+- Add Dock buttons for manual OBS recording start and stop.
+- Synchronize OBS recording started/stopped frontend events through the Worker recording-state API.
 
 Current non-goals:
-- Full control UI.
+- Full control UI beyond the v0.6 manual start/stop controls.
 - Overlay UX.
 - OAuth/upload setup.
 
@@ -134,7 +136,7 @@ Behavior:
 
 The Plugin registers an `OBS Duel Recorder` Dock through the OBS Frontend API.
 
-The v0.4 Dock is status-first. It displays:
+The Dock is status-first. It displays:
 - diagnostic state (`not_started`, `starting`, `running`, `unhealthy`, `config_error`, `runtime_dir_error`, `api_incompatible`, `crashed`)
 - endpoint
 - resolved `user_data_dir`
@@ -142,8 +144,18 @@ The v0.4 Dock is status-first. It displays:
 - Worker ownership (`plugin-spawned` or `reused-existing`)
 - latest probe/detail text
 - recommended action
+- manual start/stop recording buttons
 
-The Dock intentionally does not provide full Worker controls in v0.4.
+The Dock intentionally does not provide full Worker controls beyond the v0.6 manual recording lifecycle actions.
+
+## Manual Recording Controls
+
+The Dock `Start Recording` and `Stop Recording` buttons use the v0.6 recording-state API:
+
+- `Start Recording` sends `POST /recording/command` with `{"action":"start","source":"manual"}` and then requests OBS recording start.
+- `Stop Recording` sends `POST /recording/command` with `{"action":"stop","source":"manual"}` and then requests OBS recording stop.
+- OBS `RECORDING_STARTED` and `RECORDING_STOPPED` frontend events send `confirm_started` and `confirm_stopped` commands back to the Worker.
+- Command failures are logged with stable HTTP/status evidence and do not crash OBS.
 
 ## Worker Launch Inputs
 
@@ -214,6 +226,6 @@ The script writes `build/plugin/v0.4-plugin-smoke-report.md` by default.
 
 ## Current Lifecycle Surface
 
-The scaffold registers an OBS Frontend API callback, logs lightweight lifecycle events, runs the initial Worker preflight/launch/heartbeat flow, and surfaces status-first diagnostics in a Dock.
+The scaffold registers OBS Frontend API callbacks, logs lightweight lifecycle events, runs the initial Worker preflight/launch/heartbeat flow, surfaces status-first diagnostics in a Dock, and provides v0.6 manual recording start/stop controls.
 
 Heavy work must remain outside the plugin process. Full controls, overlay UX, and upload/OAuth setup remain later-version work.

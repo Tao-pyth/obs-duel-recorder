@@ -144,6 +144,15 @@ void PluginUiController::register_ui()
 	auto *settings_button = new QPushButton("Settings");
 	QObject::connect(settings_button, &QPushButton::clicked, [this]() { show_settings_dialog(); });
 	root->addWidget(settings_button);
+
+	auto *recording_controls = new QHBoxLayout;
+	start_button_ = new QPushButton("Start Recording");
+	stop_button_ = new QPushButton("Stop Recording");
+	QObject::connect(start_button_, &QPushButton::clicked, [this]() { request_manual_start(); });
+	QObject::connect(stop_button_, &QPushButton::clicked, [this]() { request_manual_stop(); });
+	recording_controls->addWidget(start_button_);
+	recording_controls->addWidget(stop_button_);
+	root->addLayout(recording_controls);
 	root->addStretch(1);
 
 	if (!obs_frontend_add_dock_by_id(kDockId, "OBS Duel Recorder", dock_widget_)) {
@@ -191,6 +200,13 @@ void PluginUiController::refresh()
 	ownership_value_->setText(QString::fromUtf8(ownership_name(snapshot.ownership)));
 	detail_value_->setText(qstr_utf8(snapshot.error.empty() ? snapshot.last_probe_summary : snapshot.error));
 	action_value_->setText(QString::fromUtf8(recommended_action(snapshot.state)));
+	const bool worker_running = snapshot.state == WorkerDiagnosticState::running;
+	if (start_button_) {
+		start_button_->setEnabled(worker_running);
+	}
+	if (stop_button_) {
+		stop_button_->setEnabled(worker_running);
+	}
 
 	if (snapshot.overlay_state_available &&
 	    (!overlay_state_applied_ ||
@@ -274,6 +290,58 @@ void PluginUiController::save_settings_and_restart(const PluginSettings &setting
 	worker_manager_.stop();
 	worker_manager_.start_async(make_launch_config(settings));
 	refresh();
+}
+
+void PluginUiController::request_manual_start()
+{
+	RecordingCommandResult start = worker_manager_.send_recording_command("start", "manual");
+	log_recording_command_result("start", start);
+	if (!start.accepted()) {
+		refresh();
+		return;
+	}
+
+	if (obs_frontend_recording_active()) {
+		RecordingCommandResult confirm = worker_manager_.send_recording_command("confirm_started", "manual");
+		log_recording_command_result("confirm_started", confirm);
+	} else {
+		obs_frontend_recording_start();
+		blog(LOG_INFO, "%s recording manual_start requested_obs_start", kLogPrefix);
+	}
+	refresh();
+}
+
+void PluginUiController::request_manual_stop()
+{
+	RecordingCommandResult stop = worker_manager_.send_recording_command("stop", "manual");
+	log_recording_command_result("stop", stop);
+	if (!stop.accepted()) {
+		refresh();
+		return;
+	}
+
+	if (obs_frontend_recording_active()) {
+		obs_frontend_recording_stop();
+		blog(LOG_INFO, "%s recording manual_stop requested_obs_stop", kLogPrefix);
+	} else {
+		RecordingCommandResult confirm = worker_manager_.send_recording_command("confirm_stopped", "manual");
+		log_recording_command_result("confirm_stopped", confirm);
+	}
+	refresh();
+}
+
+void PluginUiController::log_recording_command_result(const char *action, const RecordingCommandResult &result)
+{
+	if (result.accepted()) {
+		blog(LOG_INFO,
+		     "%s recording command=%s accepted state=%s session_id=%s source=%s last_action=%s",
+		     kLogPrefix, action, result.state.state.c_str(), result.state.session_id.c_str(),
+		     result.state.command_source.c_str(), result.state.last_action.c_str());
+		return;
+	}
+
+	blog(LOG_WARNING, "%s recording command=%s failed status=%d http=%lu error=%s",
+	     kLogPrefix, action, static_cast<int>(result.status), result.http_status, result.error.c_str());
 }
 
 } // namespace odr::plugin

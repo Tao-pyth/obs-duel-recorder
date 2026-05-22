@@ -67,6 +67,7 @@ public:
 	void start_async(WorkerLaunchConfig config);
 	void stop();
 	WorkerStatusSnapshot status_snapshot() const;
+	RecordingCommandResult send_recording_command(const std::string &action, const std::string &source);
 
 private:
 	void start(WorkerLaunchConfig config);

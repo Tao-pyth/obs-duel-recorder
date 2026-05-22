@@ -4,6 +4,7 @@
 #include "worker-launcher.hpp"
 
 class QLabel;
+class QPushButton;
 class QTimer;
 class QWidget;
 
@@ -21,6 +22,9 @@ private:
 	static void open_settings_from_menu(void *private_data);
 	void show_settings_dialog();
 	void save_settings_and_restart(const PluginSettings &settings);
+	void request_manual_start();
+	void request_manual_stop();
+	void log_recording_command_result(const char *action, const RecordingCommandResult &result);
 
 	WorkerProcessManager &worker_manager_;
 	QWidget *dock_widget_ = nullptr;
@@ -32,6 +36,8 @@ private:
 	QLabel *ownership_value_ = nullptr;
 	QLabel *detail_value_ = nullptr;
 	QLabel *action_value_ = nullptr;
+	QPushButton *start_button_ = nullptr;
+	QPushButton *stop_button_ = nullptr;
 	OverlayStatePayload last_applied_overlay_state_;
 	bool overlay_state_applied_ = false;
 	bool tools_menu_registered_ = false;
