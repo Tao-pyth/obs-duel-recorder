@@ -49,6 +49,7 @@ Goals:
 - Version tracking issue: `#110` - `[v0.4] OBS Plugin Skeleton release tracking`
 - Acceptance checklist: `docs/requirements/v0.4-obs-plugin-skeleton-acceptance.md`
 - Release readiness checklist: `docs/release/v0.4-release-readiness.md`
+- Plugin scaffold/build notes: `app/plugin/README.md`
 - Requirements (relevant sections):
   - `docs/requirements/requirements.md` -> Architecture / Platform / Runtime Rules
   - `AGENTS.md` -> Runtime Directory Rules / Responsibility Separation
