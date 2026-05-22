@@ -151,3 +151,19 @@ The version tracking issue may contain the working release summary, but finalize
 - Deferred items: YouTube Upload MVP remains in #318 for v1.0
 - Next version tracking issue: #318
 - Status: released
+
+### v1.0.0 - YouTube Upload MVP
+
+- Version tracking issue: #318
+- Milestone: `v1.0` (not set)
+- Release readiness checklist: `docs/release/v1.0-release-readiness.md`
+- Tag: `v1.0.0`
+- Tag target: `30dfd9b0d1670a4cbbe3bc0f4bf328bcc7bc67d1`
+- Release finalized at: `2026-05-23T06:16:38+09:00`
+- Tag finalized at: `2026-05-23T06:16:08+09:00`
+- Release summary: `docs/release/v1.0-release-summary.md`
+- Major child issues: #328, #329, #330, #331
+- Major PRs: #364
+- Deferred items: Match Metadata remains in #320 for v1.1
+- Next version tracking issue: #320
+- Status: released

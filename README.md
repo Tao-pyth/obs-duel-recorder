@@ -23,14 +23,14 @@ Major and minor release completions are tagged as `vMajor.Minor.Patch`. See [Rel
 ## Current Development
 
 Latest released version:
-- `v0.9.0` - Screenshot System
+- `v1.0.0` - YouTube Upload MVP
 
 Current development target:
-- `v1.0` - YouTube Upload MVP
-- Tracking issue: [#318](https://github.com/Tao-pyth/obs-duel-recorder/issues/318)
+- `v1.1` - Match Metadata
+- Tracking issue: [#320](https://github.com/Tao-pyth/obs-duel-recorder/issues/320)
 
 Next roadmap target:
-- `v1.1` - Match Metadata
+- `v1.2` - Export System
 
 ---
 
@@ -54,10 +54,11 @@ Current released foundation:
 - OBS Plugin skeleton and Worker lifecycle management
 - OBS overlay Text Source integration
 - Screenshot capture and linkage
+- YouTube upload MVP boundary
 
 Planned roadmap capabilities:
-- YouTube archive upload (`v1.0`)
 - Match memo support (`v1.1`)
+- Export system (`v1.2`)
 - GitHub Actions based packaging (`v1.4+`)
 
 ---
@@ -107,26 +108,26 @@ obs-duel-recorder/
 
 ### Latest Release
 
-- Version: `v0.9.0`
-- Scope: Screenshot System
+- Version: `v1.0.0`
+- Scope: YouTube Upload MVP
 - Status: released
-- Tag target: `fd2fca25b632f4aea471cca7044886e689a3faf1`
-- Tracking issue: [#250](https://github.com/Tao-pyth/obs-duel-recorder/issues/250)
+- Tag target: `30dfd9b0d1670a4cbbe3bc0f4bf328bcc7bc67d1`
+- Tracking issue: [#318](https://github.com/Tao-pyth/obs-duel-recorder/issues/318)
 - Release record: [docs/release-history.md](docs/release-history.md)
 
-### Completed in v0.9
+### Completed in v1.0
 
-- Worker-owned screenshot capture and archive storage under `user_data/data/screenshots/`
-- Deterministic screenshot naming rules
-- SQLite screenshot metadata linked to matches and upload queue items
-- Screenshot preview API with missing-file diagnostics
-- Upload-state-aware screenshot cleanup that preserves failure evidence
-- Screenshot acceptance, architecture, API, DB, and release readiness documentation
+- Worker-owned upload status API
+- Deterministic mocked upload processing for CI and smoke checks
+- Upload success, retryable failure, quota wait, missing file, auth/manual-review, and ambiguous outcome handling
+- YouTube video id and URL persistence
+- OAuth scope, privacy, and secret-redaction contract
+- v1.0 acceptance and release readiness documentation
 
-### Planned After v0.9
+### Planned After v1.0
 
-- `v1.0` - YouTube Upload MVP
-- Later roadmap items include upload automation, metadata management, packaging, and GitHub Pages documentation.
+- `v1.1` - Match Metadata
+- Later roadmap items include metadata management, export, packaging, and GitHub Pages documentation.
 
 ---
 
