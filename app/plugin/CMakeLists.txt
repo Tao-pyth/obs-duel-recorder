@@ -7,6 +7,7 @@ find_package(obs-frontend-api REQUIRED)
 find_package(Qt6 REQUIRED COMPONENTS Widgets)
 
 add_library(obs-duel-recorder MODULE
+  src/overlay-sources.cpp
   src/plugin-main.cpp
   src/plugin-settings.cpp
   src/plugin-ui.cpp

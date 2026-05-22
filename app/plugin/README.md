@@ -18,9 +18,9 @@ The Plugin must not:
 - directly manipulate SQLite
 - directly upload to YouTube
 
-## Current v0.4 Scaffold
+## Current v0.5 Overlay Integration
 
-The current scaffold is intentionally minimal for #119/#120/#121/#122/#123/#144:
+The current scaffold keeps the v0.4 Worker lifecycle surface and adds the first v0.5 overlay source-management layer:
 
 - Build a loadable OBS module.
 - Register minimal OBS Frontend API lifecycle hooks.
@@ -30,6 +30,9 @@ The current scaffold is intentionally minimal for #119/#120/#121/#122/#123/#144:
 - Reuse a healthy singleton Worker for the same `ODR_USER_DATA_DIR`.
 - Monitor Worker heartbeat through `GET /health`.
 - Register a status-first OBS Dock for Worker diagnostics.
+- Load additive `overlay` settings with v0.5 defaults.
+- Find or create the fixed OBS Text Sources for deck name, sequence number, result, opponent deck, and recording state display.
+- Log stable overlay diagnostics for missing, duplicated, unsupported, unavailable, or failed source operations.
 
 Current non-goals:
 - Full control UI.
@@ -77,11 +80,30 @@ Current keys:
   "host": "127.0.0.1",
   "port": 8787,
   "user_data_dir": "C:/path/to/user_data",
-  "restart_worker_on_change": true
+  "restart_worker_on_change": true,
+  "overlay": {
+    "enabled": true,
+    "auto_create_sources": true,
+    "sources": {
+      "deck_name": "ODR Deck Name",
+      "sequence_number": "ODR Sequence",
+      "result": "ODR Result",
+      "opponent_deck": "ODR Opponent Deck",
+      "recording_state": "ODR Recording State"
+    },
+    "defaults": {
+      "deck_name": "Deck: -",
+      "sequence_number": "#---",
+      "result": "Result: unknown",
+      "opponent_deck": "Opponent: unknown",
+      "recording_state": "Idle"
+    }
+  }
 }
 ```
 
 `ODR_USER_DATA_DIR` remains a compatibility fallback for initial defaults. Once the settings file is saved, `user_data_dir` in the JSON file is the Plugin launch input.
+Missing `overlay` settings are loaded with defaults so existing v0.4 settings files remain valid.
 
 Settings flow:
 - Open `Tools > OBS Duel Recorder Settings` or the `Settings` button in the Dock.
@@ -89,7 +111,24 @@ Settings flow:
 - Save the dialog.
 - The Plugin persists the JSON file and restarts the Worker manager with the saved settings.
 
-v0.4 treats settings changes conservatively: saving settings restarts the Worker manager. Immediate apply is reserved for explicitly safe future fields. OBS restart is an exception path, not the default.
+v0.5 treats settings changes conservatively: saving settings restarts the Worker manager and re-runs overlay source management. OBS restart is an exception path, not the default.
+
+## Overlay Text Sources
+
+On OBS frontend ready and after settings are saved, the Plugin checks the configured overlay sources.
+
+Default source names:
+- `ODR Deck Name`
+- `ODR Sequence`
+- `ODR Result`
+- `ODR Opponent Deck`
+- `ODR Recording State`
+
+Behavior:
+- Existing supported OBS Text Sources are reused.
+- Missing sources are created in the current scene when `overlay.auto_create_sources` is true.
+- Unsupported, duplicate, unavailable, and failed operations are logged with stable diagnostic names from `docs/architecture/overlay.md`.
+- The Plugin does not delete or replace unrelated user-created sources.
 
 ## Status Dock
 
