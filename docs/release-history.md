@@ -119,3 +119,19 @@ The version tracking issue may contain the working release summary, but finalize
 - Deferred items: Template Matching MVP remains in #249; Screenshot System remains v0.9
 - Next version tracking issue: #249
 - Status: released
+
+### v0.8.0 - Template Matching MVP
+
+- Version tracking issue: #249
+- Milestone: `v0.8` (not set)
+- Release readiness checklist: `docs/release/v0.8-release-readiness.md`
+- Tag: `v0.8.0`
+- Tag target: `a83fa4ca6d09e169bf8c9b175a1e4863644eb3ec`
+- Release finalized at: `2026-05-23T03:46:21+09:00`
+- Tag finalized at: `2026-05-23T03:46:55+09:00`
+- Release summary: `docs/release/v0.8-release-summary.md`
+- Major child issues: #270, #271, #272, #273, #274, #275
+- Major PRs: #315
+- Deferred items: Screenshot System remains in #250; YouTube Upload MVP remains v1.0
+- Next version tracking issue: #250
+- Status: released

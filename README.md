@@ -23,14 +23,14 @@ Major and minor release completions are tagged as `vMajor.Minor.Patch`. See [Rel
 ## Current Development
 
 Latest released version:
-- `v0.7.0` - Queue Recovery System
+- `v0.8.0` - Template Matching MVP
 
 Current development target:
-- `v0.8` - Template Matching MVP
-- Tracking issue: [#249](https://github.com/Tao-pyth/obs-duel-recorder/issues/249)
+- `v0.9` - Screenshot System
+- Tracking issue: [#250](https://github.com/Tao-pyth/obs-duel-recorder/issues/250)
 
 Next roadmap target:
-- `v0.9` - Screenshot System
+- `v1.0` - YouTube Upload MVP
 
 ---
 
@@ -55,7 +55,6 @@ Current released foundation:
 - OBS overlay Text Source integration
 
 Planned roadmap capabilities:
-- Automatic duel recording (`v0.8`)
 - Screenshot capture and linkage (`v0.9`)
 - YouTube archive upload (`v1.0`)
 - Match memo support (`v1.1`)
@@ -108,26 +107,26 @@ obs-duel-recorder/
 
 ### Latest Release
 
-- Version: `v0.7.0`
-- Scope: Queue Recovery System
+- Version: `v0.8.0`
+- Scope: Template Matching MVP
 - Status: released
-- Tag target: `b0a262ac9500a6ec0ee43f9091ad0fee0e79f0dd`
-- Tracking issue: [#248](https://github.com/Tao-pyth/obs-duel-recorder/issues/248)
+- Tag target: `a83fa4ca6d09e169bf8c9b175a1e4863644eb3ec`
+- Tracking issue: [#249](https://github.com/Tao-pyth/obs-duel-recorder/issues/249)
 - Release record: [docs/release-history.md](docs/release-history.md)
 
-### Completed in v0.7
+### Completed in v0.8
 
-- Recovery-safe upload queue schema migration
-- Worker queue API at `/queue/items` and `/queue/items/{id}/command`
-- Startup reconciliation for interrupted `uploading` items
-- Retry, retry-limit, and `quota_waiting` state handling
-- `need_manual_review` runtime state and manual adjudication evidence
-- Queue recovery acceptance and release readiness documentation
+- Local template configuration and loading from `user_data`
+- Deterministic Worker template matching MVP
+- Duel lifecycle states for no duel, potential duel, active duel, and ended duel
+- Detection API at `/detection/templates`, `/detection/state`, and `/detection/frame`
+- Automatic recording start/stop trigger integration through the recording lifecycle API
+- Template matching acceptance and release readiness documentation
 
-### Planned After v0.7
+### Planned After v0.8
 
-- `v0.8` - Template Matching MVP
-- Later roadmap items include template matching, screenshot capture, upload automation, packaging, and GitHub Pages documentation.
+- `v0.9` - Screenshot System
+- Later roadmap items include screenshot capture, upload automation, packaging, and GitHub Pages documentation.
 
 ---
 

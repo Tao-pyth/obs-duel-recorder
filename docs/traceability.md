@@ -105,6 +105,7 @@ Goals:
 - Release readiness checklist: `docs/release/v0.8-release-readiness.md`
 - Detection architecture contract: `docs/architecture/detection.md`
 - Worker API contract: `docs/architecture/worker-api.md`
+- Release record: `docs/release-history.md`; detailed summary: `docs/release/v0.8-release-summary.md`
 - Requirements (relevant sections):
   - `docs/requirements/requirements.md` -> Detection Rules / Architecture / Platform / Runtime Rules
   - `AGENTS.md` -> Runtime Directory Rules / Responsibility Separation
