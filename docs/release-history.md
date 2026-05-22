@@ -103,3 +103,19 @@ The version tracking issue may contain the working release summary, but finalize
 - Deferred items: Queue Recovery System remains in #248; Automatic Duel Recording remains v0.8
 - Next version tracking issue: #248
 - Status: released
+
+### v0.7.0 - Queue Recovery System
+
+- Version tracking issue: #248
+- Milestone: `v0.7` (not set)
+- Release readiness checklist: `docs/release/v0.7-release-readiness.md`
+- Tag: `v0.7.0`
+- Tag target: `b0a262ac9500a6ec0ee43f9091ad0fee0e79f0dd`
+- Release finalized at: `2026-05-23T03:21:37+09:00`
+- Tag finalized at: `2026-05-23T03:22:11+09:00`
+- Release summary: `docs/release/v0.7-release-summary.md`
+- Major child issues: #237, #264, #265, #266, #267, #268, #269
+- Major PRs: #313
+- Deferred items: Template Matching MVP remains in #249; Screenshot System remains v0.9
+- Next version tracking issue: #249
+- Status: released

@@ -23,14 +23,14 @@ Major and minor release completions are tagged as `vMajor.Minor.Patch`. See [Rel
 ## Current Development
 
 Latest released version:
-- `v0.6.0` - Recording State Management
+- `v0.7.0` - Queue Recovery System
 
 Current development target:
-- `v0.7` - Queue Recovery System
-- Tracking issue: [#248](https://github.com/Tao-pyth/obs-duel-recorder/issues/248)
+- `v0.8` - Template Matching MVP
+- Tracking issue: [#249](https://github.com/Tao-pyth/obs-duel-recorder/issues/249)
 
 Next roadmap target:
-- `v0.8` - Automatic Duel Recording
+- `v0.9` - Screenshot System
 
 ---
 
@@ -55,11 +55,10 @@ Current released foundation:
 - OBS overlay Text Source integration
 
 Planned roadmap capabilities:
-- Match queue management (`v0.7`)
 - Automatic duel recording (`v0.8`)
+- Screenshot capture and linkage (`v0.9`)
 - YouTube archive upload (`v1.0`)
 - Match memo support (`v1.1`)
-- Upload retry / recovery support (`v0.7`)
 - GitHub Actions based packaging (`v1.4+`)
 
 ---
@@ -109,27 +108,26 @@ obs-duel-recorder/
 
 ### Latest Release
 
-- Version: `v0.6.0`
-- Scope: Recording State Management
+- Version: `v0.7.0`
+- Scope: Queue Recovery System
 - Status: released
-- Tag target: `0654f2b78a75426ab17310c3a58689a72be5c816`
-- Tracking issue: [#247](https://github.com/Tao-pyth/obs-duel-recorder/issues/247)
+- Tag target: `b0a262ac9500a6ec0ee43f9091ad0fee0e79f0dd`
+- Tracking issue: [#248](https://github.com/Tao-pyth/obs-duel-recorder/issues/248)
 - Release record: [docs/release-history.md](docs/release-history.md)
 
-### Completed in v0.6
+### Completed in v0.7
 
-- Worker-owned recording lifecycle state model
-- Recording state API at `/recording/state` and `/recording/command`
-- Manual OBS Dock start/stop controls
-- OBS frontend recording event synchronization
-- Interrupted recording recovery and discard handling
-- Overlay recording-state display driven from authoritative Worker state
-- Windows OBS recording-state smoke evidence recorded in #310
+- Recovery-safe upload queue schema migration
+- Worker queue API at `/queue/items` and `/queue/items/{id}/command`
+- Startup reconciliation for interrupted `uploading` items
+- Retry, retry-limit, and `quota_waiting` state handling
+- `need_manual_review` runtime state and manual adjudication evidence
+- Queue recovery acceptance and release readiness documentation
 
-### Planned After v0.6
+### Planned After v0.7
 
-- `v0.7` - Queue Recovery System
-- Later roadmap items include queue recovery, template matching, upload automation, packaging, and GitHub Pages documentation.
+- `v0.8` - Template Matching MVP
+- Later roadmap items include template matching, screenshot capture, upload automation, packaging, and GitHub Pages documentation.
 
 ---
 
