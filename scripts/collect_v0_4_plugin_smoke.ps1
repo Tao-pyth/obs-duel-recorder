@@ -137,7 +137,7 @@ $obsLogExists = -not [string]::IsNullOrWhiteSpace($ObsLogPath) -and (Test-Path -
 $workerLogExists = Test-Path -LiteralPath $WorkerLogDir
 $workerLogFiles = @()
 if ($workerLogExists) {
-    $workerLogFiles = Get-ChildItem -LiteralPath $WorkerLogDir -Filter "*.log" -File -ErrorAction SilentlyContinue
+    $workerLogFiles = @(Get-ChildItem -LiteralPath $WorkerLogDir -Filter "*.log" -File -ErrorAction SilentlyContinue)
 }
 
 $checks = New-Object System.Collections.Generic.List[string]
