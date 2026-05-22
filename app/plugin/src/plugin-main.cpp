@@ -1,6 +1,7 @@
 #include <obs-frontend-api.h>
 #include <obs-module.h>
 
+#include "overlay-sources.hpp"
 #include "plugin-settings.hpp"
 #include "plugin-ui.hpp"
 #include "worker-launcher.hpp"
@@ -19,6 +20,7 @@ odr::plugin::PluginUiController ui_controller(worker_manager);
 void launch_worker()
 {
 	odr::plugin::PluginSettings settings = odr::plugin::load_plugin_settings();
+	odr::plugin::log_overlay_source_result(odr::plugin::ensure_overlay_text_sources(settings.overlay));
 	odr::plugin::WorkerLaunchConfig config = odr::plugin::make_launch_config(settings);
 	worker_manager.start_async(std::move(config));
 }

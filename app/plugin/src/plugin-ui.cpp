@@ -1,5 +1,6 @@
 #include "plugin-ui.hpp"
 
+#include "overlay-sources.hpp"
 #include "plugin-settings.hpp"
 
 #include <obs-frontend-api.h>
@@ -255,6 +256,7 @@ void PluginUiController::save_settings_and_restart(const PluginSettings &setting
 	     kLogPrefix, to_utf8(settings.settings_path).c_str(), to_utf8(settings.endpoint.host).c_str(),
 	     settings.endpoint.port, to_utf8(settings.user_data_dir).c_str());
 
+	log_overlay_source_result(ensure_overlay_text_sources(settings.overlay));
 	worker_manager_.stop();
 	worker_manager_.start_async(make_launch_config(settings));
 	refresh();

@@ -18,6 +18,10 @@ constexpr uint16_t kDefaultPort = 8787;
 constexpr const wchar_t *kSettingsDirectory = L"obs-duel-recorder";
 constexpr const wchar_t *kSettingsFile = L"plugin-settings.json";
 
+constexpr const char *kOverlayKey = "overlay";
+constexpr const char *kOverlaySourcesKey = "sources";
+constexpr const char *kOverlayDefaultsKey = "defaults";
+
 std::wstring from_utf8(const char *value)
 {
 	if (!value || value[0] == '\0') {
@@ -88,6 +92,125 @@ void apply_defaults(obs_data_t *data)
 	obs_data_set_default_bool(data, "restart_worker_on_change", true);
 }
 
+void apply_overlay_sources_defaults(obs_data_t *sources)
+{
+	const OverlaySettings defaults;
+	obs_data_set_default_string(sources, "deck_name", defaults.deck_name.source_name.c_str());
+	obs_data_set_default_string(sources, "sequence_number", defaults.sequence_number.source_name.c_str());
+	obs_data_set_default_string(sources, "result", defaults.result.source_name.c_str());
+	obs_data_set_default_string(sources, "opponent_deck", defaults.opponent_deck.source_name.c_str());
+	obs_data_set_default_string(sources, "recording_state", defaults.recording_state.source_name.c_str());
+}
+
+void apply_overlay_text_defaults(obs_data_t *defaults_data)
+{
+	const OverlaySettings defaults;
+	obs_data_set_default_string(defaults_data, "deck_name", defaults.deck_name.default_text.c_str());
+	obs_data_set_default_string(defaults_data, "sequence_number", defaults.sequence_number.default_text.c_str());
+	obs_data_set_default_string(defaults_data, "result", defaults.result.default_text.c_str());
+	obs_data_set_default_string(defaults_data, "opponent_deck", defaults.opponent_deck.default_text.c_str());
+	obs_data_set_default_string(defaults_data, "recording_state", defaults.recording_state.default_text.c_str());
+}
+
+void apply_overlay_defaults(obs_data_t *overlay)
+{
+	obs_data_set_default_bool(overlay, "enabled", true);
+	obs_data_set_default_bool(overlay, "auto_create_sources", true);
+
+	obs_data_t *sources = obs_data_create();
+	apply_overlay_sources_defaults(sources);
+	obs_data_set_default_obj(overlay, kOverlaySourcesKey, sources);
+	obs_data_release(sources);
+
+	obs_data_t *defaults_data = obs_data_create();
+	apply_overlay_text_defaults(defaults_data);
+	obs_data_set_default_obj(overlay, kOverlayDefaultsKey, defaults_data);
+	obs_data_release(defaults_data);
+}
+
+std::string read_string(obs_data_t *data, const char *key, const std::string &fallback, const char *section)
+{
+	const char *value = obs_data_get_string(data, key);
+	if (!value || value[0] == '\0') {
+		blog(LOG_WARNING, "OBS Duel Recorder overlay diagnostic=overlay_settings_invalid field=%s action=load reason=empty_%s",
+		     key, section);
+		return fallback;
+	}
+	return value;
+}
+
+void load_overlay_field(obs_data_t *sources, obs_data_t *defaults_data, const char *key, OverlayFieldSettings &field)
+{
+	field.source_name = read_string(sources, key, field.source_name, "source_name");
+	field.default_text = read_string(defaults_data, key, field.default_text, "default_text");
+}
+
+OverlaySettings load_overlay_settings(obs_data_t *data)
+{
+	OverlaySettings settings;
+	obs_data_t *overlay = obs_data_get_obj(data, kOverlayKey);
+	if (!overlay) {
+		overlay = obs_data_create();
+	}
+	apply_overlay_defaults(overlay);
+
+	settings.enabled = obs_data_get_bool(overlay, "enabled");
+	settings.auto_create_sources = obs_data_get_bool(overlay, "auto_create_sources");
+
+	obs_data_t *sources = obs_data_get_obj(overlay, kOverlaySourcesKey);
+	if (!sources) {
+		sources = obs_data_create();
+	}
+	apply_overlay_sources_defaults(sources);
+
+	obs_data_t *defaults_data = obs_data_get_obj(overlay, kOverlayDefaultsKey);
+	if (!defaults_data) {
+		defaults_data = obs_data_create();
+	}
+	apply_overlay_text_defaults(defaults_data);
+
+	load_overlay_field(sources, defaults_data, "deck_name", settings.deck_name);
+	load_overlay_field(sources, defaults_data, "sequence_number", settings.sequence_number);
+	load_overlay_field(sources, defaults_data, "result", settings.result);
+	load_overlay_field(sources, defaults_data, "opponent_deck", settings.opponent_deck);
+	load_overlay_field(sources, defaults_data, "recording_state", settings.recording_state);
+
+	obs_data_release(defaults_data);
+	obs_data_release(sources);
+	obs_data_release(overlay);
+	return settings;
+}
+
+void save_overlay_field(obs_data_t *sources, obs_data_t *defaults_data, const char *key,
+			const OverlayFieldSettings &field)
+{
+	obs_data_set_string(sources, key, field.source_name.c_str());
+	obs_data_set_string(defaults_data, key, field.default_text.c_str());
+}
+
+void save_overlay_settings(obs_data_t *data, const OverlaySettings &settings)
+{
+	obs_data_t *overlay = obs_data_create();
+	obs_data_set_bool(overlay, "enabled", settings.enabled);
+	obs_data_set_bool(overlay, "auto_create_sources", settings.auto_create_sources);
+
+	obs_data_t *sources = obs_data_create();
+	obs_data_t *defaults_data = obs_data_create();
+	save_overlay_field(sources, defaults_data, "deck_name", settings.deck_name);
+	save_overlay_field(sources, defaults_data, "sequence_number", settings.sequence_number);
+	save_overlay_field(sources, defaults_data, "result", settings.result);
+	save_overlay_field(sources, defaults_data, "opponent_deck", settings.opponent_deck);
+	save_overlay_field(sources, defaults_data, "recording_state", settings.recording_state);
+
+	obs_data_set_obj(overlay, kOverlaySourcesKey, sources);
+	obs_data_set_obj(overlay, kOverlayDefaultsKey, defaults_data);
+	obs_data_set_obj(data, kOverlayKey, overlay);
+
+	obs_data_release(defaults_data);
+	obs_data_release(sources);
+	obs_data_release(overlay);
+}
+
 } // namespace
 
 std::wstring default_plugin_settings_path()
@@ -119,6 +242,7 @@ PluginSettings load_plugin_settings()
 	settings.endpoint.port = clamp_port(obs_data_get_int(data, "port"));
 	settings.user_data_dir = from_utf8(obs_data_get_string(data, "user_data_dir"));
 	settings.restart_worker_on_change = obs_data_get_bool(data, "restart_worker_on_change");
+	settings.overlay = load_overlay_settings(data);
 
 	obs_data_release(data);
 	return settings;
@@ -137,6 +261,7 @@ bool save_plugin_settings(const PluginSettings &settings)
 	obs_data_set_int(data, "port", settings.endpoint.port);
 	obs_data_set_string(data, "user_data_dir", to_utf8(settings.user_data_dir).c_str());
 	obs_data_set_bool(data, "restart_worker_on_change", settings.restart_worker_on_change);
+	save_overlay_settings(data, settings.overlay);
 
 	const bool saved = obs_data_save_json_safe(data, to_utf8(settings.settings_path).c_str(), "tmp", "bak");
 	obs_data_release(data);
