@@ -11,6 +11,14 @@ from .db import DbInfo
 from .health import API_VERSION, PID, STARTED_AT, WorkerDb, WorkerPaths, build_health_payload
 from .identity import INSTANCE_ID
 from .overlay import OverlayPayloadError, OverlayState, apply_overlay_update
+from .recording import (
+    RecordingCommandError,
+    apply_recording_command,
+    initialize_recording_state,
+    overlay_recording_state,
+    recording_state_path,
+    save_recording_state,
+)
 from .runtime_dirs import RuntimeDirs
 from .version import __version__
 
@@ -38,6 +46,12 @@ def create_app(*, runtime_dirs: RuntimeDirs, loaded_config: LoadedWorkerConfig, 
     app.state.paths = worker_paths
     app.state.config_loaded = loaded_config.config_loaded
     app.state.overlay_state = OverlayState()
+    app.state.recording_state_path = recording_state_path(runtime_dirs.data_dir)
+    app.state.recording_state = initialize_recording_state(app.state.recording_state_path)
+    app.state.overlay_state = apply_overlay_update(
+        app.state.overlay_state,
+        {"recording_state": overlay_recording_state(app.state.recording_state)},
+    )
 
     app.state.db = None
     if db_info is not None:
@@ -85,6 +99,37 @@ def create_app(*, runtime_dirs: RuntimeDirs, loaded_config: LoadedWorkerConfig, 
                 content=_error_payload(code="overlay_payload_invalid", message="Overlay payload must be JSON object"),
             )
         return app.state.overlay_state.as_payload()
+
+    @app.get("/recording/state")
+    def get_recording_state() -> dict[str, str]:
+        return app.state.recording_state.as_payload()
+
+    @app.post("/recording/command")
+    async def post_recording_command(request: Request):
+        try:
+            payload = await request.json()
+            app.state.recording_state = apply_recording_command(app.state.recording_state, payload)
+            save_recording_state(app.state.recording_state_path, app.state.recording_state)
+            app.state.overlay_state = apply_overlay_update(
+                app.state.overlay_state,
+                {"recording_state": overlay_recording_state(app.state.recording_state)},
+            )
+        except RecordingCommandError as exc:
+            status_code = 409 if exc.code == "recording_transition_invalid" else 400
+            return JSONResponse(
+                status_code=status_code,
+                content=_error_payload(
+                    code=exc.code,
+                    message="Recording command is invalid",
+                    details=exc.details,
+                ),
+            )
+        except ValueError:
+            return JSONResponse(
+                status_code=400,
+                content=_error_payload(code="recording_command_invalid", message="Recording command must be JSON object"),
+            )
+        return app.state.recording_state.as_payload()
 
     @app.exception_handler(Exception)
     async def unhandled_exception_handler(request: Request, exc: Exception):
