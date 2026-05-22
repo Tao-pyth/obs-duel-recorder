@@ -91,9 +91,10 @@ The version tracking issue may contain the working release summary, but finalize
 - Version tracking issue: #247
 - Milestone: `v0.6` (not set)
 - Release readiness checklist: `docs/release/v0.6-release-readiness.md`
-- Tag: `v0.6.0` intended; tag target will be finalized after the v0.6 release PR merge
-- Intended tag target: release merge commit on `main`
-- Release finalized at: pending release PR merge
+- Tag: `v0.6.0`
+- Tag target: `0654f2b78a75426ab17310c3a58689a72be5c816`
+- Release finalized at: `2026-05-23T03:03:08+09:00`
+- Tag finalized at: `2026-05-23T03:03:52+09:00`
 - Release summary: `docs/release/v0.6-release-summary.md`
 - Major child issues: #258, #259, #260, #261, #262, #263, #310
 - Smoke evidence gate: #310
@@ -101,4 +102,4 @@ The version tracking issue may contain the working release summary, but finalize
 - Superseded duplicate planning issue: #303
 - Deferred items: Queue Recovery System remains in #248; Automatic Duel Recording remains v0.8
 - Next version tracking issue: #248
-- Status: release finalization in progress
+- Status: released
