@@ -23,14 +23,14 @@ Major and minor release completions are tagged as `vMajor.Minor.Patch`. See [Rel
 ## Current Development
 
 Latest released version:
-- `v0.3.0` - SQLite Foundation
+- `v0.4.0` - OBS Plugin Skeleton
 
 Current development target:
-- `v0.4` - OBS Plugin Skeleton
-- Tracking issue: [#110](https://github.com/Tao-pyth/obs-duel-recorder/issues/110)
+- `v0.5` - Overlay Integration
+- Tracking issue: [#288](https://github.com/Tao-pyth/obs-duel-recorder/issues/288)
 
 Next roadmap target:
-- `v0.5` - Overlay Integration
+- `v0.6` - Recording State Management
 
 ---
 
@@ -51,12 +51,14 @@ Status note: This list includes current foundations and planned roadmap capabili
 Current released foundation:
 - SQLite runtime storage foundation
 - Worker runtime, health, logging, and migration foundations
+- OBS Plugin skeleton and Worker lifecycle management
 
 Planned roadmap capabilities:
-- Automatic duel recording (`v0.8`)
-- Match queue management (`v0.7`)
-- YouTube archive upload (`v1.0`)
 - OBS overlay integration (`v0.5`)
+- Recording state management (`v0.6`)
+- Match queue management (`v0.7`)
+- Automatic duel recording (`v0.8`)
+- YouTube archive upload (`v1.0`)
 - Match memo support (`v1.1`)
 - Upload retry / recovery support (`v0.7`)
 - GitHub Actions based packaging (`v1.4+`)
@@ -108,26 +110,28 @@ obs-duel-recorder/
 
 ### Latest Release
 
-- Version: `v0.3.0`
-- Scope: SQLite Foundation
+- Version: `v0.4.0`
+- Scope: OBS Plugin Skeleton
 - Status: released
-- Tag target: `5a31a55b76f5cd2d3e2a64cbf1d4cfed04642dd0`
-- Tracking issue: [#88](https://github.com/Tao-pyth/obs-duel-recorder/issues/88)
+- Intended tag target: `629f4f6d8d28d0d9dcca96381340a04077d2bb62`
+- Tracking issue: [#110](https://github.com/Tao-pyth/obs-duel-recorder/issues/110)
 - Release record: [docs/release-history.md](docs/release-history.md)
 
-### Completed in v0.3
+### Completed in v0.4
 
-- SQLite initialization under runtime data (`user_data/`)
-- Schema version management
-- Minimal migration framework
-- Initial tables (`matches`, `upload_queue`)
-- Restart-safe, idempotent startup behavior
-- Worker runtime and package metadata version aligned to `0.3.0`
+- Loadable OBS Plugin scaffold
+- OBS Frontend API startup/shutdown integration
+- Plugin-managed Worker launch and ownership tracking
+- Worker heartbeat monitoring via localhost `/health`
+- Status-first OBS Dock diagnostics
+- Persisted Plugin settings at `%APPDATA%\obs-duel-recorder\plugin-settings.json`
+- Localhost API wrapper diagnostics for runtime-root continuity and Worker identity
+- Windows OBS smoke evidence recorded in #285
 
-### Planned After v0.3
+### Planned After v0.4
 
-- `v0.4` - OBS Plugin skeleton and Worker lifecycle management
-- Later roadmap items include overlay integration, queue recovery, template matching, upload automation, packaging, and GitHub Pages documentation.
+- `v0.5` - Overlay Integration
+- Later roadmap items include recording state management, queue recovery, template matching, upload automation, packaging, and GitHub Pages documentation.
 
 ---
 
