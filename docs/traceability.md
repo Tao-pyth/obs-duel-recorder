@@ -88,8 +88,10 @@ Goals:
 
 - Roadmap: `docs/roadmap.md` -> **v0.7 - Queue Recovery System**
 - Version tracking issue: `#248` - `[v0.7] Queue Recovery System release tracking`
-- Acceptance checklist: not created yet
-- Release readiness checklist: not created yet
+- Acceptance checklist: `docs/requirements/v0.7-queue-recovery-system-acceptance.md`
+- Release readiness checklist: `docs/release/v0.7-release-readiness.md`
+- Queue architecture contract: `docs/architecture/queue.md`
+- Worker API contract: `docs/architecture/worker-api.md`
 - Requirements (relevant sections):
   - `docs/requirements/requirements.md` -> Match Data / Queue / Architecture / Platform / Runtime Rules
   - `AGENTS.md` -> Runtime Directory Rules / Responsibility Separation

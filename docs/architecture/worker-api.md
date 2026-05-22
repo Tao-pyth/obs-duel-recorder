@@ -83,3 +83,65 @@ Error behavior:
 The v0.6 recording API is defined by:
 - `docs/architecture/recording.md`
 - `docs/requirements/v0.6-recording-state-management-acceptance.md`
+
+---
+
+## v0.7 Queue Recovery Endpoints
+
+v0.7 adds a recovery-safe upload queue boundary while preserving `/health`, `/version`, `/overlay/state`, and `/recording/*` compatibility.
+
+### `GET /queue/recovery`
+
+Purpose:
+- Return the startup queue recovery decisions applied during Worker initialization.
+- Provide smoke-verifiable evidence for interrupted `uploading` reconciliation.
+
+Response:
+- `recovered`: list of `{id, from, to, reason}` records.
+
+### `GET /queue/items`
+
+Purpose:
+- List persisted queue items.
+- Optionally filter by `state`.
+
+Query:
+- `state`: optional queue state filter.
+
+### `POST /queue/items`
+
+Purpose:
+- Create a `ready_upload` queue item for recovery/retry processing.
+
+Request fields:
+- `match_id`: optional integer
+- `video_path`: optional string
+- `max_retries`: optional integer, default `3`
+
+### `GET /queue/items/{item_id}`
+
+Purpose:
+- Return one queue item and its retry/manual-review evidence.
+
+### `POST /queue/items/{item_id}/command`
+
+Purpose:
+- Apply a queue transition through the Worker-owned state machine.
+
+Actions:
+- `start_upload`
+- `mark_uploaded`
+- `mark_upload_failed`
+- `mark_quota_waiting`
+- `mark_need_manual_review`
+- `retry`
+- `discard`
+
+Error behavior:
+- Invalid payloads return HTTP 400 with `code=queue_payload_invalid`.
+- Missing items return HTTP 404 with `code=queue_item_not_found`.
+- Invalid transitions return HTTP 409 with `code=queue_transition_invalid`.
+
+The v0.7 queue API is defined by:
+- `docs/architecture/queue.md`
+- `docs/requirements/v0.7-queue-recovery-system-acceptance.md`

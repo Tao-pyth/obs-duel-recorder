@@ -56,3 +56,16 @@ Initial (v0.3):
 - `match_id`
 - `state`
 - `created_at`
+
+v0.7 queue recovery columns:
+- `video_path`
+- `youtube_video_id`
+- `youtube_url`
+- `retry_count`
+- `max_retries`
+- `next_attempt_at`
+- `last_error_code`
+- `last_error_message`
+- `manual_review_reason`
+- `manual_review_evidence_json`
+- `updated_at`
