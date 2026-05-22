@@ -195,9 +195,12 @@ void PluginUiController::refresh()
 	if (snapshot.overlay_state_available &&
 	    (!overlay_state_applied_ ||
 	     snapshot.overlay_state.deck_name != last_applied_overlay_state_.deck_name ||
-	     snapshot.overlay_state.sequence_number != last_applied_overlay_state_.sequence_number)) {
+	     snapshot.overlay_state.sequence_number != last_applied_overlay_state_.sequence_number ||
+	     snapshot.overlay_state.result != last_applied_overlay_state_.result ||
+	     snapshot.overlay_state.opponent_deck != last_applied_overlay_state_.opponent_deck ||
+	     snapshot.overlay_state.recording_state != last_applied_overlay_state_.recording_state)) {
 		const PluginSettings settings = load_plugin_settings();
-		log_overlay_source_result(update_deck_sequence_overlay_sources(settings.overlay, snapshot.overlay_state));
+		log_overlay_source_result(update_overlay_sources(settings.overlay, snapshot.overlay_state));
 		last_applied_overlay_state_ = snapshot.overlay_state;
 		overlay_state_applied_ = true;
 	}

@@ -146,6 +146,15 @@ Allowed v0.5 states:
 
 The v0.6 state machine may later replace or refine these values. v0.5 should treat them as display inputs only.
 
+The v0.5 Plugin display mapping is intentionally narrow:
+
+- `idle` -> `Idle`
+- `recording` -> `Recording`
+- `paused` -> `Paused`
+- `unknown` -> `Unknown`
+
+The Plugin writes this display text only to the configured recording-state Text Source. It does not start, stop, pause, resume, infer, or persist recording lifecycle state.
+
 ## Diagnostics
 
 Overlay diagnostics should use stable names in logs and Dock/status evidence where practical:

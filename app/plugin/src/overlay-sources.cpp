@@ -123,6 +123,26 @@ std::string display_or_default(const std::string &value, const OverlayFieldSetti
 	return value.empty() ? settings.default_text : value;
 }
 
+std::string recording_state_display_or_default(const std::string &value, const OverlayFieldSettings &settings)
+{
+	if (value.empty()) {
+		return settings.default_text;
+	}
+	if (value == "idle") {
+		return "Idle";
+	}
+	if (value == "recording") {
+		return "Recording";
+	}
+	if (value == "paused") {
+		return "Paused";
+	}
+	if (value == "unknown") {
+		return "Unknown";
+	}
+	return settings.default_text;
+}
+
 void update_text_source(OverlaySourceEnsureResult &result, const OverlayField &field, const std::string &text,
 			bool used_default)
 {
@@ -263,6 +283,26 @@ OverlaySourceEnsureResult update_deck_sequence_overlay_sources(const OverlaySett
 	const std::string sequence_text = display_or_default(state.sequence_number, settings.sequence_number);
 	update_text_source(result, deck_name, deck_text, state.deck_name.empty());
 	update_text_source(result, sequence_number, sequence_text, state.sequence_number.empty());
+	return result;
+}
+
+OverlaySourceEnsureResult update_overlay_sources(const OverlaySettings &settings, const OverlayStatePayload &state)
+{
+	OverlaySourceEnsureResult result = update_deck_sequence_overlay_sources(settings, state);
+	if (!settings.enabled) {
+		return result;
+	}
+
+	const OverlayField result_field{"result", settings.result};
+	const OverlayField opponent_deck{"opponent_deck", settings.opponent_deck};
+	const OverlayField recording_state{"recording_state", settings.recording_state};
+	const std::string result_text = display_or_default(state.result, settings.result);
+	const std::string opponent_text = display_or_default(state.opponent_deck, settings.opponent_deck);
+	const std::string recording_text = recording_state_display_or_default(state.recording_state,
+									      settings.recording_state);
+	update_text_source(result, result_field, result_text, state.result.empty());
+	update_text_source(result, opponent_deck, opponent_text, state.opponent_deck.empty());
+	update_text_source(result, recording_state, recording_text, state.recording_state.empty());
 	return result;
 }
 
