@@ -69,7 +69,7 @@ Invalid transitions must be rejected with a stable diagnostic. They must not sil
 
 ## v0.6 API Boundary
 
-The Worker should expose the authoritative state through localhost API routes:
+The Worker exposes the authoritative state through localhost API routes:
 
 - `GET /recording/state`
 - `POST /recording/command`

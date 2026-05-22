@@ -37,6 +37,18 @@ Health check:
 Invoke-WebRequest http://127.0.0.1:8787/health | Select-Object -ExpandProperty Content
 ```
 
+Recording state check:
+
+```powershell
+Invoke-WebRequest http://127.0.0.1:8787/recording/state | Select-Object -ExpandProperty Content
+```
+
+Manual recording command example:
+
+```powershell
+Invoke-WebRequest http://127.0.0.1:8787/recording/command -Method Post -ContentType "application/json" -Body '{"action":"start","source":"manual"}' | Select-Object -ExpandProperty Content
+```
+
 Configuration scaffold (v0.2):
 - default config path: `user_data/config/worker.toml`
 - docs: `docs/architecture/worker-config.md`
