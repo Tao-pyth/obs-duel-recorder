@@ -25,6 +25,19 @@ void launch_worker()
 	worker_manager.start_async(std::move(config));
 }
 
+void log_recording_command_result(const char *action, const odr::plugin::RecordingCommandResult &result)
+{
+	if (result.accepted()) {
+		blog(LOG_INFO,
+		     "%s recording event_command=%s accepted state=%s session_id=%s source=%s last_action=%s",
+		     kLogPrefix, action, result.state.state.c_str(), result.state.session_id.c_str(),
+		     result.state.command_source.c_str(), result.state.last_action.c_str());
+		return;
+	}
+	blog(LOG_WARNING, "%s recording event_command=%s failed status=%d http=%lu error=%s",
+	     kLogPrefix, action, static_cast<int>(result.status), result.http_status, result.error.c_str());
+}
+
 void frontend_event(enum obs_frontend_event event, void *)
 {
 	switch (event) {
@@ -36,6 +49,16 @@ void frontend_event(enum obs_frontend_event event, void *)
 	case OBS_FRONTEND_EVENT_EXIT:
 		blog(LOG_INFO, "%s frontend exit", kLogPrefix);
 		worker_manager.stop();
+		break;
+	case OBS_FRONTEND_EVENT_RECORDING_STARTED:
+		log_recording_command_result(
+			"confirm_started",
+			worker_manager.send_recording_command("confirm_started", "manual"));
+		break;
+	case OBS_FRONTEND_EVENT_RECORDING_STOPPED:
+		log_recording_command_result(
+			"confirm_stopped",
+			worker_manager.send_recording_command("confirm_stopped", "manual"));
 		break;
 	default:
 		break;
