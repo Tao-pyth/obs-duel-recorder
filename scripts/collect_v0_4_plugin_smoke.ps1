@@ -226,7 +226,7 @@ if ($workerLogFiles.Count -eq 0) {
 $lines.Add("")
 $lines.Add("## Next Action")
 $lines.Add("")
-$lines.Add("Paste this report into #110 or the relevant child issue only after confirming no secrets or local-only paths need redaction.")
+$lines.Add("Paste this report into #285, then link the accepted smoke evidence from #110 and the relevant child issues after confirming no secrets or local-only paths need redaction.")
 
 Set-Content -LiteralPath $ReportPath -Value $lines -Encoding UTF8
 Write-Host "Wrote smoke report: $ReportPath"
