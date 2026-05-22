@@ -252,3 +252,55 @@ Request:
 The v0.9 screenshot API is defined by:
 - `docs/architecture/screenshots.md`
 - `docs/requirements/v0.9-screenshot-system-acceptance.md`
+
+---
+
+## v1.0 Upload Endpoints
+
+v1.0 adds Worker-owned upload status and execution endpoints while preserving prior API compatibility.
+
+### `GET /upload/status`
+
+Purpose:
+- Report upload configuration and queue status without leaking secrets.
+- Show whether OAuth client-secret and token files are configured.
+- Provide queue counts by upload state.
+
+Response fields:
+- `settings.oauth_scope`: always `https://www.googleapis.com/auth/youtube.upload`.
+- `settings.privacy_status`: default `private`.
+- `settings.client_secret_configured`: boolean.
+- `settings.token_configured`: boolean.
+- `queue_counts`: counts by queue state.
+- `manual_actions`: `retry`, `discard`, and `mark_uploaded`.
+
+### `POST /upload/process-next`
+
+Purpose:
+- Select the lowest-id `ready_upload` queue item.
+- Move it through upload execution.
+- Persist success or failure outcome into the queue item.
+
+v1.0 test/smoke request fields:
+- `mock_result`: one of `success`, `network_error`, `quota_exceeded`, `ambiguous_error`, or `auth_error`.
+- `youtube_video_id`: required for deterministic success when overriding the default mock id.
+- `youtube_url`: optional; derived from `youtube_video_id` when omitted.
+- `next_attempt_at`: optional for retry/quota outcomes.
+- `manual_review_evidence`: optional object; redacted before persistence.
+
+Outcome mapping:
+- `success` -> `uploaded`
+- `network_error` -> `upload_failed`
+- `quota_exceeded` -> `quota_waiting`
+- `ambiguous_error` -> `need_manual_review`
+- `auth_error` -> `need_manual_review`
+- missing local file -> `discarded`
+
+Manual decisions continue to use `POST /queue/items/{item_id}/command`:
+- `retry`
+- `discard`
+- `mark_uploaded`
+
+The v1.0 upload API is defined by:
+- `docs/architecture/upload.md`
+- `docs/requirements/v1.0-youtube-upload-mvp-acceptance.md`

@@ -18,9 +18,9 @@ The Plugin must not:
 - directly manipulate SQLite
 - directly upload to YouTube
 
-## Current v0.9 Screenshot System
+## Current v1.0 YouTube Upload MVP
 
-The current scaffold keeps the v0.5 overlay surface, v0.6 manual recording lifecycle controls, v0.7 queue recovery API compatibility, v0.8 template detection API compatibility, and v0.9 screenshot API compatibility:
+The current scaffold keeps the v0.5 overlay surface, v0.6 manual recording lifecycle controls, v0.7 queue recovery API compatibility, v0.8 template detection API compatibility, v0.9 screenshot API compatibility, and v1.0 upload API compatibility:
 
 - Build a loadable OBS module.
 - Register minimal OBS Frontend API lifecycle hooks.
@@ -38,11 +38,12 @@ The current scaffold keeps the v0.5 overlay surface, v0.6 manual recording lifec
 - Require a v0.7-compatible Worker for queue recovery and retry-safe upload queue state.
 - Require a v0.8-compatible Worker for template detection and automatic recording trigger state.
 - Require a v0.9-compatible Worker for screenshot capture, preview, DB linkage, and upload-safe cleanup.
+- Require a v1.0-compatible Worker for upload status, mocked upload execution, and manual-review upload state.
 
 Current non-goals:
 - Full control UI beyond the v0.6 manual start/stop controls.
 - Overlay UX.
-- OAuth/upload setup.
+- Full OAuth/upload setup wizard.
 
 ## Prerequisites
 
@@ -166,8 +167,8 @@ Defaults:
 - Worker command: `odr-worker`
 - Host: `127.0.0.1`
 - Port: `8787`
-- Expected Worker API version: `0.9`
-- Expected Worker version: `0.9.0`
+- Expected Worker API version: `1.0`
+- Expected Worker version: `1.0.0`
 - Heartbeat interval: 2000 ms
 - Heartbeat timeout threshold: 3 consecutive failed probes
 

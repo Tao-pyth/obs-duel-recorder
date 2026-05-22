@@ -85,6 +85,18 @@ Screenshot preview example:
 Invoke-WebRequest http://127.0.0.1:8787/screenshots/1/preview | Select-Object -ExpandProperty Content
 ```
 
+Upload status check:
+
+```powershell
+Invoke-WebRequest http://127.0.0.1:8787/upload/status | Select-Object -ExpandProperty Content
+```
+
+Mock upload processing example:
+
+```powershell
+Invoke-WebRequest http://127.0.0.1:8787/upload/process-next -Method Post -ContentType "application/json" -Body '{"mock_result":"success","youtube_video_id":"abc123"}' | Select-Object -ExpandProperty Content
+```
+
 Configuration scaffold (v0.2):
 - default config path: `user_data/config/worker.toml`
 - docs: `docs/architecture/worker-config.md`
