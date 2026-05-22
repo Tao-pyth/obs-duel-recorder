@@ -25,6 +25,18 @@ jobs:
         shell: powershell
         run: python scripts/validate_jp_user_docs_coverage.py --root .
 
+      - name: Validate v0.4 plugin smoke collector
+        shell: powershell
+        run: |
+          $report = Join-Path $env:TEMP "v0.4-plugin-smoke-report.md"
+          powershell -NoProfile -ExecutionPolicy Bypass -File scripts/collect_v0_4_plugin_smoke.ps1 -SkipBuild -DockState not_started -SettingsFlow ci_skipbuild -WorkerOwnership none -ReportPath $report
+          if (-not (Test-Path -LiteralPath $report)) {
+            throw "Smoke report was not generated: $report"
+          }
+          Select-String -LiteralPath $report -SimpleMatch "# v0.4 Plugin Smoke Report" -Quiet | ForEach-Object {
+            if (-not $_) { throw "Smoke report heading was not found: $report" }
+          }
+
   worker-tests:
     name: Worker unit tests
     runs-on: windows-latest
