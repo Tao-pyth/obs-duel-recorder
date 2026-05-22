@@ -18,6 +18,7 @@ This directory is the documentation entry point for OBS Duel Recorder.
 - [v0.7 release readiness checklist](release/v0.7-release-readiness.md)
 - [v0.8 release readiness checklist](release/v0.8-release-readiness.md)
 - [v0.9 release readiness checklist](release/v0.9-release-readiness.md)
+- [v1.0 release readiness checklist](release/v1.0-release-readiness.md)
 - [v0.4 release summary](release/v0.4-release-summary.md)
 - [v0.9 release summary](release/v0.9-release-summary.md)
 - [v0.1 Repository Foundation acceptance checklist](requirements/v0.1-acceptance.md)
@@ -28,6 +29,7 @@ This directory is the documentation entry point for OBS Duel Recorder.
 - [v0.7 Queue Recovery System acceptance checklist](requirements/v0.7-queue-recovery-system-acceptance.md)
 - [v0.8 Template Matching MVP acceptance checklist](requirements/v0.8-template-matching-mvp-acceptance.md)
 - [v0.9 Screenshot System acceptance checklist](requirements/v0.9-screenshot-system-acceptance.md)
+- [v1.0 YouTube Upload MVP acceptance checklist](requirements/v1.0-youtube-upload-mvp-acceptance.md)
 
 ## Architecture
 

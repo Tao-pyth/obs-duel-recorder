@@ -189,9 +189,13 @@ class QueueStore:
                 self._require_state(item, {"uploading", "need_manual_review"}, action)
                 state = "uploaded"
                 params["youtube_video_id"] = _string_field(payload, "youtube_video_id")
-                params["youtube_url"] = _string_field(payload, "youtube_url")
                 if not params["youtube_video_id"]:
                     raise QueueCommandError("queue_payload_invalid", {"youtube_video_id": "required"})
+                params["youtube_url"] = _string_field(
+                    payload,
+                    "youtube_url",
+                    f"https://youtu.be/{params['youtube_video_id']}",
+                )
             elif action == "mark_upload_failed":
                 self._require_state(item, {"uploading", "ready_upload", "upload_failed"}, action)
                 state, params = self._failed_state(item, payload, now)
@@ -210,10 +214,15 @@ class QueueStore:
                 self._require_state(item, {"upload_failed", "quota_waiting", "need_manual_review"}, action)
                 state = "ready_upload"
                 params["next_attempt_at"] = ""
+                params["manual_review_reason"] = _string_field(payload, "reason", item.manual_review_reason)
+                if "manual_review_evidence" in payload:
+                    params["manual_review_evidence_json"] = _compact_evidence(payload.get("manual_review_evidence"))
             elif action == "discard":
                 self._require_state(item, QUEUE_STATES - TERMINAL_STATES, action)
                 state = "discarded"
                 params["manual_review_reason"] = _string_field(payload, "reason", item.manual_review_reason)
+                if "manual_review_evidence" in payload:
+                    params["manual_review_evidence_json"] = _compact_evidence(payload.get("manual_review_evidence"))
             else:
                 raise QueueCommandError("queue_payload_invalid", {"action": "unknown_action"})
 

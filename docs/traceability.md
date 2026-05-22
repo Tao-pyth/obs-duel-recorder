@@ -128,8 +128,10 @@ Goals:
 
 - Roadmap: `docs/roadmap.md` -> **v1.0 - YouTube Upload MVP**
 - Version tracking issue: `#318` - `[v1.0] YouTube Upload MVP release tracking`
-- Acceptance checklist: not created yet
-- Release readiness checklist: not created yet
+- Acceptance checklist: `docs/requirements/v1.0-youtube-upload-mvp-acceptance.md`
+- Release readiness checklist: `docs/release/v1.0-release-readiness.md`
+- Upload architecture contract: `docs/architecture/upload.md`
+- Worker API contract: `docs/architecture/worker-api.md`
 - Release record: not created yet
 - Requirements (relevant sections):
   - `docs/requirements/requirements.md` -> Upload Rules / Queue States / Architecture / Platform / Runtime Rules

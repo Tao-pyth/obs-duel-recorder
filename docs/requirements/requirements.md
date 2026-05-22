@@ -49,6 +49,11 @@ The system separates responsibilities into:
 - youtube_video_id must be stored
 - youtube_url must be stored
 - quota exceeded waits for YouTube quota reset
+- OAuth scope must be limited to `https://www.googleapis.com/auth/youtube.upload`
+- Default upload privacy must be `private`
+- Tokens, client secrets, authorization codes, and bearer strings must be redacted from diagnostics
+- Missing local videos are discarded with evidence
+- Ambiguous upload outcomes require manual review instead of blind retry
 
 ---
 

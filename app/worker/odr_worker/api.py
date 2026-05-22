@@ -23,6 +23,7 @@ from .recording import (
 )
 from .runtime_dirs import RuntimeDirs
 from .screenshots import ScreenshotError, ScreenshotStore
+from .upload import UploadCommandError, UploadStore, build_upload_settings
 from .version import __version__
 
 
@@ -78,6 +79,7 @@ def create_app(*, runtime_dirs: RuntimeDirs, loaded_config: LoadedWorkerConfig, 
     app.state.queue_store = None
     app.state.queue_recovery = {"recovered": []}
     app.state.screenshot_store = None
+    app.state.upload_store = None
     if db_info is not None:
         app.state.db = WorkerDb(
             db_path=db_info.db_path,
@@ -89,6 +91,11 @@ def create_app(*, runtime_dirs: RuntimeDirs, loaded_config: LoadedWorkerConfig, 
         app.state.screenshot_store = ScreenshotStore(
             db_path=db_info.db_path,
             screenshots_dir=runtime_dirs.screenshots_dir,
+        )
+        app.state.upload_store = UploadStore(
+            queue_store=app.state.queue_store,
+            videos_dir=runtime_dirs.videos_dir,
+            settings=build_upload_settings(user_data_dir=runtime_dirs.user_data_dir),
         )
 
     @app.get("/health")
@@ -419,6 +426,61 @@ def create_app(*, runtime_dirs: RuntimeDirs, loaded_config: LoadedWorkerConfig, 
                 status_code=400,
                 code="screenshot_cleanup_invalid",
                 message="Screenshot cleanup payload must include integer queue_item_id",
+            )
+
+    @app.get("/upload/status")
+    def get_upload_status() -> dict[str, object]:
+        if app.state.upload_store is None:
+            return _error_response(
+                status_code=503,
+                code="upload_unavailable",
+                message="Upload storage is unavailable",
+            )
+        try:
+            return app.state.upload_store.status()
+        except QueueCommandError as exc:
+            return _error_response(
+                status_code=400,
+                code=exc.code,
+                message="Upload status is invalid",
+                details=exc.details,
+            )
+
+    @app.post("/upload/process-next")
+    async def post_upload_process_next(request: Request):
+        if app.state.upload_store is None:
+            return _error_response(
+                status_code=503,
+                code="upload_unavailable",
+                message="Upload storage is unavailable",
+            )
+        try:
+            payload = await request.json()
+            if not isinstance(payload, dict):
+                raise ValueError
+            return app.state.upload_store.process_next(payload)
+        except UploadCommandError as exc:
+            return _error_response(
+                status_code=400,
+                code=exc.code,
+                message="Upload request is invalid",
+                details=exc.details,
+            )
+        except QueueCommandError as exc:
+            status_code = 409 if exc.code == "queue_transition_invalid" else 400
+            if exc.code == "queue_item_not_found":
+                status_code = 404
+            return _error_response(
+                status_code=status_code,
+                code=exc.code,
+                message="Upload queue transition is invalid",
+                details=exc.details,
+            )
+        except ValueError:
+            return _error_response(
+                status_code=400,
+                code="upload_payload_invalid",
+                message="Upload payload must be JSON object",
             )
 
     @app.exception_handler(Exception)
