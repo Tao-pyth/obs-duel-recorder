@@ -191,6 +191,16 @@ void PluginUiController::refresh()
 	ownership_value_->setText(QString::fromUtf8(ownership_name(snapshot.ownership)));
 	detail_value_->setText(qstr_utf8(snapshot.error.empty() ? snapshot.last_probe_summary : snapshot.error));
 	action_value_->setText(QString::fromUtf8(recommended_action(snapshot.state)));
+
+	if (snapshot.overlay_state_available &&
+	    (!overlay_state_applied_ ||
+	     snapshot.overlay_state.deck_name != last_applied_overlay_state_.deck_name ||
+	     snapshot.overlay_state.sequence_number != last_applied_overlay_state_.sequence_number)) {
+		const PluginSettings settings = load_plugin_settings();
+		log_overlay_source_result(update_deck_sequence_overlay_sources(settings.overlay, snapshot.overlay_state));
+		last_applied_overlay_state_ = snapshot.overlay_state;
+		overlay_state_applied_ = true;
+	}
 }
 
 void PluginUiController::open_settings_from_menu(void *private_data)
@@ -257,6 +267,7 @@ void PluginUiController::save_settings_and_restart(const PluginSettings &setting
 	     settings.endpoint.port, to_utf8(settings.user_data_dir).c_str());
 
 	log_overlay_source_result(ensure_overlay_text_sources(settings.overlay));
+	overlay_state_applied_ = false;
 	worker_manager_.stop();
 	worker_manager_.start_async(make_launch_config(settings));
 	refresh();

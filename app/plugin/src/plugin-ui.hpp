@@ -32,6 +32,8 @@ private:
 	QLabel *ownership_value_ = nullptr;
 	QLabel *detail_value_ = nullptr;
 	QLabel *action_value_ = nullptr;
+	OverlayStatePayload last_applied_overlay_state_;
+	bool overlay_state_applied_ = false;
 	bool tools_menu_registered_ = false;
 };
 

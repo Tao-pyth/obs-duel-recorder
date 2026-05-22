@@ -43,16 +43,20 @@ struct WorkerStatusSnapshot {
 	WorkerDiagnosticState state = WorkerDiagnosticState::not_started;
 	WorkerOwnership ownership = WorkerOwnership::none;
 	WorkerEndpoint endpoint;
+	OverlayStatePayload overlay_state;
 	std::wstring user_data_dir;
 	std::string last_probe_summary;
 	std::string error;
+	std::string overlay_error;
 	std::string api_version;
 	std::string version;
 	std::string instance_id;
 	std::string pid;
 	std::string started_at;
 	unsigned long http_status = 0;
+	unsigned long overlay_http_status = 0;
 	unsigned int consecutive_failures = 0;
+	bool overlay_state_available = false;
 };
 
 class WorkerProcessManager {
@@ -72,7 +76,8 @@ private:
 	WorkerOwnership current_ownership() const;
 	void update_status(WorkerDiagnosticState state, const WorkerLaunchConfig &config,
 			   WorkerOwnership ownership, const std::string &error,
-			   const WorkerProbeResult *probe = nullptr, unsigned int consecutive_failures = 0);
+			   const WorkerProbeResult *probe = nullptr, unsigned int consecutive_failures = 0,
+			   const OverlayFetchResult *overlay = nullptr);
 	void close_process_handles();
 
 	LocalhostApiClient api_client_;

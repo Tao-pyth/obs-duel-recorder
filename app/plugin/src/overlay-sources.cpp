@@ -118,6 +118,36 @@ void create_source(OverlaySourceEnsureResult &result, const OverlayField &field,
 	obs_source_release(source);
 }
 
+std::string display_or_default(const std::string &value, const OverlayFieldSettings &settings)
+{
+	return value.empty() ? settings.default_text : value;
+}
+
+void update_text_source(OverlaySourceEnsureResult &result, const OverlayField &field, const std::string &text,
+			bool used_default)
+{
+	obs_source_t *source = obs_get_source_by_name(field.settings.source_name.c_str());
+	if (!source) {
+		add_diagnostic(result, "overlay_source_missing", field, "update", "source_not_found");
+		return;
+	}
+	if (!is_supported_text_source(source)) {
+		const char *id = obs_source_get_id(source);
+		add_diagnostic(result, "overlay_source_unsupported", field, "skip", id ? id : "unknown_source_kind");
+		obs_source_release(source);
+		return;
+	}
+
+	obs_data_t *data = obs_data_create();
+	obs_data_set_string(data, "text", text.c_str());
+	obs_source_update(source, data);
+	obs_data_release(data);
+	obs_source_release(source);
+
+	blog(LOG_INFO, "%s overlay update applied field=%s source=%s action=update value=%s", kLogPrefix, field.key,
+	     field.settings.source_name.c_str(), used_default ? "default" : "payload");
+}
+
 void ensure_field(OverlaySourceEnsureResult &result, const OverlayField &field, bool auto_create_sources)
 {
 	SourceNameCount count{field.settings.source_name};
@@ -217,6 +247,23 @@ void log_overlay_source_result(const OverlaySourceEnsureResult &result)
 		     diagnostic.code.c_str(), diagnostic.field.c_str(), diagnostic.source_name.c_str(),
 		     diagnostic.action.c_str(), diagnostic.reason.c_str());
 	}
+}
+
+OverlaySourceEnsureResult update_deck_sequence_overlay_sources(const OverlaySettings &settings,
+							       const OverlayStatePayload &state)
+{
+	OverlaySourceEnsureResult result;
+	if (!settings.enabled) {
+		return result;
+	}
+
+	const OverlayField deck_name{"deck_name", settings.deck_name};
+	const OverlayField sequence_number{"sequence_number", settings.sequence_number};
+	const std::string deck_text = display_or_default(state.deck_name, settings.deck_name);
+	const std::string sequence_text = display_or_default(state.sequence_number, settings.sequence_number);
+	update_text_source(result, deck_name, deck_text, state.deck_name.empty());
+	update_text_source(result, sequence_number, sequence_text, state.sequence_number.empty());
+	return result;
 }
 
 } // namespace odr::plugin

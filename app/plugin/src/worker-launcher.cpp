@@ -301,7 +301,8 @@ void WorkerProcessManager::monitor_heartbeat(const WorkerLaunchConfig &config, c
 			}
 			consecutive_failures = 0;
 			timeout_reported = false;
-			update_status(WorkerDiagnosticState::running, config, current_ownership(), {}, &probe);
+			OverlayFetchResult overlay = api_client_.fetch_overlay_state(config.endpoint);
+			update_status(WorkerDiagnosticState::running, config, current_ownership(), {}, &probe, 0, &overlay);
 
 			if (!replacement_reported && identity_changed(baseline, probe)) {
 				replacement_reported = true;
@@ -340,7 +341,8 @@ WorkerOwnership WorkerProcessManager::current_ownership() const
 
 void WorkerProcessManager::update_status(WorkerDiagnosticState state, const WorkerLaunchConfig &config,
 					 WorkerOwnership ownership, const std::string &error,
-					 const WorkerProbeResult *probe, unsigned int consecutive_failures)
+					 const WorkerProbeResult *probe, unsigned int consecutive_failures,
+					 const OverlayFetchResult *overlay)
 {
 	std::lock_guard<std::mutex> lock(mutex_);
 	status_.state = state;
@@ -357,6 +359,14 @@ void WorkerProcessManager::update_status(WorkerDiagnosticState state, const Work
 		status_.instance_id = probe->instance_id;
 		status_.pid = probe->pid;
 		status_.started_at = probe->started_at;
+	}
+	if (overlay) {
+		status_.overlay_http_status = overlay->http_status;
+		status_.overlay_error = overlay->error;
+		status_.overlay_state_available = overlay->status == OverlayFetchStatus::reachable;
+		if (status_.overlay_state_available) {
+			status_.overlay_state = overlay->state;
+		}
 	}
 }
 
