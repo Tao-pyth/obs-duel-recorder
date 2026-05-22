@@ -92,6 +92,7 @@ Goals:
 - Release readiness checklist: `docs/release/v0.7-release-readiness.md`
 - Queue architecture contract: `docs/architecture/queue.md`
 - Worker API contract: `docs/architecture/worker-api.md`
+- Release record: `docs/release-history.md`; detailed summary: `docs/release/v0.7-release-summary.md`
 - Requirements (relevant sections):
   - `docs/requirements/requirements.md` -> Match Data / Queue / Architecture / Platform / Runtime Rules
   - `AGENTS.md` -> Runtime Directory Rules / Responsibility Separation
