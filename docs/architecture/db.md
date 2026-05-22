@@ -69,3 +69,23 @@ v0.7 queue recovery columns:
 - `manual_review_reason`
 - `manual_review_evidence_json`
 - `updated_at`
+
+### screenshots
+
+v0.9 screenshot archive table:
+- `id`
+- `match_id`
+- `queue_item_id`
+- `kind`
+- `relative_path`
+- `content_type`
+- `size_bytes`
+- `status`
+- `created_at`
+- `updated_at`
+
+Rules:
+- `match_id` references `matches.id`.
+- `queue_item_id` references `upload_queue.id`.
+- `relative_path` is unique under `user_data/data/screenshots/`.
+- `status` is one of `available`, `missing`, or `deleted`.

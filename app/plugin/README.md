@@ -18,9 +18,9 @@ The Plugin must not:
 - directly manipulate SQLite
 - directly upload to YouTube
 
-## Current v0.8 Template Matching MVP
+## Current v0.9 Screenshot System
 
-The current scaffold keeps the v0.5 overlay surface, v0.6 manual recording lifecycle controls, v0.7 queue recovery API compatibility, and v0.8 template detection API compatibility:
+The current scaffold keeps the v0.5 overlay surface, v0.6 manual recording lifecycle controls, v0.7 queue recovery API compatibility, v0.8 template detection API compatibility, and v0.9 screenshot API compatibility:
 
 - Build a loadable OBS module.
 - Register minimal OBS Frontend API lifecycle hooks.
@@ -37,6 +37,7 @@ The current scaffold keeps the v0.5 overlay surface, v0.6 manual recording lifec
 - Synchronize OBS recording started/stopped frontend events through the Worker recording-state API.
 - Require a v0.7-compatible Worker for queue recovery and retry-safe upload queue state.
 - Require a v0.8-compatible Worker for template detection and automatic recording trigger state.
+- Require a v0.9-compatible Worker for screenshot capture, preview, DB linkage, and upload-safe cleanup.
 
 Current non-goals:
 - Full control UI beyond the v0.6 manual start/stop controls.
@@ -165,8 +166,8 @@ Defaults:
 - Worker command: `odr-worker`
 - Host: `127.0.0.1`
 - Port: `8787`
-- Expected Worker API version: `0.8`
-- Expected Worker version: `0.8.0`
+- Expected Worker API version: `0.9`
+- Expected Worker version: `0.9.0`
 - Heartbeat interval: 2000 ms
 - Heartbeat timeout threshold: 3 consecutive failed probes
 

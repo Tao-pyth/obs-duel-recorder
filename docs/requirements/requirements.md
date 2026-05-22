@@ -20,7 +20,7 @@ The system separates responsibilities into:
 | Component | Responsibility |
 |---|---|
 | OBS Plugin | OBS integration, overlay control, Dock UI, Worker lifecycle |
-| Python Worker | Queue processing, SQLite, OCR, template matching, upload processing |
+| Python Worker | Queue processing, SQLite, OCR, template matching, screenshot archive, upload processing |
 
 ---
 
@@ -72,6 +72,16 @@ Secondary:
 - OCR
 
 OCR must not be the primary trigger mechanism.
+
+---
+
+## Screenshot Rules
+
+- Screenshot files are runtime data under `user_data/data/screenshots/`.
+- Screenshot metadata is Worker-owned and persisted in SQLite.
+- Screenshots can link to match and upload queue records.
+- Upload cleanup must preserve screenshots needed for failure diagnosis or manual review.
+- The repository must not distribute runtime screenshots or game assets.
 
 ---
 

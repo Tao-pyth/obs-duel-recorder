@@ -73,6 +73,18 @@ Template detection frame example:
 Invoke-WebRequest http://127.0.0.1:8787/detection/frame -Method Post -ContentType "application/json" -Body '{"frame_text":"sample frame bytes or fixture text"}' | Select-Object -ExpandProperty Content
 ```
 
+Screenshot capture example:
+
+```powershell
+Invoke-WebRequest http://127.0.0.1:8787/screenshots/capture -Method Post -ContentType "application/json" -Body '{"kind":"duel-start","content_text":"local fixture bytes"}' | Select-Object -ExpandProperty Content
+```
+
+Screenshot preview example:
+
+```powershell
+Invoke-WebRequest http://127.0.0.1:8787/screenshots/1/preview | Select-Object -ExpandProperty Content
+```
+
 Configuration scaffold (v0.2):
 - default config path: `user_data/config/worker.toml`
 - docs: `docs/architecture/worker-config.md`
