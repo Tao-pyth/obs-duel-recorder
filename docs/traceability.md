@@ -61,8 +61,10 @@ Goals:
 
 - Roadmap: `docs/roadmap.md` -> **v0.5 - Overlay Integration**
 - Version tracking issue: `#288` - `[v0.5] Overlay Integration release tracking`
-- Acceptance checklist: TBD
-- Release readiness checklist: TBD
+- Acceptance checklist: `docs/requirements/v0.5-overlay-integration-acceptance.md`
+- Release readiness checklist: `docs/release/v0.5-release-readiness.md`
+- Smoke procedure: `docs/architecture/v0.5-overlay-smoke.md`
+- Smoke evidence gate: `#296`
 - Requirements (relevant sections):
   - `docs/requirements/requirements.md` -> Overlay Rules / Architecture / Platform / Runtime Rules
   - `AGENTS.md` -> Runtime Directory Rules / Responsibility Separation
@@ -107,3 +109,4 @@ The version tracking issue itself is not an implementation work item.
 - Refs #88
 - Refs #110
 - Refs #288
+- Refs #296
