@@ -48,3 +48,21 @@ The version tracking issue may contain the working release summary, but finalize
 - Version PRs: #112, #118
 - Next version tracking issue: #110
 - Status: released
+
+### v0.4.0 - OBS Plugin Skeleton
+
+- Version tracking issue: #110
+- Milestone: `v0.4` (not set)
+- Release readiness checklist: `docs/release/v0.4-release-readiness.md`
+- Tag: `v0.4.0` intended; tag creation tooling was unavailable in this run
+- Intended tag target: `629f4f6d8d28d0d9dcca96381340a04077d2bb62`
+- Release finalized at: `2026-05-23T00:24:03+09:00`
+- Release summary: `docs/release/v0.4-release-summary.md`
+- Major child issues: #119, #120, #121, #122, #123, #144
+- Smoke evidence gate: #285
+- Major PRs: #244, #245, #251, #282, #287
+- Validation PRs: #283, #284, #286
+- Documentation/design PRs: #128, #131, #132, #134, #136, #138, #143, #146, #150
+- Deferred items: Overlay Integration remains in #288; Recording State Management remains v0.6
+- Next version tracking issue: #288
+- Status: released; tag still needs maintainer/tooling creation at the intended target above
