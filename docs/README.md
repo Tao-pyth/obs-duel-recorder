@@ -14,11 +14,13 @@ This directory is the documentation entry point for OBS Duel Recorder.
 - [v0.3 release readiness checklist](release/v0.3-release-readiness.md)
 - [v0.4 release readiness checklist](release/v0.4-release-readiness.md)
 - [v0.5 release readiness checklist](release/v0.5-release-readiness.md)
+- [v0.6 release readiness checklist](release/v0.6-release-readiness.md)
 - [v0.4 release summary](release/v0.4-release-summary.md)
 - [v0.1 Repository Foundation acceptance checklist](requirements/v0.1-acceptance.md)
 - [v0.3 SQLite Foundation acceptance checklist](requirements/v0.3-sqlite-foundation-acceptance.md)
 - [v0.4 OBS Plugin Skeleton acceptance checklist](requirements/v0.4-obs-plugin-skeleton-acceptance.md)
 - [v0.5 Overlay Integration acceptance checklist](requirements/v0.5-overlay-integration-acceptance.md)
+- [v0.6 Recording State Management acceptance checklist](requirements/v0.6-recording-state-management-acceptance.md)
 
 ## Architecture
 
@@ -28,8 +30,10 @@ Architecture documents describe technical behavior and responsibility boundaries
 - [Overlay architecture](architecture/overlay.md)
 - [Database design](architecture/db.md)
 - [Queue design](architecture/queue.md)
+- [Recording state machine](architecture/recording.md)
 - [Upload flow](architecture/upload.md)
 - [v0.5 OBS overlay smoke procedure](architecture/v0.5-overlay-smoke.md)
+- [v0.6 recording-state smoke procedure](architecture/v0.6-recording-state-smoke.md)
 
 ## Worker (Developer)
 
