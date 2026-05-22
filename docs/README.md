@@ -25,6 +25,7 @@ This directory is the documentation entry point for OBS Duel Recorder.
 Architecture documents describe technical behavior and responsibility boundaries.
 
 - [Plugin and Worker architecture](architecture/plugin-worker.md)
+- [Overlay architecture](architecture/overlay.md)
 - [Database design](architecture/db.md)
 - [Queue design](architecture/queue.md)
 - [Upload flow](architecture/upload.md)
