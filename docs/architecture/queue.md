@@ -106,7 +106,7 @@ On startup, reconcile `uploading` items in this order:
 
 - Retry: `need_manual_review` -> `ready_upload`
 - Discard: `need_manual_review` -> dropped (terminal; no retry)
-- (Future) Mark as uploaded by attaching `youtube_video_id` after a manual channel check
+- Mark uploaded: attach `youtube_video_id` after a manual channel check
 
 Manual adjudication evidence and allowed operator actions are defined above in `need_manual_review` Contract (v0.7+).
 
