@@ -24,8 +24,8 @@ class SqliteFoundationTests(unittest.TestCase):
 
             db_info = init_db(runtime_dirs=runtime_dirs)
             self.assertTrue(db_info.db_path.exists())
-            self.assertGreaterEqual(db_info.schema_version, 2)
-            self.assertEqual(db_info.applied_migrations, ("0001_init", "0002_tables"))
+            self.assertGreaterEqual(db_info.schema_version, 3)
+            self.assertEqual(db_info.applied_migrations, ("0001_init", "0002_tables", "0003_queue_recovery"))
 
             conn = sqlite3.connect(db_info.db_path)
             try:
@@ -39,13 +39,18 @@ class SqliteFoundationTests(unittest.TestCase):
                 conn.execute("INSERT INTO matches DEFAULT VALUES;")
                 match_id = conn.execute("SELECT id FROM matches ORDER BY id DESC LIMIT 1;").fetchone()[0]
                 conn.execute(
-                    "INSERT INTO upload_queue(match_id, state) VALUES(?, ?);",
-                    (match_id, "ready_upload"),
+                    "INSERT INTO upload_queue(match_id, state, video_path) VALUES(?, ?, ?);",
+                    (match_id, "ready_upload", "duel.mp4"),
                 )
                 conn.commit()
 
-                row = conn.execute("SELECT state FROM upload_queue WHERE match_id = ?;", (match_id,)).fetchone()
+                row = conn.execute(
+                    "SELECT state, retry_count, manual_review_evidence_json FROM upload_queue WHERE match_id = ?;",
+                    (match_id,),
+                ).fetchone()
                 self.assertEqual(row[0], "ready_upload")
+                self.assertEqual(row[1], 0)
+                self.assertEqual(row[2], "{}")
             finally:
                 conn.close()
 
@@ -98,6 +103,8 @@ class SqliteFoundationTests(unittest.TestCase):
                 )
             if migration_id == "0002_tables":
                 return "THIS IS INVALID SQL;"
+            if migration_id == "0003_queue_recovery":
+                return ""
             raise AssertionError("unexpected migration id")
 
         with tempfile.TemporaryDirectory() as tmp:

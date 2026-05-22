@@ -18,9 +18,9 @@ The Plugin must not:
 - directly manipulate SQLite
 - directly upload to YouTube
 
-## Current v0.6 Recording State Management
+## Current v0.7 Queue Recovery System
 
-The current scaffold keeps the v0.5 overlay surface and adds v0.6 manual recording lifecycle controls:
+The current scaffold keeps the v0.5 overlay surface, v0.6 manual recording lifecycle controls, and v0.7 queue recovery API compatibility:
 
 - Build a loadable OBS module.
 - Register minimal OBS Frontend API lifecycle hooks.
@@ -35,6 +35,7 @@ The current scaffold keeps the v0.5 overlay surface and adds v0.6 manual recordi
 - Log stable overlay diagnostics for missing, duplicated, unsupported, unavailable, or failed source operations.
 - Add Dock buttons for manual OBS recording start and stop.
 - Synchronize OBS recording started/stopped frontend events through the Worker recording-state API.
+- Require a v0.7-compatible Worker for queue recovery and retry-safe upload queue state.
 
 Current non-goals:
 - Full control UI beyond the v0.6 manual start/stop controls.
@@ -163,8 +164,8 @@ Defaults:
 - Worker command: `odr-worker`
 - Host: `127.0.0.1`
 - Port: `8787`
-- Expected Worker API version: `0.6`
-- Expected Worker version: `0.6.0`
+- Expected Worker API version: `0.7`
+- Expected Worker version: `0.7.0`
 - Heartbeat interval: 2000 ms
 - Heartbeat timeout threshold: 3 consecutive failed probes
 

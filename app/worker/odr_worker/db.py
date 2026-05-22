@@ -23,6 +23,7 @@ class DbInfo:
 _MIGRATIONS: tuple[str, ...] = (
     "0001_init",
     "0002_tables",
+    "0003_queue_recovery",
 )
 
 

@@ -49,6 +49,18 @@ Manual recording command example:
 Invoke-WebRequest http://127.0.0.1:8787/recording/command -Method Post -ContentType "application/json" -Body '{"action":"start","source":"manual"}' | Select-Object -ExpandProperty Content
 ```
 
+Queue check:
+
+```powershell
+Invoke-WebRequest http://127.0.0.1:8787/queue/items | Select-Object -ExpandProperty Content
+```
+
+Create a queue item:
+
+```powershell
+Invoke-WebRequest http://127.0.0.1:8787/queue/items -Method Post -ContentType "application/json" -Body '{"video_path":"C:/path/to/duel.mp4"}' | Select-Object -ExpandProperty Content
+```
+
 Configuration scaffold (v0.2):
 - default config path: `user_data/config/worker.toml`
 - docs: `docs/architecture/worker-config.md`
