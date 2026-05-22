@@ -17,7 +17,7 @@ namespace {
 
 std::string extract_json_string(const std::string &body, const char *key)
 {
-	const std::regex pattern(std::string("\"") + key + R"("\s*:\s*"([^"]*)")");
+	const std::regex pattern(std::string("\"") + key + "\"\\s*:\\s*\"([^\"]*)\"");
 	std::smatch match;
 	if (!std::regex_search(body, match, pattern) || match.size() < 2) {
 		return {};
@@ -27,7 +27,7 @@ std::string extract_json_string(const std::string &body, const char *key)
 
 std::string extract_json_number(const std::string &body, const char *key)
 {
-	const std::regex pattern(std::string("\"") + key + R"("\s*:\s*([0-9]+))");
+	const std::regex pattern(std::string("\"") + key + "\"\\s*:\\s*([0-9]+)");
 	std::smatch match;
 	if (!std::regex_search(body, match, pattern) || match.size() < 2) {
 		return {};
