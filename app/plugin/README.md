@@ -20,16 +20,16 @@ The Plugin must not:
 
 ## Current v0.4 Scaffold
 
-The current scaffold is intentionally minimal for #119/#120/#123/#144:
+The current scaffold is intentionally minimal for #119/#120/#121/#123/#144:
 
 - Build a loadable OBS module.
 - Register minimal OBS Frontend API lifecycle hooks.
 - Log plugin startup and shutdown messages.
 - Probe and launch the Worker when `ODR_USER_DATA_DIR` is explicitly configured.
 - Reuse a healthy singleton Worker for the same `ODR_USER_DATA_DIR`.
+- Monitor Worker heartbeat through `GET /health`.
 
 Current non-goals:
-- Worker heartbeat monitoring.
 - Settings UI.
 - Browser Dock UI.
 
@@ -73,12 +73,21 @@ Defaults:
 - Port: `8787`
 - Expected Worker API version: `0.3`
 - Expected Worker version: `0.3.0`
+- Heartbeat interval: 2000 ms
+- Heartbeat timeout threshold: 3 consecutive failed probes
 
 Startup behavior:
 - On OBS frontend ready, the Plugin probes `GET /health` on the configured host/port.
 - If a compatible Worker is already running for the same `ODR_USER_DATA_DIR`, the Plugin reuses it.
 - If a reachable Worker reports a different runtime root, incompatible API version, or unexpected Worker version, startup is blocked and the Plugin logs diagnostics.
 - If no Worker is reachable, the Plugin starts `odr-worker --host 127.0.0.1 --port 8787` with `ODR_USER_DATA_DIR` in the child process environment.
+
+Heartbeat behavior:
+- `/health` is the readiness and heartbeat source of truth.
+- The Plugin records a heartbeat baseline from `api_version`, `version`, `instance_id`, `pid`, `started_at`, and `user_data_dir`.
+- Consecutive probe failures are logged with the target `host:port`, `ODR_USER_DATA_DIR`, and baseline identity evidence.
+- After the failure threshold is reached, the Plugin logs heartbeat timeout evidence.
+- If `instance_id`, `pid`, or `started_at` changes during a healthy heartbeat sequence, the Plugin logs `unexpected_process_change` evidence and does not treat those fields as ownership gates.
 
 Shutdown behavior:
 - Plugin-spawned Workers are stopped on OBS shutdown/plugin unload.
@@ -90,7 +99,7 @@ Use the canonical v0.4 smoke procedure:
 
 - `docs/architecture/v0.4-smoke.md`
 
-For #119/#120/#123/#144, the minimum passing evidence is:
+For #119/#120/#121/#123/#144, the minimum passing evidence is:
 
 - The CMake configure and build commands used.
 - The produced plugin DLL path.
@@ -99,11 +108,12 @@ For #119/#120/#123/#144, the minimum passing evidence is:
   - `OBS Duel Recorder plugin startup`
   - `OBS Duel Recorder plugin shutdown`
   - worker preflight or launch result
+  - heartbeat baseline and either heartbeat success or failure evidence
   - `ODR_USER_DATA_DIR`
   - Worker ownership (`plugin-spawned` or `reused-existing`)
 
 ## Current Lifecycle Surface
 
-The scaffold registers an OBS Frontend API callback, logs lightweight lifecycle events, and runs the initial Worker preflight/launch flow.
+The scaffold registers an OBS Frontend API callback, logs lightweight lifecycle events, and runs the initial Worker preflight/launch/heartbeat flow.
 
-Heavy work must remain outside the plugin process. Heartbeat, settings, and Dock behavior must be added through their own v0.4 issues.
+Heavy work must remain outside the plugin process. Settings and Dock behavior must be added through their own v0.4 issues.

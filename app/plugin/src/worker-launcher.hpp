@@ -24,6 +24,8 @@ struct WorkerLaunchConfig {
 	std::wstring user_data_dir;
 	std::wstring command = L"odr-worker";
 	unsigned int startup_timeout_ms = 10000;
+	unsigned int heartbeat_interval_ms = 2000;
+	unsigned int heartbeat_failure_threshold = 3;
 };
 
 class WorkerProcessManager {
@@ -37,11 +39,13 @@ public:
 private:
 	void start(WorkerLaunchConfig config);
 	bool spawn_worker(const WorkerLaunchConfig &config);
-	bool wait_until_ready(const WorkerLaunchConfig &config);
+	bool wait_until_ready(const WorkerLaunchConfig &config, WorkerProbeResult &ready_probe);
+	void monitor_heartbeat(const WorkerLaunchConfig &config, const WorkerProbeResult &baseline);
+	WorkerOwnership current_ownership() const;
 	void close_process_handles();
 
 	LocalhostApiClient api_client_;
-	std::mutex mutex_;
+	mutable std::mutex mutex_;
 	std::thread worker_thread_;
 	std::atomic_bool stop_requested_{false};
 	WorkerOwnership ownership_ = WorkerOwnership::none;
