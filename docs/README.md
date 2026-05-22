@@ -43,6 +43,17 @@ User-facing setup and usage documents live under `docs/user/`.
 Documentation validation policy lives at:
 - [Documentation validation policy](validation.md)
 
+Quick validation commands (run from the repository root):
+
+```powershell
+powershell -NoLogo -NoProfile -ExecutionPolicy Bypass -File docs/tools/validate_markdown_links.ps1
+python scripts/validate_jp_user_docs_coverage.py --root .
+```
+
+Notes:
+- Markdown links: checks `README*.md` and `docs/**/*.md`.
+- JP user docs coverage: checks English ↔ Japanese topic coverage.
+
 ## Documentation Rules
 
 - Keep important design decisions under `docs/`.
@@ -51,15 +62,3 @@ Documentation validation policy lives at:
 - Treat English documents as canonical; translations should not contradict the English source.
 - Keep completed release point information in `docs/release-history.md` or a version-specific release summary.
 - Do not use documentation pages to store runtime data, credentials, screenshots, or game assets.
-
-## Validation
-
-Validate internal Markdown links (files within the repository):
-
-```powershell
-python scripts/validate_markdown_links.py
-```
-
-Notes:
-- Checks `README*.md` and `docs/**/*.md`.
-- Ignores `http(s)` and `mailto:` targets.
