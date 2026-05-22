@@ -23,14 +23,14 @@ Major and minor release completions are tagged as `vMajor.Minor.Patch`. See [Rel
 ## Current Development
 
 Latest released version:
-- `v0.8.0` - Template Matching MVP
+- `v0.9.0` - Screenshot System
 
 Current development target:
-- `v0.9` - Screenshot System
-- Tracking issue: [#250](https://github.com/Tao-pyth/obs-duel-recorder/issues/250)
+- `v1.0` - YouTube Upload MVP
+- Tracking issue: [#318](https://github.com/Tao-pyth/obs-duel-recorder/issues/318)
 
 Next roadmap target:
-- `v1.0` - YouTube Upload MVP
+- `v1.1` - Match Metadata
 
 ---
 
@@ -53,9 +53,9 @@ Current released foundation:
 - Worker runtime, health, logging, and migration foundations
 - OBS Plugin skeleton and Worker lifecycle management
 - OBS overlay Text Source integration
+- Screenshot capture and linkage
 
 Planned roadmap capabilities:
-- Screenshot capture and linkage (`v0.9`)
 - YouTube archive upload (`v1.0`)
 - Match memo support (`v1.1`)
 - GitHub Actions based packaging (`v1.4+`)
@@ -107,26 +107,26 @@ obs-duel-recorder/
 
 ### Latest Release
 
-- Version: `v0.8.0`
-- Scope: Template Matching MVP
+- Version: `v0.9.0`
+- Scope: Screenshot System
 - Status: released
-- Tag target: `a83fa4ca6d09e169bf8c9b175a1e4863644eb3ec`
-- Tracking issue: [#249](https://github.com/Tao-pyth/obs-duel-recorder/issues/249)
+- Tag target: `fd2fca25b632f4aea471cca7044886e689a3faf1`
+- Tracking issue: [#250](https://github.com/Tao-pyth/obs-duel-recorder/issues/250)
 - Release record: [docs/release-history.md](docs/release-history.md)
 
-### Completed in v0.8
+### Completed in v0.9
 
-- Local template configuration and loading from `user_data`
-- Deterministic Worker template matching MVP
-- Duel lifecycle states for no duel, potential duel, active duel, and ended duel
-- Detection API at `/detection/templates`, `/detection/state`, and `/detection/frame`
-- Automatic recording start/stop trigger integration through the recording lifecycle API
-- Template matching acceptance and release readiness documentation
+- Worker-owned screenshot capture and archive storage under `user_data/data/screenshots/`
+- Deterministic screenshot naming rules
+- SQLite screenshot metadata linked to matches and upload queue items
+- Screenshot preview API with missing-file diagnostics
+- Upload-state-aware screenshot cleanup that preserves failure evidence
+- Screenshot acceptance, architecture, API, DB, and release readiness documentation
 
-### Planned After v0.8
+### Planned After v0.9
 
-- `v0.9` - Screenshot System
-- Later roadmap items include screenshot capture, upload automation, packaging, and GitHub Pages documentation.
+- `v1.0` - YouTube Upload MVP
+- Later roadmap items include upload automation, metadata management, packaging, and GitHub Pages documentation.
 
 ---
 
