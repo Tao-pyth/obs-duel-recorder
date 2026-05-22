@@ -51,10 +51,10 @@ bool obs_module_load(void)
 
 void obs_module_unload(void)
 {
+	blog(LOG_INFO, "%s plugin shutdown", kLogPrefix);
 	ui_controller.unregister_ui();
 	worker_manager.stop();
 	obs_frontend_remove_event_callback(frontend_event, nullptr);
-	blog(LOG_INFO, "%s plugin shutdown", kLogPrefix);
 }
 
 const char *obs_module_description(void)
