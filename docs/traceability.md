@@ -124,6 +124,17 @@ Goals:
   - `docs/requirements/requirements.md` -> Match Data / Queue / Architecture / Platform / Runtime Rules
   - `AGENTS.md` -> Runtime Directory Rules / Responsibility Separation
 
+### v1.0 - YouTube Upload MVP
+
+- Roadmap: `docs/roadmap.md` -> **v1.0 - YouTube Upload MVP**
+- Version tracking issue: `#318` - `[v1.0] YouTube Upload MVP release tracking`
+- Acceptance checklist: not created yet
+- Release readiness checklist: not created yet
+- Release record: not created yet
+- Requirements (relevant sections):
+  - `docs/requirements/requirements.md` -> Upload Rules / Queue States / Architecture / Platform / Runtime Rules
+  - `AGENTS.md` -> Runtime Directory Rules / Responsibility Separation
+
 ---
 
 ## Policy
@@ -171,3 +182,4 @@ The version tracking issue itself is not an implementation work item.
 - Refs #310
 - Refs #249
 - Refs #250
+- Refs #318

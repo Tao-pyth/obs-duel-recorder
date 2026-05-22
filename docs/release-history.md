@@ -135,3 +135,19 @@ The version tracking issue may contain the working release summary, but finalize
 - Deferred items: Screenshot System remains in #250; YouTube Upload MVP remains v1.0
 - Next version tracking issue: #250
 - Status: released
+
+### v0.9.0 - Screenshot System
+
+- Version tracking issue: #250
+- Milestone: `v0.9` (not set)
+- Release readiness checklist: `docs/release/v0.9-release-readiness.md`
+- Tag: `v0.9.0`
+- Tag target: `fd2fca25b632f4aea471cca7044886e689a3faf1`
+- Release finalized at: `2026-05-23T04:36:20+09:00`
+- Tag finalized at: `2026-05-23T04:35:10+09:00`
+- Release summary: `docs/release/v0.9-release-summary.md`
+- Major child issues: #276, #277, #278, #279, #280, #281
+- Major PRs: #317
+- Deferred items: YouTube Upload MVP remains in #318 for v1.0
+- Next version tracking issue: #318
+- Status: released
