@@ -158,6 +158,21 @@ For #119/#120/#121/#122/#123/#144, the minimum passing evidence is:
   - Worker ownership (`plugin-spawned` or `reused-existing`)
 - The Dock displays the Worker diagnostic state and settings entry point.
 
+After manual smoke, collect a redaction-ready report with:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts\collect_v0_4_plugin_smoke.ps1 `
+  -ObsPrefix "C:\Path\To\obs-studio-or-sdk" `
+  -QtPrefix "C:\Path\To\Qt\6.x.x\msvc2022_64" `
+  -UserDataDir "C:\Path\To\user_data" `
+  -ObsLogPath "$env:APPDATA\obs-studio\logs\<obs-log>.txt" `
+  -DockState "running" `
+  -SettingsFlow "saved host/port/user_data_dir; apply=worker_restart observed" `
+  -WorkerOwnership "plugin-spawned"
+```
+
+The script writes `build/plugin/v0.4-plugin-smoke-report.md` by default.
+
 ## Current Lifecycle Surface
 
 The scaffold registers an OBS Frontend API callback, logs lightweight lifecycle events, runs the initial Worker preflight/launch/heartbeat flow, and surfaces status-first diagnostics in a Dock.
