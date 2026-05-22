@@ -20,14 +20,15 @@ The Plugin must not:
 
 ## Current v0.4 Scaffold
 
-The current scaffold is intentionally minimal for #119:
+The current scaffold is intentionally minimal for #119/#120/#123/#144:
 
 - Build a loadable OBS module.
 - Register minimal OBS Frontend API lifecycle hooks.
 - Log plugin startup and shutdown messages.
+- Probe and launch the Worker when `ODR_USER_DATA_DIR` is explicitly configured.
+- Reuse a healthy singleton Worker for the same `ODR_USER_DATA_DIR`.
 
 Current non-goals:
-- Worker process launch.
 - Worker heartbeat monitoring.
 - Settings UI.
 - Browser Dock UI.
@@ -59,13 +60,37 @@ Expected artifact:
 build/plugin/Release/obs-duel-recorder.dll
 ```
 
+## Worker Launch Inputs
+
+The v0.4 launch path is intentionally conservative until the settings page exists.
+
+Required environment:
+- `ODR_USER_DATA_DIR`: absolute runtime root to pass to the Worker.
+
+Defaults:
+- Worker command: `odr-worker`
+- Host: `127.0.0.1`
+- Port: `8787`
+- Expected Worker API version: `0.3`
+- Expected Worker version: `0.3.0`
+
+Startup behavior:
+- On OBS frontend ready, the Plugin probes `GET /health` on the configured host/port.
+- If a compatible Worker is already running for the same `ODR_USER_DATA_DIR`, the Plugin reuses it.
+- If a reachable Worker reports a different runtime root, incompatible API version, or unexpected Worker version, startup is blocked and the Plugin logs diagnostics.
+- If no Worker is reachable, the Plugin starts `odr-worker --host 127.0.0.1 --port 8787` with `ODR_USER_DATA_DIR` in the child process environment.
+
+Shutdown behavior:
+- Plugin-spawned Workers are stopped on OBS shutdown/plugin unload.
+- Reused existing Workers are not stopped by the Plugin.
+
 ## Manual Smoke
 
 Use the canonical v0.4 smoke procedure:
 
 - `docs/architecture/v0.4-smoke.md`
 
-For #119, the minimum passing evidence is:
+For #119/#120/#123/#144, the minimum passing evidence is:
 
 - The CMake configure and build commands used.
 - The produced plugin DLL path.
@@ -73,9 +98,12 @@ For #119, the minimum passing evidence is:
 - OBS or ODR logs include:
   - `OBS Duel Recorder plugin startup`
   - `OBS Duel Recorder plugin shutdown`
+  - worker preflight or launch result
+  - `ODR_USER_DATA_DIR`
+  - Worker ownership (`plugin-spawned` or `reused-existing`)
 
 ## Current Lifecycle Surface
 
-The scaffold registers an OBS Frontend API callback and logs only lightweight lifecycle events.
+The scaffold registers an OBS Frontend API callback, logs lightweight lifecycle events, and runs the initial Worker preflight/launch flow.
 
-Heavy work must remain outside the plugin process. Worker launch, heartbeat, settings, and Dock behavior must be added through their own v0.4 issues.
+Heavy work must remain outside the plugin process. Heartbeat, settings, and Dock behavior must be added through their own v0.4 issues.
