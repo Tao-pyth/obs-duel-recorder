@@ -110,6 +110,20 @@ Goals:
   - `docs/requirements/requirements.md` -> Detection Rules / Architecture / Platform / Runtime Rules
   - `AGENTS.md` -> Runtime Directory Rules / Responsibility Separation
 
+### v0.9 - Screenshot System
+
+- Roadmap: `docs/roadmap.md` -> **v0.9 - Screenshot System**
+- Version tracking issue: `#250` - `[v0.9] Screenshot System release tracking`
+- Acceptance checklist: `docs/requirements/v0.9-screenshot-system-acceptance.md`
+- Release readiness checklist: `docs/release/v0.9-release-readiness.md`
+- Screenshot architecture contract: `docs/architecture/screenshots.md`
+- Database contract: `docs/architecture/db.md`
+- Worker API contract: `docs/architecture/worker-api.md`
+- Release record: `docs/release-history.md`; detailed summary: `docs/release/v0.9-release-summary.md`
+- Requirements (relevant sections):
+  - `docs/requirements/requirements.md` -> Match Data / Queue / Architecture / Platform / Runtime Rules
+  - `AGENTS.md` -> Runtime Directory Rules / Responsibility Separation
+
 ---
 
 ## Policy
@@ -155,3 +169,5 @@ The version tracking issue itself is not an implementation work item.
 - Refs #247
 - Refs #248
 - Refs #310
+- Refs #249
+- Refs #250

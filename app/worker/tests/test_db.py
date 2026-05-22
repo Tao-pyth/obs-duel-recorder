@@ -24,8 +24,11 @@ class SqliteFoundationTests(unittest.TestCase):
 
             db_info = init_db(runtime_dirs=runtime_dirs)
             self.assertTrue(db_info.db_path.exists())
-            self.assertGreaterEqual(db_info.schema_version, 3)
-            self.assertEqual(db_info.applied_migrations, ("0001_init", "0002_tables", "0003_queue_recovery"))
+            self.assertGreaterEqual(db_info.schema_version, 4)
+            self.assertEqual(
+                db_info.applied_migrations,
+                ("0001_init", "0002_tables", "0003_queue_recovery", "0004_screenshots"),
+            )
 
             conn = sqlite3.connect(db_info.db_path)
             try:
@@ -35,6 +38,7 @@ class SqliteFoundationTests(unittest.TestCase):
                 }
                 self.assertIn("matches", tables)
                 self.assertIn("upload_queue", tables)
+                self.assertIn("screenshots", tables)
 
                 conn.execute("INSERT INTO matches DEFAULT VALUES;")
                 match_id = conn.execute("SELECT id FROM matches ORDER BY id DESC LIMIT 1;").fetchone()[0]
@@ -104,6 +108,8 @@ class SqliteFoundationTests(unittest.TestCase):
             if migration_id == "0002_tables":
                 return "THIS IS INVALID SQL;"
             if migration_id == "0003_queue_recovery":
+                return ""
+            if migration_id == "0004_screenshots":
                 return ""
             raise AssertionError("unexpected migration id")
 

@@ -195,3 +195,60 @@ Error behavior:
 The v0.8 detection API is defined by:
 - `docs/architecture/detection.md`
 - `docs/requirements/v0.8-template-matching-mvp-acceptance.md`
+
+---
+
+## v0.9 Screenshot Endpoints
+
+v0.9 adds Worker-owned screenshot archive endpoints while preserving prior API compatibility.
+
+### `GET /screenshots`
+
+Purpose:
+- List screenshot records.
+- Optionally filter records by match or upload queue item.
+
+Query:
+- `match_id`: optional integer.
+- `queue_item_id`: optional integer.
+
+### `POST /screenshots/capture`
+
+Purpose:
+- Store screenshot bytes under `user_data/data/screenshots/`.
+- Insert a SQLite metadata row linked to optional match and queue context.
+- Return the created screenshot record.
+
+Request fields:
+- `match_id`: optional integer.
+- `queue_item_id`: optional integer.
+- `kind`: optional screenshot kind.
+- `captured_at`: optional timestamp used in the file name.
+- `content_type`: optional content type.
+- `extension`: optional file extension.
+- `content_base64`: screenshot bytes, or
+- `content_text`: UTF-8 fixture content.
+
+### `GET /screenshots/{screenshot_id}`
+
+Purpose:
+- Return one screenshot metadata record.
+
+### `GET /screenshots/{screenshot_id}/preview`
+
+Purpose:
+- Return base64 preview content and content type when the file exists.
+- Mark an available record `missing` when the DB row exists but the file is gone.
+
+### `POST /screenshots/cleanup`
+
+Purpose:
+- Delete local screenshot files and mark DB rows `deleted` only when the linked queue item is cleanup-safe.
+- Preserve screenshot evidence for upload failures, quota waits, active uploads, and manual review.
+
+Request:
+- `queue_item_id`: integer.
+
+The v0.9 screenshot API is defined by:
+- `docs/architecture/screenshots.md`
+- `docs/requirements/v0.9-screenshot-system-acceptance.md`

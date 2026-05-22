@@ -11,8 +11,8 @@ namespace odr::plugin {
 namespace {
 
 constexpr const char *kLogPrefix = "OBS Duel Recorder";
-constexpr const char *kExpectedApiVersion = "0.8";
-constexpr const char *kExpectedWorkerVersion = "0.8.0";
+constexpr const char *kExpectedApiVersion = "0.9";
+constexpr const char *kExpectedWorkerVersion = "0.9.0";
 
 bool identity_changed(const WorkerProbeResult &baseline, const WorkerProbeResult &current)
 {

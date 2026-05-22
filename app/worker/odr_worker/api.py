@@ -22,6 +22,7 @@ from .recording import (
     save_recording_state,
 )
 from .runtime_dirs import RuntimeDirs
+from .screenshots import ScreenshotError, ScreenshotStore
 from .version import __version__
 
 
@@ -76,6 +77,7 @@ def create_app(*, runtime_dirs: RuntimeDirs, loaded_config: LoadedWorkerConfig, 
     app.state.db = None
     app.state.queue_store = None
     app.state.queue_recovery = {"recovered": []}
+    app.state.screenshot_store = None
     if db_info is not None:
         app.state.db = WorkerDb(
             db_path=db_info.db_path,
@@ -84,6 +86,10 @@ def create_app(*, runtime_dirs: RuntimeDirs, loaded_config: LoadedWorkerConfig, 
         )
         app.state.queue_store = QueueStore(db_info.db_path)
         app.state.queue_recovery = app.state.queue_store.recover_startup()
+        app.state.screenshot_store = ScreenshotStore(
+            db_path=db_info.db_path,
+            screenshots_dir=runtime_dirs.screenshots_dir,
+        )
 
     @app.get("/health")
     def health() -> dict[str, object]:
@@ -312,6 +318,108 @@ def create_app(*, runtime_dirs: RuntimeDirs, loaded_config: LoadedWorkerConfig, 
             **result,
             "recording_state": app.state.recording_state.as_payload(),
         }
+
+    @app.get("/screenshots")
+    def get_screenshots(match_id: int | None = None, queue_item_id: int | None = None) -> dict[str, object]:
+        if app.state.screenshot_store is None:
+            return _error_response(
+                status_code=503,
+                code="screenshots_unavailable",
+                message="Screenshot storage is unavailable",
+            )
+        records = app.state.screenshot_store.list_records(match_id=match_id, queue_item_id=queue_item_id)
+        return {"items": [record.as_payload() for record in records]}
+
+    @app.post("/screenshots/capture")
+    async def post_screenshot_capture(request: Request):
+        if app.state.screenshot_store is None:
+            return _error_response(
+                status_code=503,
+                code="screenshots_unavailable",
+                message="Screenshot storage is unavailable",
+            )
+        try:
+            payload = await request.json()
+            if not isinstance(payload, dict):
+                raise ValueError
+            record = app.state.screenshot_store.capture(payload)
+        except ScreenshotError as exc:
+            return _error_response(
+                status_code=400,
+                code=exc.code,
+                message="Screenshot request is invalid",
+                details=exc.details,
+            )
+        except ValueError:
+            return _error_response(
+                status_code=400,
+                code="screenshot_payload_invalid",
+                message="Screenshot payload must be JSON object",
+            )
+        return record.as_payload()
+
+    @app.get("/screenshots/{screenshot_id}")
+    def get_screenshot(screenshot_id: int):
+        if app.state.screenshot_store is None:
+            return _error_response(
+                status_code=503,
+                code="screenshots_unavailable",
+                message="Screenshot storage is unavailable",
+            )
+        try:
+            return app.state.screenshot_store.get_record(screenshot_id).as_payload()
+        except ScreenshotError as exc:
+            return _error_response(
+                status_code=404 if exc.code == "screenshot_not_found" else 400,
+                code=exc.code,
+                message="Screenshot request is invalid",
+                details=exc.details,
+            )
+
+    @app.get("/screenshots/{screenshot_id}/preview")
+    def get_screenshot_preview(screenshot_id: int):
+        if app.state.screenshot_store is None:
+            return _error_response(
+                status_code=503,
+                code="screenshots_unavailable",
+                message="Screenshot storage is unavailable",
+            )
+        try:
+            return app.state.screenshot_store.preview(screenshot_id)
+        except ScreenshotError as exc:
+            return _error_response(
+                status_code=404 if exc.code == "screenshot_not_found" else 400,
+                code=exc.code,
+                message="Screenshot preview is unavailable",
+                details=exc.details,
+            )
+
+    @app.post("/screenshots/cleanup")
+    async def post_screenshot_cleanup(request: Request):
+        if app.state.screenshot_store is None:
+            return _error_response(
+                status_code=503,
+                code="screenshots_unavailable",
+                message="Screenshot storage is unavailable",
+            )
+        try:
+            payload = await request.json()
+            if not isinstance(payload, dict) or not isinstance(payload.get("queue_item_id"), int):
+                raise ValueError
+            return app.state.screenshot_store.cleanup_for_queue_item(payload["queue_item_id"])
+        except ScreenshotError as exc:
+            return _error_response(
+                status_code=404 if exc.code == "queue_item_not_found" else 400,
+                code=exc.code,
+                message="Screenshot cleanup is invalid",
+                details=exc.details,
+            )
+        except ValueError:
+            return _error_response(
+                status_code=400,
+                code="screenshot_cleanup_invalid",
+                message="Screenshot cleanup payload must include integer queue_item_id",
+            )
 
     @app.exception_handler(Exception)
     async def unhandled_exception_handler(request: Request, exc: Exception):
