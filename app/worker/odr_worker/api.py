@@ -8,6 +8,7 @@ from fastapi.responses import JSONResponse
 
 from .config import LoadedWorkerConfig, get_repo_root
 from .db import DbInfo
+from .detection import DetectionRuntime, TemplateConfigError, load_template_config, load_templates
 from .health import API_VERSION, PID, STARTED_AT, WorkerDb, WorkerPaths, build_health_payload
 from .identity import INSTANCE_ID
 from .overlay import OverlayPayloadError, OverlayState, apply_overlay_update
@@ -60,6 +61,17 @@ def create_app(*, runtime_dirs: RuntimeDirs, loaded_config: LoadedWorkerConfig, 
         app.state.overlay_state,
         {"recording_state": overlay_recording_state(app.state.recording_state)},
     )
+    app.state.detection_config_error = None
+    try:
+        app.state.detection_config = load_template_config(runtime_dirs.user_data_dir)
+        app.state.detection_runtime = DetectionRuntime(
+            app.state.detection_config,
+            load_templates(app.state.detection_config),
+        )
+    except TemplateConfigError as exc:
+        app.state.detection_config = None
+        app.state.detection_runtime = None
+        app.state.detection_config_error = exc.details
 
     app.state.db = None
     app.state.queue_store = None
@@ -242,6 +254,64 @@ def create_app(*, runtime_dirs: RuntimeDirs, loaded_config: LoadedWorkerConfig, 
                 message="Queue command must be JSON object",
             )
         return item.as_payload()
+
+    @app.get("/detection/templates")
+    def get_detection_templates() -> dict[str, object]:
+        if app.state.detection_config is None:
+            return {
+                "config_loaded": False,
+                "errors": [app.state.detection_config_error or {"config": "unavailable"}],
+                "templates": [],
+            }
+        return app.state.detection_config.as_payload()
+
+    @app.get("/detection/state")
+    def get_detection_state() -> dict[str, object]:
+        if app.state.detection_runtime is None:
+            return _error_response(
+                status_code=503,
+                code="detection_unavailable",
+                message="Detection runtime is unavailable",
+                details=app.state.detection_config_error,
+            )
+        return app.state.detection_runtime.state.as_payload()
+
+    @app.post("/detection/frame")
+    async def post_detection_frame(request: Request):
+        if app.state.detection_runtime is None:
+            return _error_response(
+                status_code=503,
+                code="detection_unavailable",
+                message="Detection runtime is unavailable",
+                details=app.state.detection_config_error,
+            )
+        try:
+            payload = await request.json()
+            result, recording_state = app.state.detection_runtime.evaluate(payload, app.state.recording_state)
+            if recording_state != app.state.recording_state:
+                app.state.recording_state = recording_state
+                save_recording_state(app.state.recording_state_path, app.state.recording_state)
+                app.state.overlay_state = apply_overlay_update(
+                    app.state.overlay_state,
+                    {"recording_state": overlay_recording_state(app.state.recording_state)},
+                )
+        except TemplateConfigError as exc:
+            return _error_response(
+                status_code=400,
+                code="detection_payload_invalid",
+                message="Detection payload is invalid",
+                details=exc.details,
+            )
+        except ValueError:
+            return _error_response(
+                status_code=400,
+                code="detection_payload_invalid",
+                message="Detection payload must be JSON object",
+            )
+        return {
+            **result,
+            "recording_state": app.state.recording_state.as_payload(),
+        }
 
     @app.exception_handler(Exception)
     async def unhandled_exception_handler(request: Request, exc: Exception):

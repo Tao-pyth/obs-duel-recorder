@@ -97,6 +97,18 @@ Goals:
   - `docs/requirements/requirements.md` -> Match Data / Queue / Architecture / Platform / Runtime Rules
   - `AGENTS.md` -> Runtime Directory Rules / Responsibility Separation
 
+### v0.8 - Template Matching MVP
+
+- Roadmap: `docs/roadmap.md` -> **v0.8 - Template Matching MVP**
+- Version tracking issue: `#249` - `[v0.8] Template Matching MVP release tracking`
+- Acceptance checklist: `docs/requirements/v0.8-template-matching-mvp-acceptance.md`
+- Release readiness checklist: `docs/release/v0.8-release-readiness.md`
+- Detection architecture contract: `docs/architecture/detection.md`
+- Worker API contract: `docs/architecture/worker-api.md`
+- Requirements (relevant sections):
+  - `docs/requirements/requirements.md` -> Detection Rules / Architecture / Platform / Runtime Rules
+  - `AGENTS.md` -> Runtime Directory Rules / Responsibility Separation
+
 ---
 
 ## Policy

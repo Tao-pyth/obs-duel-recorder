@@ -145,3 +145,53 @@ Error behavior:
 The v0.7 queue API is defined by:
 - `docs/architecture/queue.md`
 - `docs/requirements/v0.7-queue-recovery-system-acceptance.md`
+
+---
+
+## v0.8 Template Detection Endpoints
+
+v0.8 adds local template detection and duel lifecycle state while preserving prior API compatibility.
+
+### `GET /detection/templates`
+
+Purpose:
+- Return template configuration diagnostics.
+- Confirm whether `user_data/config/templates.toml` was loaded.
+- List locally configured templates without bundling any template assets.
+
+### `GET /detection/state`
+
+Purpose:
+- Return the current duel lifecycle state.
+
+Response fields:
+- `lifecycle_state`: `no_duel`, `potential_duel`, `active_duel`, or `ended_duel`
+- `start_count`: current start confirmation count
+- `end_count`: current end confirmation count
+- `last_event`: latest lifecycle event
+- `updated_at`: UTC ISO 8601 timestamp
+
+### `POST /detection/frame`
+
+Purpose:
+- Evaluate one frame fixture against configured local templates.
+- Update duel lifecycle state.
+- Trigger automatic recording commands through the v0.6 recording boundary when start/end is confirmed.
+
+Request fields:
+- `frame_text`: UTF-8 fixture text, or
+- `frame_hex`: hex-encoded bytes
+
+Response fields:
+- lifecycle state fields
+- `events`: lifecycle and recording integration events
+- `matches`: template match details
+- `recording_state`: current Worker recording state after detection integration
+
+Error behavior:
+- Invalid detection payloads return HTTP 400 with `code=detection_payload_invalid`.
+- Invalid detection config makes runtime endpoints return HTTP 503 with `code=detection_unavailable`.
+
+The v0.8 detection API is defined by:
+- `docs/architecture/detection.md`
+- `docs/requirements/v0.8-template-matching-mvp-acceptance.md`
