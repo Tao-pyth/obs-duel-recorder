@@ -163,8 +163,8 @@ Defaults:
 - Worker command: `odr-worker`
 - Host: `127.0.0.1`
 - Port: `8787`
-- Expected Worker API version: `0.3`
-- Expected Worker version: `0.3.0`
+- Expected Worker API version: `0.6`
+- Expected Worker version: `0.6.0`
 - Heartbeat interval: 2000 ms
 - Heartbeat timeout threshold: 3 consecutive failed probes
 

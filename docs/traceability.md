@@ -78,8 +78,20 @@ Goals:
 - Release readiness checklist: `docs/release/v0.6-release-readiness.md`
 - Recording architecture contract: `docs/architecture/recording.md`
 - Smoke procedure: `docs/architecture/v0.6-recording-state-smoke.md`
+- Smoke evidence gate: `#310`
+- Release record: `docs/release-history.md`; detailed summary: `docs/release/v0.6-release-summary.md`
 - Requirements (relevant sections):
   - `docs/requirements/requirements.md` -> Architecture / Platform / Runtime Rules
+  - `AGENTS.md` -> Runtime Directory Rules / Responsibility Separation
+
+### v0.7 - Queue Recovery System
+
+- Roadmap: `docs/roadmap.md` -> **v0.7 - Queue Recovery System**
+- Version tracking issue: `#248` - `[v0.7] Queue Recovery System release tracking`
+- Acceptance checklist: not created yet
+- Release readiness checklist: not created yet
+- Requirements (relevant sections):
+  - `docs/requirements/requirements.md` -> Match Data / Queue / Architecture / Platform / Runtime Rules
   - `AGENTS.md` -> Runtime Directory Rules / Responsibility Separation
 
 ---
@@ -125,3 +137,5 @@ The version tracking issue itself is not an implementation work item.
 - Refs #291
 - Refs #296
 - Refs #247
+- Refs #248
+- Refs #310

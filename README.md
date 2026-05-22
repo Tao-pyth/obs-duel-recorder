@@ -23,14 +23,14 @@ Major and minor release completions are tagged as `vMajor.Minor.Patch`. See [Rel
 ## Current Development
 
 Latest released version:
-- `v0.5.0` - Overlay Integration
+- `v0.6.0` - Recording State Management
 
 Current development target:
-- `v0.6` - Recording State Management
-- Tracking issue: [#303](https://github.com/Tao-pyth/obs-duel-recorder/issues/303)
+- `v0.7` - Queue Recovery System
+- Tracking issue: [#248](https://github.com/Tao-pyth/obs-duel-recorder/issues/248)
 
 Next roadmap target:
-- `v0.7` - Queue Recovery System
+- `v0.8` - Automatic Duel Recording
 
 ---
 
@@ -55,7 +55,6 @@ Current released foundation:
 - OBS overlay Text Source integration
 
 Planned roadmap capabilities:
-- Recording state management (`v0.6`)
 - Match queue management (`v0.7`)
 - Automatic duel recording (`v0.8`)
 - YouTube archive upload (`v1.0`)
@@ -110,25 +109,26 @@ obs-duel-recorder/
 
 ### Latest Release
 
-- Version: `v0.5.0`
-- Scope: Overlay Integration
-- Status: released
-- Tag target: `474c657fa8f3e90cfe12202105b0f69c8c9f7643`
-- Tracking issue: [#288](https://github.com/Tao-pyth/obs-duel-recorder/issues/288)
+- Version: `v0.6.0`
+- Scope: Recording State Management
+- Status: release finalization in progress
+- Tag target: to be recorded after the v0.6 release PR merge
+- Tracking issue: [#247](https://github.com/Tao-pyth/obs-duel-recorder/issues/247)
 - Release record: [docs/release-history.md](docs/release-history.md)
 
-### Completed in v0.5
+### Completed in v0.6
 
-- Fixed OBS Text Source management for overlay fields
-- Backward-compatible Plugin overlay settings defaults
-- Worker overlay state API at `/overlay/state`
-- Plugin polling and Text Source updates for deck name, sequence number, result, opponent deck, and recording-state display
-- Display-only recording-state overlay boundary; full state machine remains v0.6
-- Windows OBS overlay smoke evidence recorded in #296
+- Worker-owned recording lifecycle state model
+- Recording state API at `/recording/state` and `/recording/command`
+- Manual OBS Dock start/stop controls
+- OBS frontend recording event synchronization
+- Interrupted recording recovery and discard handling
+- Overlay recording-state display driven from authoritative Worker state
+- Windows OBS recording-state smoke evidence recorded in #310
 
-### Planned After v0.5
+### Planned After v0.6
 
-- `v0.6` - Recording State Management
+- `v0.7` - Queue Recovery System
 - Later roadmap items include queue recovery, template matching, upload automation, packaging, and GitHub Pages documentation.
 
 ---
