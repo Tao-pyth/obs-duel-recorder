@@ -4,9 +4,12 @@ project(obs-duel-recorder-plugin VERSION 0.4.0 LANGUAGES CXX)
 
 find_package(libobs REQUIRED)
 find_package(obs-frontend-api REQUIRED)
+find_package(Qt6 REQUIRED COMPONENTS Widgets)
 
 add_library(obs-duel-recorder MODULE
   src/plugin-main.cpp
+  src/plugin-settings.cpp
+  src/plugin-ui.cpp
   src/worker-api.cpp
   src/worker-launcher.cpp
 )
@@ -17,6 +20,7 @@ target_link_libraries(obs-duel-recorder
   PRIVATE
     OBS::libobs
     OBS::obs-frontend-api
+    Qt6::Widgets
 )
 
 if(WIN32)

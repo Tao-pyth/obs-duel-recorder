@@ -19,6 +19,17 @@ enum class WorkerOwnership {
 	reused_existing,
 };
 
+enum class WorkerDiagnosticState {
+	not_started,
+	starting,
+	running,
+	unhealthy,
+	config_error,
+	runtime_dir_error,
+	api_incompatible,
+	crashed,
+};
+
 struct WorkerLaunchConfig {
 	WorkerEndpoint endpoint;
 	std::wstring user_data_dir;
@@ -28,6 +39,22 @@ struct WorkerLaunchConfig {
 	unsigned int heartbeat_failure_threshold = 3;
 };
 
+struct WorkerStatusSnapshot {
+	WorkerDiagnosticState state = WorkerDiagnosticState::not_started;
+	WorkerOwnership ownership = WorkerOwnership::none;
+	WorkerEndpoint endpoint;
+	std::wstring user_data_dir;
+	std::string last_probe_summary;
+	std::string error;
+	std::string api_version;
+	std::string version;
+	std::string instance_id;
+	std::string pid;
+	std::string started_at;
+	unsigned long http_status = 0;
+	unsigned int consecutive_failures = 0;
+};
+
 class WorkerProcessManager {
 public:
 	WorkerProcessManager();
@@ -35,6 +62,7 @@ public:
 
 	void start_async(WorkerLaunchConfig config);
 	void stop();
+	WorkerStatusSnapshot status_snapshot() const;
 
 private:
 	void start(WorkerLaunchConfig config);
@@ -42,6 +70,9 @@ private:
 	bool wait_until_ready(const WorkerLaunchConfig &config, WorkerProbeResult &ready_probe);
 	void monitor_heartbeat(const WorkerLaunchConfig &config, const WorkerProbeResult &baseline);
 	WorkerOwnership current_ownership() const;
+	void update_status(WorkerDiagnosticState state, const WorkerLaunchConfig &config,
+			   WorkerOwnership ownership, const std::string &error,
+			   const WorkerProbeResult *probe = nullptr, unsigned int consecutive_failures = 0);
 	void close_process_handles();
 
 	LocalhostApiClient api_client_;
@@ -49,6 +80,7 @@ private:
 	std::thread worker_thread_;
 	std::atomic_bool stop_requested_{false};
 	WorkerOwnership ownership_ = WorkerOwnership::none;
+	WorkerStatusSnapshot status_;
 
 #ifdef _WIN32
 	PROCESS_INFORMATION process_info_{};

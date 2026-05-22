@@ -21,6 +21,35 @@ bool identity_changed(const WorkerProbeResult &baseline, const WorkerProbeResult
 	       (!baseline.started_at.empty() && !current.started_at.empty() && baseline.started_at != current.started_at);
 }
 
+WorkerDiagnosticState diagnostic_state_for_probe(const WorkerProbeResult &probe)
+{
+	switch (probe.status) {
+	case WorkerProbeStatus::reachable:
+		return WorkerDiagnosticState::running;
+	case WorkerProbeStatus::api_incompatible:
+		return WorkerDiagnosticState::api_incompatible;
+	case WorkerProbeStatus::runtime_root_mismatch:
+		return WorkerDiagnosticState::runtime_dir_error;
+	case WorkerProbeStatus::invalid_response:
+		return WorkerDiagnosticState::unhealthy;
+	case WorkerProbeStatus::unreachable:
+		return WorkerDiagnosticState::starting;
+	}
+	return WorkerDiagnosticState::unhealthy;
+}
+
+std::string summarize_probe(const WorkerProbeResult &probe)
+{
+	return "status=" + std::to_string(static_cast<int>(probe.status)) +
+	       " http=" + std::to_string(probe.http_status) +
+	       " api_version=" + probe.api_version +
+	       " version=" + probe.version +
+	       " instance_id=" + probe.instance_id +
+	       " pid=" + probe.pid +
+	       " started_at=" + probe.started_at +
+	       " user_data_dir=" + probe.user_data_dir;
+}
+
 #ifdef _WIN32
 
 std::vector<wchar_t> build_environment_block(const std::wstring &user_data_dir)
@@ -99,10 +128,13 @@ void WorkerProcessManager::start_async(WorkerLaunchConfig config)
 void WorkerProcessManager::start(WorkerLaunchConfig config)
 {
 	if (config.user_data_dir.empty()) {
+		update_status(WorkerDiagnosticState::config_error, config, WorkerOwnership::none,
+			      "ODR_USER_DATA_DIR is required before launching Worker");
 		blog(LOG_WARNING, "%s config_error: ODR_USER_DATA_DIR is required before launching Worker", kLogPrefix);
 		return;
 	}
 
+	update_status(WorkerDiagnosticState::starting, config, WorkerOwnership::none, "probing Worker health");
 	blog(LOG_INFO, "%s worker preflight host=%s port=%u user_data_dir=%s",
 	     kLogPrefix, to_utf8(config.endpoint.host).c_str(), config.endpoint.port,
 	     to_utf8(config.user_data_dir).c_str());
@@ -113,6 +145,7 @@ void WorkerProcessManager::start(WorkerLaunchConfig config)
 			std::lock_guard<std::mutex> lock(mutex_);
 			ownership_ = WorkerOwnership::reused_existing;
 		}
+		update_status(WorkerDiagnosticState::running, config, WorkerOwnership::reused_existing, {}, &preflight);
 		blog(LOG_INFO,
 		     "%s worker reused existing instance api_version=%s version=%s instance_id=%s pid=%s started_at=%s user_data_dir=%s",
 		     kLogPrefix, preflight.api_version.c_str(), preflight.version.c_str(),
@@ -123,6 +156,7 @@ void WorkerProcessManager::start(WorkerLaunchConfig config)
 	}
 
 	if (preflight.status != WorkerProbeStatus::unreachable) {
+		update_status(diagnostic_state_for_probe(preflight), config, WorkerOwnership::none, preflight.error, &preflight);
 		blog(LOG_WARNING,
 		     "%s worker launch blocked status=%d http=%lu error=%s api_version=%s version=%s instance_id=%s user_data_dir=%s",
 		     kLogPrefix, static_cast<int>(preflight.status), preflight.http_status,
@@ -132,11 +166,15 @@ void WorkerProcessManager::start(WorkerLaunchConfig config)
 	}
 
 	if (!spawn_worker(config)) {
+		update_status(WorkerDiagnosticState::config_error, config, WorkerOwnership::none, "Worker launch failed");
 		return;
 	}
+	update_status(WorkerDiagnosticState::starting, config, WorkerOwnership::spawned_by_plugin, "waiting for Worker readiness");
 
 	WorkerProbeResult ready_probe;
 	if (!wait_until_ready(config, ready_probe)) {
+		update_status(WorkerDiagnosticState::unhealthy, config, WorkerOwnership::spawned_by_plugin,
+			      "worker startup timeout", &ready_probe);
 		blog(LOG_WARNING, "%s worker startup timeout; terminating plugin-owned process", kLogPrefix);
 #ifdef _WIN32
 		std::lock_guard<std::mutex> lock(mutex_);
@@ -150,6 +188,7 @@ void WorkerProcessManager::start(WorkerLaunchConfig config)
 		return;
 	}
 
+	update_status(WorkerDiagnosticState::running, config, WorkerOwnership::spawned_by_plugin, {}, &ready_probe);
 	monitor_heartbeat(config, ready_probe);
 }
 
@@ -205,6 +244,8 @@ bool WorkerProcessManager::wait_until_ready(const WorkerLaunchConfig &config, Wo
 			     probe.started_at.c_str(), probe.user_data_dir.c_str());
 			return true;
 		}
+		ready_probe = probe;
+		update_status(diagnostic_state_for_probe(probe), config, current_ownership(), probe.error, &probe);
 		std::this_thread::sleep_for(std::chrono::milliseconds(250));
 	}
 
@@ -235,6 +276,11 @@ void WorkerProcessManager::monitor_heartbeat(const WorkerLaunchConfig &config, c
 			if (process_info_.hProcess) {
 				DWORD exit_code = 0;
 				if (GetExitCodeProcess(process_info_.hProcess, &exit_code) && exit_code != STILL_ACTIVE) {
+					status_.state = WorkerDiagnosticState::crashed;
+					status_.ownership = WorkerOwnership::spawned_by_plugin;
+					status_.endpoint = config.endpoint;
+					status_.user_data_dir = config.user_data_dir;
+					status_.error = "Worker exited with code " + std::to_string(exit_code);
 					blog(LOG_WARNING,
 					     "%s heartbeat crashed exit_code=%lu user_data_dir=%s instance_id=%s pid=%s started_at=%s",
 					     kLogPrefix, exit_code, to_utf8(config.user_data_dir).c_str(),
@@ -255,6 +301,7 @@ void WorkerProcessManager::monitor_heartbeat(const WorkerLaunchConfig &config, c
 			}
 			consecutive_failures = 0;
 			timeout_reported = false;
+			update_status(WorkerDiagnosticState::running, config, current_ownership(), {}, &probe);
 
 			if (!replacement_reported && identity_changed(baseline, probe)) {
 				replacement_reported = true;
@@ -268,6 +315,7 @@ void WorkerProcessManager::monitor_heartbeat(const WorkerLaunchConfig &config, c
 		}
 
 		++consecutive_failures;
+		update_status(WorkerDiagnosticState::unhealthy, config, current_ownership(), probe.error, &probe, consecutive_failures);
 		blog(LOG_WARNING,
 		     "%s heartbeat probe_failed failures=%u status=%d http=%lu error=%s user_data_dir=%s instance_id=%s pid=%s started_at=%s",
 		     kLogPrefix, consecutive_failures, static_cast<int>(probe.status), probe.http_status,
@@ -290,6 +338,34 @@ WorkerOwnership WorkerProcessManager::current_ownership() const
 	return ownership_;
 }
 
+void WorkerProcessManager::update_status(WorkerDiagnosticState state, const WorkerLaunchConfig &config,
+					 WorkerOwnership ownership, const std::string &error,
+					 const WorkerProbeResult *probe, unsigned int consecutive_failures)
+{
+	std::lock_guard<std::mutex> lock(mutex_);
+	status_.state = state;
+	status_.ownership = ownership;
+	status_.endpoint = config.endpoint;
+	status_.user_data_dir = config.user_data_dir;
+	status_.error = error;
+	status_.consecutive_failures = consecutive_failures;
+	if (probe) {
+		status_.last_probe_summary = summarize_probe(*probe);
+		status_.http_status = probe->http_status;
+		status_.api_version = probe->api_version;
+		status_.version = probe->version;
+		status_.instance_id = probe->instance_id;
+		status_.pid = probe->pid;
+		status_.started_at = probe->started_at;
+	}
+}
+
+WorkerStatusSnapshot WorkerProcessManager::status_snapshot() const
+{
+	std::lock_guard<std::mutex> lock(mutex_);
+	return status_;
+}
+
 void WorkerProcessManager::stop()
 {
 	stop_requested_ = true;
@@ -301,6 +377,9 @@ void WorkerProcessManager::stop()
 	if (ownership_ == WorkerOwnership::reused_existing) {
 		blog(LOG_INFO, "%s worker reused existing instance; not stopping foreign/manual process", kLogPrefix);
 		ownership_ = WorkerOwnership::none;
+		status_.state = WorkerDiagnosticState::not_started;
+		status_.ownership = WorkerOwnership::none;
+		status_.error = "Worker manager stopped; reused existing Worker left running";
 		return;
 	}
 
@@ -317,6 +396,10 @@ void WorkerProcessManager::stop()
 #endif
 
 	ownership_ = WorkerOwnership::none;
+	status_.state = WorkerDiagnosticState::not_started;
+	status_.ownership = WorkerOwnership::none;
+	status_.error = "Worker manager stopped";
+	status_.consecutive_failures = 0;
 }
 
 void WorkerProcessManager::close_process_handles()
