@@ -61,6 +61,18 @@ Create a queue item:
 Invoke-WebRequest http://127.0.0.1:8787/queue/items -Method Post -ContentType "application/json" -Body '{"video_path":"C:/path/to/duel.mp4"}' | Select-Object -ExpandProperty Content
 ```
 
+Detection state check:
+
+```powershell
+Invoke-WebRequest http://127.0.0.1:8787/detection/state | Select-Object -ExpandProperty Content
+```
+
+Template detection frame example:
+
+```powershell
+Invoke-WebRequest http://127.0.0.1:8787/detection/frame -Method Post -ContentType "application/json" -Body '{"frame_text":"sample frame bytes or fixture text"}' | Select-Object -ExpandProperty Content
+```
+
 Configuration scaffold (v0.2):
 - default config path: `user_data/config/worker.toml`
 - docs: `docs/architecture/worker-config.md`

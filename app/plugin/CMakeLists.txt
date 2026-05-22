@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.24)
 
-project(obs-duel-recorder-plugin VERSION 0.7.0 LANGUAGES CXX)
+project(obs-duel-recorder-plugin VERSION 0.8.0 LANGUAGES CXX)
 
 find_package(libobs REQUIRED)
 find_package(obs-frontend-api REQUIRED)
