@@ -23,14 +23,14 @@ Major and minor release completions are tagged as `vMajor.Minor.Patch`. See [Rel
 ## Current Development
 
 Latest released version:
-- `v0.4.0` - OBS Plugin Skeleton
+- `v0.5.0` - Overlay Integration
 
 Current development target:
-- `v0.5` - Overlay Integration
-- Tracking issue: [#288](https://github.com/Tao-pyth/obs-duel-recorder/issues/288)
+- `v0.6` - Recording State Management
+- Tracking issue: [#303](https://github.com/Tao-pyth/obs-duel-recorder/issues/303)
 
 Next roadmap target:
-- `v0.6` - Recording State Management
+- `v0.7` - Queue Recovery System
 
 ---
 
@@ -52,9 +52,9 @@ Current released foundation:
 - SQLite runtime storage foundation
 - Worker runtime, health, logging, and migration foundations
 - OBS Plugin skeleton and Worker lifecycle management
+- OBS overlay Text Source integration
 
 Planned roadmap capabilities:
-- OBS overlay integration (`v0.5`)
 - Recording state management (`v0.6`)
 - Match queue management (`v0.7`)
 - Automatic duel recording (`v0.8`)
@@ -110,28 +110,26 @@ obs-duel-recorder/
 
 ### Latest Release
 
-- Version: `v0.4.0`
-- Scope: OBS Plugin Skeleton
+- Version: `v0.5.0`
+- Scope: Overlay Integration
 - Status: released
-- Intended tag target: `629f4f6d8d28d0d9dcca96381340a04077d2bb62`
-- Tracking issue: [#110](https://github.com/Tao-pyth/obs-duel-recorder/issues/110)
+- Intended tag target: `474c657fa8f3e90cfe12202105b0f69c8c9f7643`
+- Tracking issue: [#288](https://github.com/Tao-pyth/obs-duel-recorder/issues/288)
 - Release record: [docs/release-history.md](docs/release-history.md)
 
-### Completed in v0.4
+### Completed in v0.5
 
-- Loadable OBS Plugin scaffold
-- OBS Frontend API startup/shutdown integration
-- Plugin-managed Worker launch and ownership tracking
-- Worker heartbeat monitoring via localhost `/health`
-- Status-first OBS Dock diagnostics
-- Persisted Plugin settings at `%APPDATA%\obs-duel-recorder\plugin-settings.json`
-- Localhost API wrapper diagnostics for runtime-root continuity and Worker identity
-- Windows OBS smoke evidence recorded in #285
+- Fixed OBS Text Source management for overlay fields
+- Backward-compatible Plugin overlay settings defaults
+- Worker overlay state API at `/overlay/state`
+- Plugin polling and Text Source updates for deck name, sequence number, result, opponent deck, and recording-state display
+- Display-only recording-state overlay boundary; full state machine remains v0.6
+- Windows OBS overlay smoke evidence recorded in #296
 
-### Planned After v0.4
+### Planned After v0.5
 
-- `v0.5` - Overlay Integration
-- Later roadmap items include recording state management, queue recovery, template matching, upload automation, packaging, and GitHub Pages documentation.
+- `v0.6` - Recording State Management
+- Later roadmap items include queue recovery, template matching, upload automation, packaging, and GitHub Pages documentation.
 
 ---
 
