@@ -36,11 +36,34 @@ struct WorkerProbeResult {
 	}
 };
 
+enum class OverlayFetchStatus {
+	reachable,
+	unavailable,
+	invalid_response,
+};
+
+struct OverlayStatePayload {
+	std::string deck_name;
+	std::string sequence_number;
+	std::string result;
+	std::string opponent_deck;
+	std::string recording_state;
+};
+
+struct OverlayFetchResult {
+	OverlayFetchStatus status = OverlayFetchStatus::unavailable;
+	unsigned long http_status = 0;
+	OverlayStatePayload state;
+	std::string error;
+	std::string body;
+};
+
 class LocalhostApiClient {
 public:
 	explicit LocalhostApiClient(std::string expected_api_version, std::string expected_worker_version);
 
 	WorkerProbeResult probe_health(const WorkerEndpoint &endpoint, const std::wstring &expected_user_data_dir) const;
+	OverlayFetchResult fetch_overlay_state(const WorkerEndpoint &endpoint) const;
 
 private:
 	std::string expected_api_version_;

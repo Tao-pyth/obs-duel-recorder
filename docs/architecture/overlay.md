@@ -120,6 +120,19 @@ Field behavior:
 - overlong value: truncate or reject with a diagnostic; do not crash OBS
 - unknown enum-like value: display `unknown` or a configured default and log a diagnostic
 
+## Worker API Boundary
+
+The Worker stores the current overlay state in memory and exposes it over the existing localhost API.
+
+Routes:
+
+- `GET /overlay/state`: returns the current overlay state payload.
+- `PUT /overlay/state`: validates and applies a partial overlay state update, then returns the full current state.
+
+`PUT /overlay/state` accepts any subset of the overlay fields. Missing fields preserve the previous value. Unknown fields, non-string values, overlong values, and unknown `recording_state` values return `400` with `code: "overlay_payload_invalid"`.
+
+The Plugin polls `GET /overlay/state` through its Worker API client. Actual Text Source writes are handled by the Plugin; the Worker does not call OBS APIs and does not own recording lifecycle decisions.
+
 ## Recording-State Boundary
 
 v0.5 may display recording-state text, but it must not become the owner of recording lifecycle decisions.

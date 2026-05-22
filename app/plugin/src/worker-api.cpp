@@ -226,4 +226,46 @@ WorkerProbeResult LocalhostApiClient::probe_health(const WorkerEndpoint &endpoin
 #endif
 }
 
+OverlayFetchResult LocalhostApiClient::fetch_overlay_state(const WorkerEndpoint &endpoint) const
+{
+	OverlayFetchResult result;
+
+#ifdef _WIN32
+	const HttpResponse response = http_get(endpoint, L"/overlay/state");
+	result.http_status = response.status;
+	result.body = response.body;
+
+	if (!response.ok) {
+		result.status = OverlayFetchStatus::unavailable;
+		result.error = response.error;
+		return result;
+	}
+	if (response.status != 200) {
+		result.status = OverlayFetchStatus::invalid_response;
+		result.error = "GET /overlay/state returned non-200 status";
+		return result;
+	}
+
+	result.state.deck_name = extract_json_string(response.body, "deck_name");
+	result.state.sequence_number = extract_json_string(response.body, "sequence_number");
+	result.state.result = extract_json_string(response.body, "result");
+	result.state.opponent_deck = extract_json_string(response.body, "opponent_deck");
+	result.state.recording_state = extract_json_string(response.body, "recording_state");
+
+	if (result.state.result.empty() || result.state.opponent_deck.empty() ||
+	    result.state.recording_state.empty()) {
+		result.status = OverlayFetchStatus::invalid_response;
+		result.error = "GET /overlay/state response is missing required fields";
+		return result;
+	}
+
+	result.status = OverlayFetchStatus::reachable;
+	return result;
+#else
+	result.status = OverlayFetchStatus::unavailable;
+	result.error = "Overlay state probing is only implemented on Windows";
+	return result;
+#endif
+}
+
 } // namespace odr::plugin
