@@ -70,6 +70,14 @@ Goals:
   - `docs/requirements/requirements.md` -> Overlay Rules / Architecture / Platform / Runtime Rules
   - `AGENTS.md` -> Runtime Directory Rules / Responsibility Separation
 
+### v0.6 - Recording State Management
+
+- Roadmap: `docs/roadmap.md` -> **v0.6 - Recording State Management**
+- Version tracking issue: `#303` - `[v0.6] Recording State Management release tracking`
+- Requirements (relevant sections):
+  - `docs/requirements/requirements.md` -> Architecture / Platform / Runtime Rules
+  - `AGENTS.md` -> Runtime Directory Rules / Responsibility Separation
+
 ---
 
 ## Policy
@@ -112,3 +120,4 @@ The version tracking issue itself is not an implementation work item.
 - Refs #288
 - Refs #291
 - Refs #296
+- Refs #303
