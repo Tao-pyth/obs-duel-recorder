@@ -113,7 +113,7 @@ obs-duel-recorder/
 - Version: `v0.5.0`
 - Scope: Overlay Integration
 - Status: released
-- Intended tag target: `474c657fa8f3e90cfe12202105b0f69c8c9f7643`
+- Tag target: `474c657fa8f3e90cfe12202105b0f69c8c9f7643`
 - Tracking issue: [#288](https://github.com/Tao-pyth/obs-duel-recorder/issues/288)
 - Release record: [docs/release-history.md](docs/release-history.md)
 
