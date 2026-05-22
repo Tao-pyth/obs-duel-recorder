@@ -82,6 +82,23 @@ The version tracking issue may contain the working release summary, but finalize
 - Major PRs: #297, #298, #299, #300, #301, #302
 - Release documentation PRs: #304, #305
 - Superseded duplicate planning issues: #246, #252, #253, #254, #255, #256, #257
-- Deferred items: Recording State Management remains in #303; Queue Recovery System remains v0.7
-- Next version tracking issue: #303
+- Deferred items: Recording State Management remains in #247; Queue Recovery System remains v0.7
+- Next version tracking issue: #247
 - Status: released
+
+### v0.6.0 - Recording State Management
+
+- Version tracking issue: #247
+- Milestone: `v0.6` (not set)
+- Release readiness checklist: `docs/release/v0.6-release-readiness.md`
+- Tag: `v0.6.0` intended; tag target will be finalized after the v0.6 release PR merge
+- Intended tag target: release merge commit on `main`
+- Release finalized at: pending release PR merge
+- Release summary: `docs/release/v0.6-release-summary.md`
+- Major child issues: #258, #259, #260, #261, #262, #263, #310
+- Smoke evidence gate: #310
+- Major PRs: #307, #308, #309
+- Superseded duplicate planning issue: #303
+- Deferred items: Queue Recovery System remains in #248; Automatic Duel Recording remains v0.8
+- Next version tracking issue: #248
+- Status: release finalization in progress
