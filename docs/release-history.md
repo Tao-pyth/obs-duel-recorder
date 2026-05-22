@@ -80,6 +80,8 @@ The version tracking issue may contain the working release summary, but finalize
 - Major child issues: #290, #291, #292, #293, #294, #295, #296
 - Smoke evidence gate: #296
 - Major PRs: #297, #298, #299, #300, #301, #302
+- Release documentation PRs: #304, #305
+- Superseded duplicate planning issues: #246, #252, #253, #254, #255, #256, #257
 - Deferred items: Recording State Management remains in #303; Queue Recovery System remains v0.7
 - Next version tracking issue: #303
 - Status: released
