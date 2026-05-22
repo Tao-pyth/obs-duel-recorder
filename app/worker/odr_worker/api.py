@@ -10,6 +10,7 @@ from .config import LoadedWorkerConfig, get_repo_root
 from .db import DbInfo
 from .health import API_VERSION, PID, STARTED_AT, WorkerDb, WorkerPaths, build_health_payload
 from .identity import INSTANCE_ID
+from .overlay import OverlayPayloadError, OverlayState, apply_overlay_update
 from .runtime_dirs import RuntimeDirs
 from .version import __version__
 
@@ -36,6 +37,7 @@ def create_app(*, runtime_dirs: RuntimeDirs, loaded_config: LoadedWorkerConfig, 
 
     app.state.paths = worker_paths
     app.state.config_loaded = loaded_config.config_loaded
+    app.state.overlay_state = OverlayState()
 
     app.state.db = None
     if db_info is not None:
@@ -58,6 +60,31 @@ def create_app(*, runtime_dirs: RuntimeDirs, loaded_config: LoadedWorkerConfig, 
             "pid": PID,
             "started_at": STARTED_AT,
         }
+
+    @app.get("/overlay/state")
+    def get_overlay_state() -> dict[str, str]:
+        return app.state.overlay_state.as_payload()
+
+    @app.put("/overlay/state")
+    async def put_overlay_state(request: Request):
+        try:
+            payload = await request.json()
+            app.state.overlay_state = apply_overlay_update(app.state.overlay_state, payload)
+        except OverlayPayloadError as exc:
+            return JSONResponse(
+                status_code=400,
+                content=_error_payload(
+                    code="overlay_payload_invalid",
+                    message="Overlay payload is invalid",
+                    details=exc.details,
+                ),
+            )
+        except ValueError:
+            return JSONResponse(
+                status_code=400,
+                content=_error_payload(code="overlay_payload_invalid", message="Overlay payload must be JSON object"),
+            )
+        return app.state.overlay_state.as_payload()
 
     @app.exception_handler(Exception)
     async def unhandled_exception_handler(request: Request, exc: Exception):
