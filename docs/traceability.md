@@ -73,7 +73,11 @@ Goals:
 ### v0.6 - Recording State Management
 
 - Roadmap: `docs/roadmap.md` -> **v0.6 - Recording State Management**
-- Version tracking issue: `#303` - `[v0.6] Recording State Management release tracking`
+- Version tracking issue: `#247` - `[v0.6] Recording State Management release tracking`
+- Acceptance checklist: `docs/requirements/v0.6-recording-state-management-acceptance.md`
+- Release readiness checklist: `docs/release/v0.6-release-readiness.md`
+- Recording architecture contract: `docs/architecture/recording.md`
+- Smoke procedure: `docs/architecture/v0.6-recording-state-smoke.md`
 - Requirements (relevant sections):
   - `docs/requirements/requirements.md` -> Architecture / Platform / Runtime Rules
   - `AGENTS.md` -> Runtime Directory Rules / Responsibility Separation
@@ -120,4 +124,4 @@ The version tracking issue itself is not an implementation work item.
 - Refs #288
 - Refs #291
 - Refs #296
-- Refs #303
+- Refs #247
