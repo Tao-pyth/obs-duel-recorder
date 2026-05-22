@@ -39,6 +39,7 @@ Goals:
 - Version tracking issue: `#88` - `[v0.3] SQLite Foundation release tracking`
 - Acceptance checklist: `docs/requirements/v0.3-sqlite-foundation-acceptance.md`
 - Release readiness checklist: `docs/release/v0.3-release-readiness.md`
+- Release record: `docs/release-history.md`; detailed summary: `docs/release/v0.3-release-summary.md`
 - Requirements (relevant sections):
   - `docs/requirements/requirements.md` -> Architecture / Platform / Runtime Rules
   - `AGENTS.md` -> Runtime Directory Rules / Responsibility Separation
@@ -49,9 +50,21 @@ Goals:
 - Version tracking issue: `#110` - `[v0.4] OBS Plugin Skeleton release tracking`
 - Acceptance checklist: `docs/requirements/v0.4-obs-plugin-skeleton-acceptance.md`
 - Release readiness checklist: `docs/release/v0.4-release-readiness.md`
+- Release record: `docs/release-history.md`; detailed summary: `docs/release/v0.4-release-summary.md`
 - Plugin scaffold/build notes: `app/plugin/README.md`
+- Smoke evidence gate: `#285`
 - Requirements (relevant sections):
   - `docs/requirements/requirements.md` -> Architecture / Platform / Runtime Rules
+  - `AGENTS.md` -> Runtime Directory Rules / Responsibility Separation
+
+### v0.5 - Overlay Integration
+
+- Roadmap: `docs/roadmap.md` -> **v0.5 - Overlay Integration**
+- Version tracking issue: `#288` - `[v0.5] Overlay Integration release tracking`
+- Acceptance checklist: TBD
+- Release readiness checklist: TBD
+- Requirements (relevant sections):
+  - `docs/requirements/requirements.md` -> Overlay Rules / Architecture / Platform / Runtime Rules
   - `AGENTS.md` -> Runtime Directory Rules / Responsibility Separation
 
 ---
@@ -93,3 +106,4 @@ The version tracking issue itself is not an implementation work item.
 - Refs #72
 - Refs #88
 - Refs #110
+- Refs #288
