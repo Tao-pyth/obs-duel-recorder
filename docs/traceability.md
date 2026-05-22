@@ -63,6 +63,7 @@ Goals:
 - Version tracking issue: `#288` - `[v0.5] Overlay Integration release tracking`
 - Acceptance checklist: `docs/requirements/v0.5-overlay-integration-acceptance.md`
 - Release readiness checklist: `docs/release/v0.5-release-readiness.md`
+- Overlay architecture contract: `docs/architecture/overlay.md`
 - Smoke procedure: `docs/architecture/v0.5-overlay-smoke.md`
 - Smoke evidence gate: `#296`
 - Requirements (relevant sections):
@@ -109,4 +110,5 @@ The version tracking issue itself is not an implementation work item.
 - Refs #88
 - Refs #110
 - Refs #288
+- Refs #291
 - Refs #296
