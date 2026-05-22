@@ -72,13 +72,14 @@ The version tracking issue may contain the working release summary, but finalize
 - Version tracking issue: #288
 - Milestone: `v0.5` (not set)
 - Release readiness checklist: `docs/release/v0.5-release-readiness.md`
-- Tag: `v0.5.0` intended
-- Intended tag target: `474c657fa8f3e90cfe12202105b0f69c8c9f7643`
+- Tag: `v0.5.0`
+- Tag target: `474c657fa8f3e90cfe12202105b0f69c8c9f7643`
 - Release finalized at: `2026-05-23T02:00:52+09:00`
+- Tag finalized at: `2026-05-23T02:08:53+09:00`
 - Release summary: `docs/release/v0.5-release-summary.md`
 - Major child issues: #290, #291, #292, #293, #294, #295, #296
 - Smoke evidence gate: #296
 - Major PRs: #297, #298, #299, #300, #301, #302
 - Deferred items: Recording State Management remains in #303; Queue Recovery System remains v0.7
 - Next version tracking issue: #303
-- Status: release record prepared; tag creation pending after release handoff PR merge
+- Status: released
