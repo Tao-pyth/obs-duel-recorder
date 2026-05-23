@@ -23,14 +23,14 @@ Major and minor release completions are tagged as `vMajor.Minor.Patch`. See [Rel
 ## Current Development
 
 Latest released version:
-- `v2.1.0` - Statistics System
+- `v2.2.0` - GitHub Pages Documentation
 
 Current development target:
-- `v2.2` - GitHub Pages Documentation
-- Tracking issue: [#326](https://github.com/Tao-pyth/obs-duel-recorder/issues/326)
+- `v2.3` - Runtime Optimization
+- Tracking issue: [#327](https://github.com/Tao-pyth/obs-duel-recorder/issues/327)
 
 Next roadmap target:
-- `v2.3` - Runtime Optimization
+- Later v2.x roadmap work after v2.3 is tracked in GitHub issues.
 
 ---
 
@@ -61,9 +61,10 @@ Current released foundation:
 - Update entrypoint, DB backup-before-migration, update-state diagnostics, and runtime preservation
 - Image-recognition-assisted result, rank, and DP metadata candidates with manual review/correction audit
 - Read-only match, deck, opponent, upload, and memo statistics
+- GitHub Pages documentation publication with static HTML artifact generation
 
 Planned roadmap capabilities:
-- GitHub Pages documentation publication (`v2.2`)
+- Runtime optimization (`v2.3`)
 - GitHub Actions based packaging and SHA256 checksum assets (`v2.0+`)
 
 ---
@@ -113,25 +114,25 @@ obs-duel-recorder/
 
 ### Latest Release
 
-- Version: `v2.1.0`
-- Scope: Statistics System
+- Version: `v2.2.0`
+- Scope: GitHub Pages Documentation
 - Status: released
-- Tag target: `c7ba88b3e4524ac472ebab9f336afbfcdcf3330e`
-- Tracking issue: [#325](https://github.com/Tao-pyth/obs-duel-recorder/issues/325)
+- Tag target: pending tag-record PR
+- Tracking issue: [#326](https://github.com/Tao-pyth/obs-duel-recorder/issues/326)
 - Release record: [docs/release-history.md](docs/release-history.md)
 
-### Completed in v2.1
+### Completed in v2.2
 
-- Worker-owned read-only statistics endpoints
-- Deterministic win rate, deck, opponent, upload, and memo statistics
-- Statistics index migration without derived aggregate tables
-- Empty, mixed, filtered, memo, and upload statistics tests
-- v2.1 acceptance and release readiness documentation
+- GitHub Pages publication workflow and publication contract
+- Static documentation artifact generation with HTML entry points
+- Published documentation exclusions for runtime data, credentials, logs, databases, screenshots, videos, and game assets
+- Japanese setup, usage, queue, troubleshooting, FAQ, and YouTube setup documentation completion
+- Documentation validation gate for Markdown links, Japanese user docs coverage, and Pages artifact generation
 
-### Planned After v2.1
+### Planned After v2.2
 
-- `v2.2` - GitHub Pages Documentation
-- Later roadmap items include packaging and GitHub Pages documentation.
+- `v2.3` - Runtime Optimization
+- Later roadmap items include packaging automation and release asset hardening.
 
 ---
 
@@ -148,7 +149,7 @@ Key documents:
 - [User docs (language selector / 日本語)](docs/user/index.md)
 - [Japanese user docs](docs/user/ja/index.md)
 
-Planned GitHub Pages support is also included in the roadmap.
+GitHub Pages publication is documented in [docs/pages.md](docs/pages.md).
 
 ---
 
