@@ -270,12 +270,12 @@ The version tracking issue may contain the working release summary, but finalize
 - Milestone: `v2.2` (not set)
 - Release readiness checklist: `docs/release/v2.2-release-readiness.md`
 - Tag: `v2.2.0`
-- Tag target: pending tag-record PR
+- Tag target: `ab8b18ae63c854addfaaca1c40922118360d2907`
 - Release finalized at: `2026-05-23T15:20:28+09:00`
-- Tag finalized at: pending tag-record PR
+- Tag finalized at: `2026-05-23T15:30:14+09:00`
 - Release summary: `docs/release/v2.2-release-summary.md`
 - Major child issues: #356, #357, #358, #359
 - Major PRs: #381
 - Deferred items: Runtime Optimization remains in #327 for v2.3; packaging ZIP workflow remains v2.x follow-up under `docs/architecture/packaging.md`
 - Next version tracking issue: #327
-- Status: release finalization pending tag record
+- Status: released
