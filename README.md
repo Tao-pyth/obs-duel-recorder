@@ -23,14 +23,14 @@ Major and minor release completions are tagged as `vMajor.Minor.Patch`. See [Rel
 ## Current Development
 
 Latest released version:
-- `v2.0.0` - OCR Integration
+- `v2.1.0` - Statistics System
 
 Current development target:
-- `v2.1` - Statistics System
-- Tracking issue: [#325](https://github.com/Tao-pyth/obs-duel-recorder/issues/325)
+- `v2.2` - GitHub Pages Documentation
+- Tracking issue: [#326](https://github.com/Tao-pyth/obs-duel-recorder/issues/326)
 
 Next roadmap target:
-- `v2.2` - GitHub Pages Documentation
+- `v2.3` - Runtime Optimization
 
 ---
 
@@ -60,9 +60,10 @@ Current released foundation:
 - Setup wizard state and validation for runtime path, OBS integration, OAuth, and templates
 - Update entrypoint, DB backup-before-migration, update-state diagnostics, and runtime preservation
 - Image-recognition-assisted result, rank, and DP metadata candidates with manual review/correction audit
+- Read-only match, deck, opponent, upload, and memo statistics
 
 Planned roadmap capabilities:
-- statistics and memo analysis (`v2.1`)
+- GitHub Pages documentation publication (`v2.2`)
 - GitHub Actions based packaging and SHA256 checksum assets (`v2.0+`)
 
 ---
@@ -112,25 +113,24 @@ obs-duel-recorder/
 
 ### Latest Release
 
-- Version: `v2.0.0`
-- Scope: OCR Integration
+- Version: `v2.1.0`
+- Scope: Statistics System
 - Status: released
-- Tag target: `ad16666fcc4d12a0c8adc0d4a71f123e2b346a0a`
-- Tracking issue: [#324](https://github.com/Tao-pyth/obs-duel-recorder/issues/324)
+- Tag target: to be finalized after release commit merge
+- Tracking issue: [#325](https://github.com/Tao-pyth/obs-duel-recorder/issues/325)
 - Release record: [docs/release-history.md](docs/release-history.md)
 
-### Completed in v2.0
+### Completed in v2.1
 
-- Worker-owned image recognition provider boundary
-- Deterministic fixture-backed recognition without heavyweight OCR/ML runtime dependency
-- Result, rank, and DP candidate extraction with confidence and evidence
-- Persisted candidate audit records for confirm, correct, and reject actions
-- Manual correction through the existing match metadata boundary
-- v2.0 acceptance and release readiness documentation
+- Worker-owned read-only statistics endpoints
+- Deterministic win rate, deck, opponent, upload, and memo statistics
+- Statistics index migration without derived aggregate tables
+- Empty, mixed, filtered, memo, and upload statistics tests
+- v2.1 acceptance and release readiness documentation
 
-### Planned After v2.0
+### Planned After v2.1
 
-- `v2.1` - Statistics System
+- `v2.2` - GitHub Pages Documentation
 - Later roadmap items include packaging and GitHub Pages documentation.
 
 ---

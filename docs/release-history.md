@@ -247,3 +247,19 @@ The version tracking issue may contain the working release summary, but finalize
 - Deferred items: Statistics System remains in #325 for v2.1; GitHub Pages Documentation remains in #326 for v2.2; Runtime Optimization remains in #327 for v2.3; packaging ZIP workflow remains v2.x follow-up under `docs/architecture/packaging.md`
 - Next version tracking issue: #325
 - Status: released
+
+### v2.1.0 - Statistics System
+
+- Version tracking issue: #325
+- Milestone: `v2.1` (not set)
+- Release readiness checklist: `docs/release/v2.1-release-readiness.md`
+- Tag: `v2.1.0`
+- Tag target: to be finalized after release commit merge
+- Release finalized at: `2026-05-23T14:42:54+09:00`
+- Tag finalized at: pending
+- Release summary: `docs/release/v2.1-release-summary.md`
+- Major child issues: #352, #353, #354, #355
+- Major PRs: #378
+- Deferred items: GitHub Pages Documentation remains in #326 for v2.2; Runtime Optimization remains in #327 for v2.3; packaging ZIP workflow remains v2.x follow-up under `docs/architecture/packaging.md`
+- Next version tracking issue: #326
+- Status: release finalization in progress
