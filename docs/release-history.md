@@ -189,12 +189,13 @@ The version tracking issue may contain the working release summary, but finalize
 - Packaging architecture: `docs/architecture/packaging.md`
 - Packaging workflow: `.github/workflows/release-package.yml`
 - Packaging scripts: `scripts/build_release_package.ps1`, `scripts/validate_release_package.ps1`
-- Tag: `v0.12.0` intended after this release record is merged
-- Intended tag target: pending merge commit of the v0.12 completion PR
+- Tag: `v0.12.0`
+- Tag target: `9853d8e5840b7a7a4f9a993761a1a6538e68d28b`
 - Release finalized at: `2026-05-23T18:30:01+09:00`
+- Tag finalized at: `2026-05-23T18:38:13+09:00`
 - Release summary: `docs/release/v0.12-release-summary.md`
 - Major child issues: none
-- Major PRs: pending v0.12 completion PR
+- Major PRs: #399
 - Packaging evidence: local package build with real `build/plugin/Release/obs-duel-recorder.dll`; CI package builder validation with fixture DLL; ZIP layout validation; external `SHA256SUMS.txt` generation
 - Deferred items: practical install/update verification, runtime data preservation verification, release publication, and practical tag naming decision remain for v1.0
 - Next version tracking issue: practical `v1.0` First Practical OBS Plugin Release
