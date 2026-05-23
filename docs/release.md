@@ -30,11 +30,12 @@ As of #389, version labels are split into two meanings:
 
 The project is currently **pre-v1.0 on the practical release track**. A practical `v1.0` release requires accepted evidence that:
 
-- the Plugin DLL can be built in Release configuration,
-- the DLL loads in a real Windows OBS Studio x64 runtime without crashing,
-- the OBS Duel Recorder Dock appears,
-- Worker heartbeat and compatibility checks pass,
-- basic manual recording start/stop behavior is smoke-tested,
+- the Plugin DLL can be built in Release configuration (completed by #387 / v0.11),
+- the DLL loads in a real Windows OBS Studio x64 runtime without crashing (completed by #387 / v0.11),
+- the OBS Duel Recorder Dock appears (completed by #387 / v0.11),
+- Worker heartbeat and compatibility checks pass (completed by #387 / v0.11),
+- basic manual recording start/stop behavior is smoke-tested (completed by #387 / v0.11),
+- release ZIP packaging and checksum assets are reproducible,
 - packaging/update instructions are usable for a normal user.
 
 Existing historical/internal tags such as `v1.0.0` through `v2.3.0` must not be interpreted as practical user-ready release evidence. Do not move or overwrite those tags. If a future practical `v1.0` tag would conflict with an existing historical/internal tag, record the exact naming decision before tagging.
@@ -120,8 +121,11 @@ Use a version-scoped readiness checklist before tagging:
 - v0.3: `docs/release/v0.3-release-readiness.md`
 - v0.4: `docs/release/v0.4-release-readiness.md`
 - v0.11: `docs/release/v0.11-release-readiness.md`
+- v0.12: `docs/release/v0.12-release-readiness.md`
 
-The v0.11 readiness checklist is a practical-readiness gate, not a tag approval by itself. It must be completed together with the OBS real-load smoke evidence tracked by #387 and coordinated through #393.
+The v0.11 readiness checklist is a practical-readiness gate, not a packaged release approval by itself. It was completed together with the OBS real-load smoke evidence tracked by #387 and coordinated through #393.
+
+The v0.12 readiness checklist is the current practical-readiness gate for release packaging automation, release asset automation, SHA256 checksum publication, and v1.0 handoff documentation.
 
 Do not retroactively create a `v0.1.0` tag unless explicitly approved.
 

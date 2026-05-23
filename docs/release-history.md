@@ -8,7 +8,8 @@ Use this file as the durable index for release point information. If a release n
 
 As of #389, this history distinguishes practical user-ready releases from historical/internal implementation milestones.
 
-- The project remains pre-v1.0 for practical OBS plugin user readiness until #387 or its successor records real OBS load smoke evidence.
+- #387 records completed OBS Plugin DLL build and real OBS load smoke evidence for the v0.11 practical readiness gate.
+- The project remains pre-v1.0 for practical OBS plugin user readiness until packaging, release asset, checksum, install, and update gates are completed.
 - Existing `v1.x` and `v2.x` tags are preserved historical/internal milestone tags.
 - Older `Status: released` entries before this policy note mean "roadmap milestone released" unless a record explicitly says it is a practical user-ready OBS plugin release.
 - Do not interpret `v2.0.0` through `v2.3.0` as proof that an installable OBS plugin release is user-ready.
@@ -161,6 +162,24 @@ The version tracking issue may contain the working release summary, but finalize
 - Next version tracking issue: #318
 - Status: released
 
+### v0.11.0 - OBS Plugin Real Load Smoke
+
+- Version tracking issue: #393
+- Smoke evidence gate: #387
+- Release readiness checklist: `docs/release/v0.11-release-readiness.md`
+- Acceptance checklist: `docs/requirements/v0.11-obs-plugin-real-load-smoke-acceptance.md`
+- Smoke procedure: `docs/architecture/v0.11-obs-plugin-smoke.md`
+- Tag: `v0.11.0` intended after this release record is merged
+- Intended tag target: pending merge commit of the v0.11 completion documentation PR
+- Release finalized at: `2026-05-23T18:05:02+09:00`
+- Release summary: `docs/release/v0.11-release-summary.md`
+- Major child issues: #387
+- Major PRs: #394, #395
+- Smoke evidence: portable OBS 32.1.2 load smoke; Dock display; Worker API `2.3` / Worker version `2.3.0`; manual recording start/stop; overlay Text Source reuse/update; plugin startup/shutdown logs
+- Deferred items: packaging ZIP workflow, release asset automation, and SHA256 checksum publication remain in #396 for v0.12
+- Next version tracking issue: #396
+- Status: practical readiness gate complete; not a packaged user-ready OBS plugin release
+
 ### v1.0.0 - YouTube Upload MVP
 
 - Version tracking issue: #318
@@ -253,7 +272,7 @@ The version tracking issue may contain the working release summary, but finalize
 - Release summary: `docs/release/v2.0-release-summary.md`
 - Major child issues: #348, #349, #350, #351
 - Major PRs: #375
-- Deferred items: Statistics System remains in #325 for v2.1; GitHub Pages Documentation remains in #326 for v2.2; Runtime Optimization remains in #327 for v2.3; practical OBS plugin smoke remains in #387; packaging automation moves to the v0.x practical readiness track
+- Deferred items: Statistics System remains in #325 for v2.1; GitHub Pages Documentation remains in #326 for v2.2; Runtime Optimization remains in #327 for v2.3; practical OBS plugin smoke was completed later by #387 / v0.11; packaging automation moves to the v0.x practical readiness track
 - Next version tracking issue: #325
 - Status: internal milestone complete; not a practical user-ready OBS plugin release
 
@@ -269,7 +288,7 @@ The version tracking issue may contain the working release summary, but finalize
 - Release summary: `docs/release/v2.1-release-summary.md`
 - Major child issues: #352, #353, #354, #355
 - Major PRs: #378
-- Deferred items: GitHub Pages Documentation remains in #326 for v2.2; Runtime Optimization remains in #327 for v2.3; practical OBS plugin smoke remains in #387; packaging automation moves to the v0.x practical readiness track
+- Deferred items: GitHub Pages Documentation remains in #326 for v2.2; Runtime Optimization remains in #327 for v2.3; practical OBS plugin smoke was completed later by #387 / v0.11; packaging automation moves to the v0.x practical readiness track
 - Next version tracking issue: #326
 - Status: internal milestone complete; not a practical user-ready OBS plugin release
 
@@ -285,7 +304,7 @@ The version tracking issue may contain the working release summary, but finalize
 - Release summary: `docs/release/v2.2-release-summary.md`
 - Major child issues: #356, #357, #358, #359
 - Major PRs: #381
-- Deferred items: Runtime Optimization remains in #327 for v2.3; practical OBS plugin smoke remains in #387; packaging automation moves to the v0.x practical readiness track
+- Deferred items: Runtime Optimization remains in #327 for v2.3; practical OBS plugin smoke was completed later by #387 / v0.11; packaging automation moves to the v0.x practical readiness track
 - Next version tracking issue: #327
 - Status: internal milestone complete; not a practical user-ready OBS plugin release
 
@@ -302,6 +321,6 @@ The version tracking issue may contain the working release summary, but finalize
 - Release summary: `docs/release/v2.3-release-summary.md`
 - Major child issues: #360, #361, #362, #363
 - Major PRs: #384
-- Deferred items: practical OBS plugin smoke remains in #387; packaging ZIP workflow, release asset automation, and checksum publication move to v0.12 on the practical readiness track
+- Deferred items: practical OBS plugin smoke was completed later by #387 / v0.11; packaging ZIP workflow, release asset automation, and checksum publication move to v0.12 on the practical readiness track
 - Next version tracking issue: none yet
 - Status: internal milestone complete; not a practical user-ready OBS plugin release
