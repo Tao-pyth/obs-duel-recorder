@@ -26,6 +26,7 @@ _MIGRATIONS: tuple[str, ...] = (
     "0003_queue_recovery",
     "0004_screenshots",
     "0005_match_metadata",
+    "0006_image_recognition_metadata",
 )
 
 

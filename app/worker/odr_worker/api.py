@@ -11,6 +11,7 @@ from .db import DbInfo
 from .detection import DetectionRuntime, TemplateConfigError, load_template_config, load_templates
 from .exports import ExportError, ExportStore
 from .health import API_VERSION, PID, STARTED_AT, WorkerDb, WorkerPaths, build_health_payload
+from .image_recognition import ImageRecognitionError, RecognitionCandidateStore, analyze_fixture_payload
 from .identity import INSTANCE_ID
 from .metadata import MatchMetadataStore, MetadataError
 from .overlay import OverlayPayloadError, OverlayState, apply_overlay_update
@@ -85,6 +86,7 @@ def create_app(*, runtime_dirs: RuntimeDirs, loaded_config: LoadedWorkerConfig, 
     app.state.screenshot_store = None
     app.state.upload_store = None
     app.state.metadata_store = None
+    app.state.recognition_store = None
     app.state.export_store = None
     app.state.setup_store = SetupWizardStore(runtime_dirs=runtime_dirs)
     app.state.update_manager = UpdateManager(runtime_dirs=runtime_dirs)
@@ -101,6 +103,7 @@ def create_app(*, runtime_dirs: RuntimeDirs, loaded_config: LoadedWorkerConfig, 
             screenshots_dir=runtime_dirs.screenshots_dir,
         )
         app.state.metadata_store = MatchMetadataStore(db_info.db_path)
+        app.state.recognition_store = RecognitionCandidateStore(db_info.db_path)
         app.state.upload_store = UploadStore(
             queue_store=app.state.queue_store,
             videos_dir=runtime_dirs.videos_dir,
@@ -528,6 +531,101 @@ def create_app(*, runtime_dirs: RuntimeDirs, loaded_config: LoadedWorkerConfig, 
                 code=exc.code,
                 message="Match upload metadata is invalid",
                 details=exc.details,
+            )
+
+    @app.post("/recognition/analyze")
+    async def post_recognition_analyze(request: Request):
+        try:
+            payload = await request.json()
+            if not isinstance(payload, dict):
+                raise ValueError
+            match_id = payload.get("match_id")
+            if match_id is not None and not isinstance(match_id, int):
+                return _error_response(
+                    status_code=400,
+                    code="recognition_payload_invalid",
+                    message="Recognition payload is invalid",
+                    details={"match_id": "must_be_integer_or_null"},
+                )
+            if match_id is not None and app.state.metadata_store is not None:
+                app.state.metadata_store.get_match(match_id)
+            result = analyze_fixture_payload(payload)
+            response = result.as_payload(match_id=match_id)
+            if app.state.recognition_store is not None:
+                records = app.state.recognition_store.save_result(match_id=match_id, result=result)
+                response["candidate_records"] = [record.as_payload() for record in records]
+            return response
+        except ImageRecognitionError as exc:
+            return _error_response(
+                status_code=400,
+                code=exc.code,
+                message="Recognition request is invalid",
+                details=exc.details,
+            )
+        except MetadataError as exc:
+            return _error_response(
+                status_code=404 if exc.code == "match_not_found" else 400,
+                code=exc.code,
+                message="Match metadata request is invalid",
+                details=exc.details,
+            )
+        except ValueError:
+            return _error_response(
+                status_code=400,
+                code="recognition_payload_invalid",
+                message="Recognition payload must be JSON object",
+            )
+
+    @app.get("/recognition/candidates")
+    def get_recognition_candidates(match_id: int | None = None, status: str | None = None):
+        if app.state.recognition_store is None:
+            return _error_response(
+                status_code=503,
+                code="recognition_unavailable",
+                message="Recognition storage is unavailable",
+            )
+        try:
+            records = app.state.recognition_store.list_candidates(match_id=match_id, status=status)
+            return {"items": [record.as_payload() for record in records]}
+        except ImageRecognitionError as exc:
+            return _error_response(
+                status_code=400,
+                code=exc.code,
+                message="Recognition request is invalid",
+                details=exc.details,
+            )
+
+    @app.post("/recognition/candidates/{candidate_id}/command")
+    async def post_recognition_candidate_command(candidate_id: int, request: Request):
+        if app.state.recognition_store is None:
+            return _error_response(
+                status_code=503,
+                code="recognition_unavailable",
+                message="Recognition storage is unavailable",
+            )
+        try:
+            payload = await request.json()
+            if not isinstance(payload, dict):
+                raise ValueError
+            record = app.state.recognition_store.apply_command(
+                candidate_id,
+                payload,
+                metadata_store=app.state.metadata_store,
+            )
+            return record.as_payload()
+        except ImageRecognitionError as exc:
+            status_code = 404 if exc.code in {"recognition_candidate_not_found", "match_not_found"} else 400
+            return _error_response(
+                status_code=status_code,
+                code=exc.code,
+                message="Recognition command is invalid",
+                details=exc.details,
+            )
+        except ValueError:
+            return _error_response(
+                status_code=400,
+                code="recognition_command_invalid",
+                message="Recognition command must be JSON object",
             )
 
     @app.get("/screenshots")

@@ -42,6 +42,8 @@ class MatchMetadataApiTests(unittest.TestCase):
                 "deck_name": "Labrynth",
                 "opponent_deck": "Branded",
                 "result": "win",
+                "rank": "Diamond I",
+                "dp": "12000",
                 "memo": "Game 2 went long.",
                 "started_at": "2026-05-23T05:00:00Z",
             },
@@ -50,6 +52,8 @@ class MatchMetadataApiTests(unittest.TestCase):
         self.assertEqual(created.status_code, 200)
         match_id = created.json()["id"]
         self.assertEqual(created.json()["opponent_deck"], "Branded")
+        self.assertEqual(created.json()["rank"], "Diamond I")
+        self.assertEqual(created.json()["dp"], "12000")
 
         edited = client.put(
             f"/matches/{match_id}/metadata",
@@ -96,6 +100,8 @@ class MatchMetadataApiTests(unittest.TestCase):
         self.assertEqual(metadata.status_code, 200)
         self.assertEqual(metadata.json()["title"], "Swordsoul vs Purrely [loss]")
         self.assertIn("Notes:", metadata.json()["description"])
+        self.assertIn("Rank: unknown", metadata.json()["description"])
+        self.assertIn("DP: unknown", metadata.json()["description"])
         self.assertIn("Misplayed turn three.", metadata.json()["description"])
         self.assertIn("opponent_deck", metadata.json()["variables"])
 

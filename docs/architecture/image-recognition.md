@@ -19,6 +19,10 @@ The image recognition boundary may produce candidate metadata such as:
 
 The recognized candidates should integrate with existing match metadata APIs so users can correct or confirm the values.
 
+v2.0 exposes this through `POST /recognition/analyze`. The endpoint accepts fixture text or a fixture object and returns candidate `result`, `rank`, and `dp` values with confidence and evidence. It does not mutate metadata automatically. When a `match_id` is supplied, the response includes the `PUT /matches/{match_id}/metadata` correction endpoint and a `metadata_patch` body that the Plugin UI or user tooling can review before saving.
+
+Recognition candidates are persisted when SQLite is available. `GET /recognition/candidates` lists the audit records, and `POST /recognition/candidates/{candidate_id}/command` resolves them as confirmed, corrected, or rejected. Confirming or correcting a candidate is an explicit manual action and updates match metadata through the existing metadata boundary.
+
 ## Fallback
 
 When recognition fails, confidence is low, or fixture coverage does not support the input:
