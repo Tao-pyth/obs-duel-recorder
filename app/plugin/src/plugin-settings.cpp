@@ -105,6 +105,21 @@ std::wstring default_worker_command()
 	return L"odr-worker";
 }
 
+std::wstring default_user_data_dir()
+{
+	const std::wstring configured = read_env_wstring(L"ODR_USER_DATA_DIR");
+	if (!configured.empty()) {
+		return configured;
+	}
+
+	const std::wstring app_data = read_env_wstring(L"APPDATA");
+	if (!app_data.empty()) {
+		return app_data + L"\\" + kSettingsDirectory + L"\\user_data";
+	}
+
+	return L"user_data";
+}
+
 bool ensure_directory(const std::wstring &path)
 {
 	if (path.empty()) {
@@ -144,7 +159,7 @@ void apply_defaults(obs_data_t *data)
 {
 	obs_data_set_default_string(data, "host", kDefaultHost);
 	obs_data_set_default_int(data, "port", kDefaultPort);
-	obs_data_set_default_string(data, "user_data_dir", to_utf8(read_env_wstring(L"ODR_USER_DATA_DIR")).c_str());
+	obs_data_set_default_string(data, "user_data_dir", to_utf8(default_user_data_dir()).c_str());
 	obs_data_set_default_bool(data, "restart_worker_on_change", true);
 }
 

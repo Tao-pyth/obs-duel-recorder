@@ -8,7 +8,8 @@ This roadmap uses one version sequence based on user-visible usability.
 - Existing `v1.x` and `v2.x` tags are legacy non-product tags from before this rule.
 - The `v0.11` gate completed built OBS Plugin DLL, real OBS load smoke evidence, Dock visibility, Worker heartbeat, and basic recording control evidence.
 - The `v0.12` gate completed packaging workflow, release asset automation path, SHA256 checksum generation, and package layout validation.
-- A user-ready `v1.0` release still requires Worker EXE bundled distribution, clean install verification, runtime data preservation verification, release publication, and a recorded tag naming decision because legacy `v1.0.0` already exists.
+- The `v0.13` gate completed Worker EXE bundled distribution and local download-to-first-run smoke evidence.
+- A user-ready `v1.0` release still requires release publication and a recorded tag naming decision because legacy `v1.0.0` already exists.
 
 ---
 
@@ -110,20 +111,20 @@ to set up Python, pip, or a virtual environment manually.
 
 ### Planned
 
-- Worker EXE build and bundling path
-- release ZIP layout update for the bundled Worker executable
-- `update.bat` bundled-Worker-first behavior
-- Plugin Worker launch contract review for bundled Worker execution
-- clean Windows + OBS Studio x64 install smoke
-- download-to-first-run smoke covering Dock, Worker heartbeat, and basic recording
-- user-facing install, checksum, and recovery documentation
+- Worker EXE build and bundling path - complete
+- release ZIP layout update for the bundled Worker executable - complete
+- `update.bat` bundled-Worker-first behavior - complete
+- Plugin Worker launch contract review for bundled Worker execution - complete
+- clean Windows + OBS Studio x64 install smoke - complete
+- download-to-first-run smoke covering Dock, Worker heartbeat, and basic recording - complete
+- user-facing install, checksum, and recovery documentation - complete
 
 ### Deliverables
 
 - version tracking coordinated through #404
 - Worker EXE package artifact included in release ZIP
 - updated packaging/update documentation
-- clean install smoke evidence
+- clean install smoke evidence in `docs/release/v0.13-download-to-first-run-smoke.md`
 - v1.0 handoff evidence
 
 ---
@@ -139,15 +140,13 @@ Publish the first user-ready release after OBS plugin smoke, packaging, and prac
 - v0.11 real OBS plugin smoke evidence accepted
 - v0.12 packaging automation evidence accepted
 - v0.13 practical distribution readiness evidence accepted
-- user-facing install/update documentation verified
-- runtime data preservation rules verified
 - release naming/tagging decision recorded without moving legacy tags
 
 ### Deliverables
 
 - first usable OBS plugin release package
 - user-ready release notes
-- install/update verification evidence
+- release publication evidence
 
 ---
 

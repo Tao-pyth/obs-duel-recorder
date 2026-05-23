@@ -18,6 +18,16 @@ user_data/data/installed-version.json
 user_data/data/db/backups/
 ```
 
+For packaged Windows use, the default runtime root is:
+
+```text
+%APPDATA%/obs-duel-recorder/user_data
+```
+
+`ODR_USER_DATA_DIR` may override this for portable or development workflows.
+The fallback `<package>/user_data` path is only used when neither
+`ODR_USER_DATA_DIR` nor `%APPDATA%` is available.
+
 Normal update flow must preserve:
 - `user_data/config/`
 - `user_data/data/db/`

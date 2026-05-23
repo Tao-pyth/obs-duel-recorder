@@ -11,7 +11,8 @@ usability.
 
 - #387 records completed OBS Plugin DLL build and real OBS load smoke evidence for the v0.11 version gate.
 - #396 records completed release packaging automation for the v0.12 version gate.
-- The project remains pre-v1.0 until install/update verification, release publication, and tag-naming gates are completed.
+- #404 records completed Worker EXE bundled distribution and local download-to-first-run smoke for the v0.13 version gate.
+- The project remains pre-v1.0 until release publication and tag-naming gates are completed.
 - Existing `v1.x` and `v2.x` tags created before this policy are legacy non-product tags. They are preserved for auditability, but they are not part of the active product version sequence.
 - Older `Status: released` entries before this policy note mean "legacy implementation record completed" unless a record explicitly says it is a user-ready product release.
 
@@ -201,6 +202,22 @@ The version tracking issue may contain the working release summary, but finalize
 - Deferred items: install/update verification, runtime data preservation verification, release publication, and tag naming decision remain for #401
 - Next version tracking issue: #401
 - Status: version gate complete; not a final user-ready OBS plugin release
+
+### v0.13.0 - Practical Distribution Readiness
+
+- Version tracking issue: #404
+- Release readiness checklist: `docs/release/v0.13-release-readiness.md`
+- Acceptance checklist: `docs/requirements/v0.13-practical-distribution-readiness-acceptance.md`
+- Download-to-first-run smoke: `docs/release/v0.13-download-to-first-run-smoke.md`
+- Tag: `v0.13.0` intended; tag creation remains with v1.0 publication approval
+- Intended tag target: pending final v0.13 merge
+- Release finalized at: pending final v0.13 merge
+- Major child issues: #405, #406, #407
+- Major PRs: #408, #409, #410, #411
+- Distribution evidence: Worker EXE build with PyInstaller; release ZIP includes bundled Worker executable; SHA256 checksum verification passed; portable OBS 32.1.2 loaded the packaged Plugin DLL; bundled Worker launched from OBS plugin layout; Dock registered; Worker heartbeat reached API `2.3` / Worker version `2.3.0`; OBS recording start/stop smoke produced an MP4 under the local smoke recording directory
+- Deferred items: public GitHub Release publication, final release asset selection, and tag approval remain in #401 for v1.0
+- Next version tracking issue: #401
+- Status: version gate complete; v1.0 publication is still pending
 
 ### Legacy tag v1.0.0 - YouTube Upload MVP
 

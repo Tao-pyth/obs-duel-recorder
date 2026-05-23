@@ -171,6 +171,7 @@ Goals:
 - Version tracking issue: `#404` - `[v0.13] Practical Distribution Readiness release tracking`
 - Acceptance checklist: `docs/requirements/v0.13-practical-distribution-readiness-acceptance.md`
 - Release readiness checklist: `docs/release/v0.13-release-readiness.md`
+- Download-to-first-run smoke: `docs/release/v0.13-download-to-first-run-smoke.md`
 - Previous version gate: `#396` - `[v0.12] Release Packaging Automation release tracking`
 - Packaging architecture contract: `docs/architecture/packaging.md`
 - Update system architecture contract: `docs/architecture/update-system.md`
@@ -190,9 +191,8 @@ Goals:
   - v0.11 OBS plugin real-load smoke accepted
   - v0.12 packaging automation accepted
   - v0.13 practical distribution readiness accepted
-  - install/update verification
-  - runtime data preservation verification
   - tag naming decision
+  - public release asset publication
 
 ### Legacy record: v1.0 - YouTube Upload MVP
 
