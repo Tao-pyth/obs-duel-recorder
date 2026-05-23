@@ -14,6 +14,8 @@ obs-duel-recorder-vX.Y.Z/
 |   |-- plugin/
 |   |   `-- obs-duel-recorder.dll
 |   `-- worker/
+|       |-- odr-worker/
+|       |   `-- odr-worker.exe
 |       `-- <worker package files>
 |-- docs/
 |   `-- <minimal install/update/user docs>
@@ -62,9 +64,16 @@ The packaging script expects an existing `obs-duel-recorder.dll` from the v0.11
 OBS Plugin build/smoke boundary. It does not install OBS, Qt, or rebuild the
 plugin by itself.
 
+The packaging script also expects a bundled Worker executable directory,
+normally created by `scripts/build_worker_exe.ps1` under
+`build/worker/odr-worker/`. The bundled executable is the normal user path for
+packaged releases; source-based Worker execution is kept as a developer
+fallback.
+
 The release workflow can either read `build/plugin/Release/obs-duel-recorder.dll`
 from the workspace or download an artifact named by `plugin_dll_artifact_name`.
-It always generates:
+It builds the bundled Worker executable before creating the release package and
+always generates:
 
 - `obs-duel-recorder-vX.Y.Z.zip`
 - `SHA256SUMS.txt`

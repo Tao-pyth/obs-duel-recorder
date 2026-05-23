@@ -32,6 +32,7 @@ $zipName = Split-Path -Leaf $zipPath
 $expectedRoot = "obs-duel-recorder-$ExpectedVersion/"
 $expectedEntries = @(
     "app/plugin/obs-duel-recorder.dll",
+    "app/worker/odr-worker/odr-worker.exe",
     "app/worker/pyproject.toml",
     "app/worker/odr_worker/__init__.py",
     "docs/user/index.md",
