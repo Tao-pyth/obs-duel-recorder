@@ -35,6 +35,7 @@ class SqliteFoundationTests(unittest.TestCase):
                     "0005_match_metadata",
                     "0006_image_recognition_metadata",
                     "0007_statistics_indexes",
+                    "0008_runtime_optimization_indexes",
                 ),
             )
 
@@ -48,6 +49,12 @@ class SqliteFoundationTests(unittest.TestCase):
                 self.assertIn("upload_queue", tables)
                 self.assertIn("screenshots", tables)
                 self.assertIn("recognition_candidates", tables)
+                indexes = {
+                    row[0]
+                    for row in conn.execute("SELECT name FROM sqlite_master WHERE type='index';").fetchall()
+                }
+                self.assertIn("idx_upload_queue_state_id", indexes)
+                self.assertIn("idx_upload_queue_state_updated_at", indexes)
 
                 conn.execute("INSERT INTO matches DEFAULT VALUES;")
                 match_id = conn.execute("SELECT id FROM matches ORDER BY id DESC LIMIT 1;").fetchone()[0]

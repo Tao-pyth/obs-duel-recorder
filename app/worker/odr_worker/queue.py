@@ -124,6 +124,7 @@ class QueueStore:
         conn = sqlite3.connect(self.db_path)
         conn.row_factory = sqlite3.Row
         conn.execute("PRAGMA foreign_keys = ON;")
+        conn.execute("PRAGMA busy_timeout = 5000;")
         return conn
 
     def create_item(self, payload: dict[str, Any]) -> QueueItem:
@@ -163,6 +164,31 @@ class QueueStore:
             else:
                 rows = conn.execute("SELECT * FROM upload_queue ORDER BY id;").fetchall()
             return [_item_from_row(row) for row in rows]
+        finally:
+            conn.close()
+
+    def count_by_state(self) -> dict[str, int]:
+        counts = {state: 0 for state in sorted(QUEUE_STATES)}
+        conn = self._connect()
+        try:
+            rows = conn.execute(
+                "SELECT state, COUNT(*) AS count FROM upload_queue GROUP BY state ORDER BY state;"
+            ).fetchall()
+            for row in rows:
+                state = str(row["state"])
+                if state in counts:
+                    counts[state] = int(row["count"])
+            return counts
+        finally:
+            conn.close()
+
+    def next_ready_item(self) -> QueueItem | None:
+        conn = self._connect()
+        try:
+            row = conn.execute(
+                "SELECT * FROM upload_queue WHERE state = 'ready_upload' ORDER BY id LIMIT 1;"
+            ).fetchone()
+            return _item_from_row(row) if row is not None else None
         finally:
             conn.close()
 
@@ -234,10 +260,12 @@ class QueueStore:
             conn.close()
 
     def recover_startup(self) -> dict[str, object]:
+        started_at = _dt.datetime.now(tz=_dt.timezone.utc)
         recovered: list[dict[str, object]] = []
         conn = self._connect()
         try:
             rows = conn.execute("SELECT * FROM upload_queue WHERE state = 'uploading' ORDER BY id;").fetchall()
+            scanned_count = len(rows)
             for row in rows:
                 item = _item_from_row(row)
                 now = _utc_now_iso()
@@ -276,7 +304,13 @@ class QueueStore:
             conn.commit()
         finally:
             conn.close()
-        return {"recovered": recovered}
+        elapsed = _dt.datetime.now(tz=_dt.timezone.utc) - started_at
+        return {
+            "recovered": recovered,
+            "scanned_count": scanned_count,
+            "recovered_count": len(recovered),
+            "duration_ms": round(elapsed.total_seconds() * 1000, 3),
+        }
 
     def _failed_state(self, item: QueueItem, payload: dict[str, Any], now: str) -> tuple[str, dict[str, object]]:
         retry_count = item.retry_count + 1

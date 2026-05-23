@@ -113,9 +113,7 @@ class UploadStore:
         self.uploader = MockYouTubeUploader()
 
     def status(self) -> dict[str, object]:
-        counts = {state: 0 for state in sorted(QUEUE_STATES)}
-        for item in self.queue_store.list_items():
-            counts[item.state] = counts.get(item.state, 0) + 1
+        counts = self.queue_store.count_by_state()
         return {
             "settings": self.settings.as_payload(),
             "queue_counts": counts,
@@ -168,8 +166,7 @@ class UploadStore:
         return self.metadata_store.render_upload_metadata(item.match_id)
 
     def _next_ready_item(self) -> QueueItem | None:
-        items = self.queue_store.list_items(state="ready_upload")
-        return items[0] if items else None
+        return self.queue_store.next_ready_item()
 
     def _video_exists(self, video_path: str) -> bool:
         if not video_path:
