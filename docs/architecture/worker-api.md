@@ -567,3 +567,67 @@ Error behavior:
 The v2.0 image recognition API is defined by:
 - `docs/architecture/image-recognition.md`
 - `docs/requirements/v2.0-ocr-integration-acceptance.md`
+
+---
+
+## v2.1 Statistics Endpoints
+
+v2.1 adds read-only Worker-owned statistics derived from SQLite runtime data.
+
+### `GET /statistics/summary`
+
+Purpose:
+- Return total match count, known/unknown result counts, result counts, and win rate.
+
+Query:
+- `from_date`: optional lower bound using `started_at` when present, otherwise `created_at`.
+- `to_date`: optional upper bound using `started_at` when present, otherwise `created_at`.
+- `deck`: optional exact normalized local deck filter.
+- `opponent_deck`: optional exact normalized opponent deck filter.
+- `result`: optional result filter.
+
+### `GET /statistics/decks`
+
+Purpose:
+- Aggregate match counts, result counts, known result counts, and win rate by local deck name.
+
+Query:
+- Same filters as `/statistics/summary`.
+- `limit`: optional positive integer, capped by the Worker.
+
+### `GET /statistics/opponents`
+
+Purpose:
+- Aggregate match counts, result counts, known result counts, and win rate by opponent deck name.
+
+Query:
+- Same filters as `/statistics/summary`.
+- `limit`: optional positive integer, capped by the Worker.
+
+### `GET /statistics/uploads`
+
+Purpose:
+- Return upload queue counts by state without exposing video paths, OAuth paths, or local media contents.
+
+Query:
+- `from_date`: optional lower bound over upload queue `created_at`.
+- `to_date`: optional upper bound over upload queue `created_at`.
+
+### `GET /statistics/memos`
+
+Purpose:
+- Search match memos with case-insensitive partial matching.
+- Return match metadata and memo excerpts without mutating match records.
+
+Query:
+- `query`: required non-empty search text.
+- Same filters as `/statistics/summary`.
+- `limit`: optional positive integer, capped by the Worker.
+
+Error behavior:
+- Invalid limits return HTTP 400 with `code=statistics_limit_invalid`.
+- Empty memo queries return HTTP 400 with `code=statistics_query_invalid`.
+
+The v2.1 statistics API is defined by:
+- `docs/architecture/statistics.md`
+- `docs/requirements/v2.1-statistics-system-acceptance.md`

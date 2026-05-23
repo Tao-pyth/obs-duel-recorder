@@ -25,6 +25,32 @@ The statistics boundary should support deterministic summaries such as:
 - memo search summaries
 - upload state statistics
 
+## Worker API
+
+v2.1 exposes statistics through read-only Worker endpoints:
+
+- `GET /statistics/summary`
+- `GET /statistics/decks`
+- `GET /statistics/opponents`
+- `GET /statistics/uploads`
+- `GET /statistics/memos?query=...`
+
+Supported match filters:
+
+- `from_date`
+- `to_date`
+- `deck`
+- `opponent_deck`
+- `result`
+
+`/statistics/uploads` supports `from_date` and `to_date` over upload queue creation time.
+
+Result values are normalized to `win`, `loss`, `draw`, or `unknown`. Win rate is computed as `win / (win + loss + draw)` and returns `0.0` when no known results exist.
+
+Deck and opponent names are grouped by trimmed case-insensitive keys. Empty names are grouped as `unknown`.
+
+Memo search is case-insensitive partial matching over the memo field only. It returns excerpts and never mutates match records.
+
 ## Safety
 
 - Empty datasets must return stable zero-count responses.
