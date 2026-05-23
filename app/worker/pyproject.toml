@@ -17,6 +17,9 @@ dependencies = [
 test = [
   "httpx>=0.27",
 ]
+bundle = [
+  "pyinstaller>=6.0",
+]
 
 [project.scripts]
 odr-worker = "odr_worker.__main__:main"

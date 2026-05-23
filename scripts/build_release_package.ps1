@@ -4,6 +4,8 @@ param(
 
     [string]$PluginDllPath = "build/plugin/Release/obs-duel-recorder.dll",
 
+    [string]$WorkerBundlePath = "build/worker/odr-worker",
+
     [string]$OutputDir = "build/release",
 
     [switch]$Clean
@@ -103,6 +105,8 @@ $packageRoot = Join-Path $outputRoot $packageName
 $zipPath = Join-Path $outputRoot "$packageName.zip"
 $checksumPath = Join-Path $outputRoot "SHA256SUMS.txt"
 $pluginDll = Resolve-RepoPath $PluginDllPath
+$workerBundle = Resolve-RepoPath $WorkerBundlePath
+$workerExe = Join-Path $workerBundle "odr-worker.exe"
 
 if (-not (Test-Path -LiteralPath $pluginDll -PathType Leaf)) {
     throw "Plugin DLL is required for release packaging: $pluginDll"
@@ -110,6 +114,14 @@ if (-not (Test-Path -LiteralPath $pluginDll -PathType Leaf)) {
 
 if ((Split-Path -Leaf $pluginDll) -ne "obs-duel-recorder.dll") {
     throw "Plugin DLL file name must be obs-duel-recorder.dll: $pluginDll"
+}
+
+if (-not (Test-Path -LiteralPath $workerBundle -PathType Container)) {
+    throw "Worker executable bundle is required for release packaging: $workerBundle"
+}
+
+if (-not (Test-Path -LiteralPath $workerExe -PathType Leaf)) {
+    throw "Worker executable is required for release packaging: $workerExe"
 }
 
 New-Item -ItemType Directory -Force -Path $outputRoot | Out-Null
@@ -129,6 +141,7 @@ if (Test-Path -LiteralPath $packageRoot) {
 New-Item -ItemType Directory -Force -Path $packageRoot | Out-Null
 
 Copy-RequiredFile -Source $pluginDll -Destination (Join-Path $packageRoot "app/plugin/obs-duel-recorder.dll")
+Copy-RequiredDirectory -Source $workerBundle -Destination (Join-Path $packageRoot "app/worker/odr-worker")
 
 $workerSource = Join-Path $RepoRoot "app/worker"
 $workerDest = Join-Path $packageRoot "app/worker"
@@ -152,7 +165,8 @@ $manifest = [ordered]@{
     version = $tagVersion
     created_at_utc = (Get-Date).ToUniversalTime().ToString("o")
     plugin_dll = "app/plugin/obs-duel-recorder.dll"
-    worker_package = "app/worker"
+    worker_executable = "app/worker/odr-worker/odr-worker.exe"
+    worker_source_fallback = "app/worker/odr_worker"
     update_entrypoint = "update.bat"
     checksum_file = "SHA256SUMS.txt beside the ZIP"
     docs = @(

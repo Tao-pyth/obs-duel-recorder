@@ -45,7 +45,9 @@ jobs:
         run: |
           New-Item -ItemType Directory -Force -Path build/plugin/Release | Out-Null
           Set-Content -LiteralPath build/plugin/Release/obs-duel-recorder.dll -Value "ci fixture dll for package layout validation" -Encoding ASCII
-          powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build_release_package.ps1 -Version v0.12.0 -PluginDllPath build/plugin/Release/obs-duel-recorder.dll -OutputDir build/release -Clean
+          New-Item -ItemType Directory -Force -Path build/worker/odr-worker | Out-Null
+          Set-Content -LiteralPath build/worker/odr-worker/odr-worker.exe -Value "ci fixture worker exe for package layout validation" -Encoding ASCII
+          powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build_release_package.ps1 -Version v0.13.0 -PluginDllPath build/plugin/Release/obs-duel-recorder.dll -WorkerBundlePath build/worker/odr-worker -OutputDir build/release -Clean
 
   worker-tests:
     name: Worker unit tests
@@ -67,3 +69,25 @@ jobs:
 
       - name: Run Worker tests
         run: python -m unittest discover -s app/worker/tests -p "test_*.py" -v
+
+  worker-bundle:
+    name: Worker executable build
+    runs-on: windows-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: app/worker/pyproject.toml
+
+      - name: Install Worker bundle dependencies
+        run: python -m pip install "./app/worker[bundle]"
+
+      - name: Build Worker executable
+        shell: powershell
+        run: powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build_worker_exe.ps1 -OutputDir build/worker -Clean
