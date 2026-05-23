@@ -18,9 +18,9 @@ The Plugin must not:
 - directly manipulate SQLite
 - directly upload to YouTube
 
-## Current v1.1 Match Metadata
+## Current v1.2 Export System
 
-The current scaffold keeps the v0.5 overlay surface, v0.6 manual recording lifecycle controls, v0.7 queue recovery API compatibility, v0.8 template detection API compatibility, v0.9 screenshot API compatibility, v1.0 upload API compatibility, and v1.1 match metadata API compatibility:
+The current scaffold keeps the v0.5 overlay surface, v0.6 manual recording lifecycle controls, v0.7 queue recovery API compatibility, v0.8 template detection API compatibility, v0.9 screenshot API compatibility, v1.0 upload API compatibility, v1.1 match metadata API compatibility, and v1.2 export API compatibility:
 
 - Build a loadable OBS module.
 - Register minimal OBS Frontend API lifecycle hooks.
@@ -40,12 +40,14 @@ The current scaffold keeps the v0.5 overlay surface, v0.6 manual recording lifec
 - Require a v0.9-compatible Worker for screenshot capture, preview, DB linkage, and upload-safe cleanup.
 - Require a v1.0-compatible Worker for upload status, mocked upload execution, and manual-review upload state.
 - Require a v1.1-compatible Worker for match metadata editing and upload metadata generation.
+- Require a v1.2-compatible Worker for export archive generation and export listing.
 
 Current non-goals:
 - Full control UI beyond the v0.6 manual start/stop controls.
 - Overlay UX.
 - Full OAuth/upload setup wizard.
 - Full metadata editing UI.
+- Full export management UI.
 
 ## Prerequisites
 
@@ -169,8 +171,8 @@ Defaults:
 - Worker command: `odr-worker`
 - Host: `127.0.0.1`
 - Port: `8787`
-- Expected Worker API version: `1.1`
-- Expected Worker version: `1.1.0`
+- Expected Worker API version: `1.2`
+- Expected Worker version: `1.2.0`
 - Heartbeat interval: 2000 ms
 - Heartbeat timeout threshold: 3 consecutive failed probes
 

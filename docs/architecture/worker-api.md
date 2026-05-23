@@ -360,3 +360,46 @@ Purpose:
 The v1.1 match metadata API is defined by:
 - `docs/architecture/metadata.md`
 - `docs/requirements/v1.1-match-metadata-acceptance.md`
+
+---
+
+## v1.2 Export Endpoints
+
+v1.2 adds Worker-owned export endpoints while preserving prior API compatibility.
+
+### `GET /exports`
+
+Purpose:
+- List completed ZIP exports under `user_data/data/exports/`.
+- Return each export file name, absolute path, size, and updated timestamp.
+
+### `POST /exports`
+
+Purpose:
+- Create a ZIP archive backup from runtime state.
+- Return the completed output path and manifest.
+- Avoid mutating live runtime state.
+
+Request fields:
+- `created_at`: optional timestamp used for deterministic default naming.
+- `name`: optional ZIP file name or stem.
+- `include_videos`: optional boolean, default `false`.
+
+ZIP contents:
+- `manifest.json`
+- `database/odr.sqlite3`
+- `metadata/matches.json`
+- `metadata/upload_queue.json`
+- `metadata/screenshots.json`
+- `metadata/video_linkages.json`
+- existing referenced screenshot files under `screenshots/`
+- optional video files under `videos/` only when `include_videos` is `true`
+
+Error behavior:
+- Invalid payloads return HTTP 400 with `code=export_payload_invalid`.
+- Existing target archives return HTTP 400 with `code=export_path_conflict`.
+- Failed exports remove temporary ZIP files and do not replace completed archives.
+
+The v1.2 export API is defined by:
+- `docs/architecture/export.md`
+- `docs/requirements/v1.2-export-system-acceptance.md`

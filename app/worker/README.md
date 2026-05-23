@@ -109,6 +109,18 @@ Generate upload metadata:
 Invoke-WebRequest http://127.0.0.1:8787/matches/1/upload-metadata | Select-Object -ExpandProperty Content
 ```
 
+Create export archive:
+
+```powershell
+Invoke-WebRequest http://127.0.0.1:8787/exports -Method Post -ContentType "application/json" -Body '{"created_at":"2026-05-23T12:01:00Z"}' | Select-Object -ExpandProperty Content
+```
+
+List export archives:
+
+```powershell
+Invoke-WebRequest http://127.0.0.1:8787/exports | Select-Object -ExpandProperty Content
+```
+
 Configuration scaffold (v0.2):
 - default config path: `user_data/config/worker.toml`
 - docs: `docs/architecture/worker-config.md`
