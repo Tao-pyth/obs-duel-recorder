@@ -23,14 +23,14 @@ Major and minor release completions are tagged as `vMajor.Minor.Patch`. See [Rel
 ## Current Development
 
 Latest released version:
-- `v1.2.0` - Export System
+- `v1.3.0` - Setup Wizard
 
 Current development target:
-- `v1.3` - Setup Wizard
-- Tracking issue: [#322](https://github.com/Tao-pyth/obs-duel-recorder/issues/322)
+- `v1.4` - Update System
+- Tracking issue: [#323](https://github.com/Tao-pyth/obs-duel-recorder/issues/323)
 
 Next roadmap target:
-- `v1.4` - Update System
+- `v2.0` - Advanced Runtime Phase
 
 ---
 
@@ -57,9 +57,9 @@ Current released foundation:
 - YouTube upload MVP boundary
 - Match metadata, memo, search, and upload metadata generation
 - Export archive generation with SQLite, metadata, screenshots, and video linkages
+- Setup wizard state and validation for runtime path, OBS integration, OAuth, and templates
 
 Planned roadmap capabilities:
-- Setup wizard (`v1.3`)
 - Update system (`v1.4`)
 - GitHub Actions based packaging (`v1.4+`)
 
@@ -110,26 +110,26 @@ obs-duel-recorder/
 
 ### Latest Release
 
-- Version: `v1.2.0`
-- Scope: Export System
+- Version: `v1.3.0`
+- Scope: Setup Wizard
 - Status: released
-- Tag target: `1f307e8dba227bed8de3cbd10a089210959f07e5`
-- Tracking issue: [#321](https://github.com/Tao-pyth/obs-duel-recorder/issues/321)
+- Tag target: `c0579c1f9f3c892059d4bf27dc43e90754453730`
+- Tracking issue: [#322](https://github.com/Tao-pyth/obs-duel-recorder/issues/322)
 - Release record: [docs/release-history.md](docs/release-history.md)
 
-### Completed in v1.2
+### Completed in v1.3
 
-- Worker-owned export API
-- ZIP archive generation under `user_data/data/exports/`
-- SQLite snapshot, metadata JSON, screenshot file, and video linkage export
-- Manifest output with included artifacts, missing files, schema version, and exclusion rules
-- Secret, config, log, and temporary-file exclusion by default
-- v1.2 acceptance and release readiness documentation
+- Worker-owned setup wizard API
+- First-run, partial, complete, cancel, and reset state handling
+- Runtime path, OBS integration, OAuth, and template validation
+- Secret-safe setup diagnostics
+- Runtime-data-preserving reset/rerun behavior
+- v1.3 acceptance and release readiness documentation
 
-### Planned After v1.2
+### Planned After v1.3
 
-- `v1.3` - Setup Wizard
-- Later roadmap items include update system, packaging, and GitHub Pages documentation.
+- `v1.4` - Update System
+- Later roadmap items include packaging and GitHub Pages documentation.
 
 ---
 
