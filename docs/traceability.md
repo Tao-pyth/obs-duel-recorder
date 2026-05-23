@@ -142,6 +142,7 @@ Goals:
 - Smoke evidence gate: `#387` - `[Verification] OBS Plugin DLL build and real OBS load smoke confirmation`
 - Acceptance checklist: `docs/requirements/v0.11-obs-plugin-real-load-smoke-acceptance.md`
 - Release readiness checklist: `docs/release/v0.11-release-readiness.md`
+- Smoke procedure: `docs/architecture/v0.11-obs-plugin-smoke.md`
 - Plugin scaffold/build notes: `app/plugin/README.md`
 - Worker API contract: `docs/architecture/worker-api.md`
 - Requirements (relevant sections):
