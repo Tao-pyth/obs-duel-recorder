@@ -20,6 +20,7 @@ Examples:
 - `v0.1.0`
 - `v0.2.0`
 - `v0.12.0`
+- `v1.0.1`
 
 ## Usability-Based Versioning Policy
 
@@ -47,6 +48,11 @@ tags. They must not be interpreted as active release versions. Do not move or
 overwrite existing tags without explicit maintainer approval. If a future
 usability-based version conflicts with a legacy tag name, record the exact
 publication/tag naming decision before tagging.
+
+For the active v1.0 publication gate, the existing `v1.0.0` tag is a legacy
+non-product tag. The planned active publication tag is `v1.0.1` unless
+maintainers explicitly approve a different non-conflicting tag before
+publication.
 
 ## Version Terms
 
@@ -132,6 +138,7 @@ Use a version-scoped readiness checklist before tagging:
 - v0.11: `docs/release/v0.11-release-readiness.md`
 - v0.12: `docs/release/v0.12-release-readiness.md`
 - v0.13: `docs/release/v0.13-release-readiness.md`
+- active v1.0: `docs/release/v1.0-first-usable-release-readiness.md`
 
 The v0.11 readiness checklist is a version gate, not a packaged release
 approval by itself. It was completed together with the OBS real-load smoke
@@ -144,6 +151,11 @@ handoff documentation.
 The v0.13 readiness checklist is a completed pre-v1.0 gate for practical
 distribution readiness. It proves that normal Windows users can use the release
 ZIP without manually setting up Python, pip, or a virtual environment.
+
+The active v1.0 readiness checklist is the publication gate for the first
+normal-user GitHub Release package. It must record final ZIP/SHA verification,
+install/update preservation evidence, Release asset publication, and the
+non-conflicting tag decision before #401 closes.
 
 Do not retroactively create a `v0.1.0` tag unless explicitly approved.
 
