@@ -20,7 +20,7 @@ The system separates responsibilities into:
 | Component | Responsibility |
 |---|---|
 | OBS Plugin | OBS integration, overlay control, Dock UI, Worker lifecycle |
-| Python Worker | Queue processing, SQLite, OCR, template matching, screenshot archive, upload processing |
+| Python Worker | Queue processing, SQLite, image recognition, template matching, screenshot archive, upload processing |
 
 ---
 
@@ -54,6 +54,10 @@ The system separates responsibilities into:
 - Tokens, client secrets, authorization codes, and bearer strings must be redacted from diagnostics
 - Missing local videos are discarded with evidence
 - Ambiguous upload outcomes require manual review instead of blind retry
+- Upload execution must use a provider boundary so tests can use a deterministic mock uploader and production can use an optional Google uploader.
+- The Google uploader should use the official Google client libraries as optional dependencies.
+- Google API failures must be classified by HTTP status and API reason into stable outcomes such as quota, auth, network, and ambiguous failure.
+- Setup wizard and `/upload/status` must detect missing OAuth prerequisites before a real upload attempt.
 
 ---
 
@@ -64,6 +68,16 @@ The system separates responsibilities into:
 - Metadata validation failures must be actionable and must not change the existing record.
 - Upload title, description, and notes generation must be deterministic.
 - Post-upload metadata edits update future generated metadata but do not rewrite an already uploaded YouTube record automatically.
+
+---
+
+## Statistics Rules
+
+- Statistics are Worker-owned and derived from SQLite runtime data.
+- Statistics must not rewrite source records merely to improve aggregates.
+- Empty datasets must return stable zero-count responses.
+- Statistics filters must be documented and deterministic.
+- Statistics diagnostics must not expose OAuth secrets, logs, local media contents, or unnecessary absolute paths.
 
 ---
 
@@ -102,6 +116,29 @@ The system separates responsibilities into:
 
 ---
 
+## Packaging Rules
+
+- Release packaging should be produced as a GitHub Actions ZIP artifact.
+- The ZIP layout must include the Plugin DLL, Worker package, `update.bat`, and minimal user/developer docs needed for install/update.
+- `user_data/`, logs, databases, screenshots, videos, OAuth files, and generated runtime exports must never be included in release ZIPs.
+- Release assets should include a SHA256 checksum.
+- GitHub Actions may generate release assets automatically, but final release attachment/publishing should remain manually approved unless a later release defines a fully automated policy.
+
+---
+
+## Image Recognition Rules
+
+- v2.0 image analysis is image-recognition-assisted metadata extraction, not mandatory OCR text recognition.
+- Fixture-based recognition must be implemented first through an abstract Worker provider boundary.
+- Pillow is allowed for lightweight image preprocessing; heavyweight OCR or ML runtime dependencies are not required for v2.0.
+- Recognition results must be treated as candidates until verified by rules, fixtures, or user correction.
+- Fixture-based minimum success criteria must be documented before release.
+- Failed or low-confidence recognition must fall back to manual correction and existing match metadata editing.
+- Image recognition must not become the primary duel trigger mechanism; template matching and state transitions remain the primary detection path.
+- The repository must not distribute game assets, user screenshots, or proprietary training data.
+
+---
+
 ## Overlay Rules
 
 Overlay supports:
@@ -119,9 +156,9 @@ Primary:
 - template matching
 
 Secondary:
-- OCR
+- image-recognition-assisted metadata extraction
 
-OCR must not be the primary trigger mechanism.
+Image recognition must not be the primary trigger mechanism.
 
 ---
 

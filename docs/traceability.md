@@ -192,6 +192,67 @@ Goals:
 
 ---
 
+## v2.x
+
+### v2.0 - OCR Integration
+
+- Roadmap: `docs/roadmap.md` -> **v2.0 - OCR Integration**
+- Version tracking issue: `#324` - `[v2.0] OCR Integration release tracking`
+- Acceptance checklist: `docs/requirements/v2.0-ocr-integration-acceptance.md`
+- Release readiness checklist: `docs/release/v2.0-release-readiness.md`
+- Image recognition architecture contract: `docs/architecture/image-recognition.md`
+- Packaging architecture contract: `docs/architecture/packaging.md`
+- Upload provider architecture contract: `docs/architecture/upload-provider.md`
+- Worker API contract: `docs/architecture/worker-api.md`
+- Release record: not created yet
+- Scope note: packaging and upload-provider documents record v2.x preparation contracts; v2.0 implementation remains image-recognition-first unless child issues explicitly expand scope.
+- Requirements (relevant sections):
+  - `docs/requirements/requirements.md` -> Image Recognition Rules / Upload Rules / Packaging Rules / Detection Rules / Match Data / Runtime Rules
+  - `AGENTS.md` -> Runtime Directory Rules / Responsibility Separation
+
+### v2.1 - Statistics System
+
+- Roadmap: `docs/roadmap.md` -> **v2.1 - Statistics System**
+- Version tracking issue: `#325` - `[v2.1] Statistics System release tracking`
+- Acceptance checklist: `docs/requirements/v2.1-statistics-system-acceptance.md`
+- Release readiness checklist: `docs/release/v2.1-release-readiness.md`
+- Statistics architecture contract: `docs/architecture/statistics.md`
+- Worker API contract: `docs/architecture/worker-api.md`
+- Release record: not created yet
+- Requirements (relevant sections):
+  - `docs/requirements/requirements.md` -> Statistics Rules / Match Data / Upload Rules / Runtime Rules / Architecture / Platform
+  - `AGENTS.md` -> Runtime Directory Rules / Responsibility Separation
+
+### v2.2 - GitHub Pages Documentation
+
+- Roadmap: `docs/roadmap.md` -> **v2.2 - GitHub Pages Documentation**
+- Version tracking issue: `#326` - `[v2.2] GitHub Pages Documentation release tracking`
+- Acceptance checklist: `docs/requirements/v2.2-github-pages-documentation-acceptance.md`
+- Release readiness checklist: `docs/release/v2.2-release-readiness.md`
+- Documentation validation policy: `docs/validation.md`
+- Packaging architecture contract: `docs/architecture/packaging.md`
+- Release record: not created yet
+- Requirements (relevant sections):
+  - `docs/requirements/requirements.md` -> Packaging Rules / Runtime Rules / Architecture / Platform
+  - `docs/README.md` -> Documentation Rules / Validation
+  - `AGENTS.md` -> Runtime Directory Rules / Responsibility Separation
+
+### v2.3 - Runtime Optimization
+
+- Roadmap: `docs/roadmap.md` -> **v2.3 - Runtime Optimization**
+- Version tracking issue: `#327` - `[v2.3] Runtime Optimization release tracking`
+- Acceptance checklist: `docs/requirements/v2.3-runtime-optimization-acceptance.md`
+- Release readiness checklist: `docs/release/v2.3-release-readiness.md`
+- Runtime optimization architecture contract: `docs/architecture/runtime-optimization.md`
+- Plugin architecture contract: `docs/architecture/plugin-worker.md`
+- Worker API contract: `docs/architecture/worker-api.md`
+- Release record: not created yet
+- Requirements (relevant sections):
+  - `docs/requirements/requirements.md` -> Update Rules / Runtime Rules / Upload Rules / Queue States / Architecture / Platform
+  - `AGENTS.md` -> Runtime Directory Rules / Responsibility Separation
+
+---
+
 ## Policy
 
 ### Source roles
@@ -242,3 +303,7 @@ The version tracking issue itself is not an implementation work item.
 - Refs #321
 - Refs #322
 - Refs #323
+- Refs #324
+- Refs #325
+- Refs #326
+- Refs #327

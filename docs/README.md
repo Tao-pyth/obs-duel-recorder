@@ -23,6 +23,10 @@ This directory is the documentation entry point for OBS Duel Recorder.
 - [v1.2 release readiness checklist](release/v1.2-release-readiness.md)
 - [v1.3 release readiness checklist](release/v1.3-release-readiness.md)
 - [v1.4 release readiness checklist](release/v1.4-release-readiness.md)
+- [v2.0 release readiness checklist](release/v2.0-release-readiness.md)
+- [v2.1 release readiness checklist](release/v2.1-release-readiness.md)
+- [v2.2 release readiness checklist](release/v2.2-release-readiness.md)
+- [v2.3 release readiness checklist](release/v2.3-release-readiness.md)
 - [v0.4 release summary](release/v0.4-release-summary.md)
 - [v0.9 release summary](release/v0.9-release-summary.md)
 - [v1.0 release summary](release/v1.0-release-summary.md)
@@ -43,6 +47,10 @@ This directory is the documentation entry point for OBS Duel Recorder.
 - [v1.2 Export System acceptance checklist](requirements/v1.2-export-system-acceptance.md)
 - [v1.3 Setup Wizard acceptance checklist](requirements/v1.3-setup-wizard-acceptance.md)
 - [v1.4 Update System acceptance checklist](requirements/v1.4-update-system-acceptance.md)
+- [v2.0 OCR Integration acceptance checklist](requirements/v2.0-ocr-integration-acceptance.md)
+- [v2.1 Statistics System acceptance checklist](requirements/v2.1-statistics-system-acceptance.md)
+- [v2.2 GitHub Pages Documentation acceptance checklist](requirements/v2.2-github-pages-documentation-acceptance.md)
+- [v2.3 Runtime Optimization acceptance checklist](requirements/v2.3-runtime-optimization-acceptance.md)
 
 ## Architecture
 
@@ -59,6 +67,11 @@ Architecture documents describe technical behavior and responsibility boundaries
 - [Match metadata](architecture/metadata.md)
 - [Export system](architecture/export.md)
 - [Setup wizard](architecture/setup-wizard.md)
+- [Image recognition](architecture/image-recognition.md)
+- [Packaging](architecture/packaging.md)
+- [Statistics](architecture/statistics.md)
+- [Runtime optimization](architecture/runtime-optimization.md)
+- [Upload provider](architecture/upload-provider.md)
 - [v0.5 OBS overlay smoke procedure](architecture/v0.5-overlay-smoke.md)
 - [v0.6 recording-state smoke procedure](architecture/v0.6-recording-state-smoke.md)
 

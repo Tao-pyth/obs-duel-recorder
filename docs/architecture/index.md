@@ -13,6 +13,11 @@ Architecture documents describe technical behavior, responsibility boundaries, a
 - [Export System](export.md)
 - [Setup Wizard](setup-wizard.md)
 - [Update System](update-system.md)
+- [Image Recognition](image-recognition.md)
+- [Packaging](packaging.md)
+- [Statistics](statistics.md)
+- [Runtime Optimization](runtime-optimization.md)
+- [Upload Provider](upload-provider.md)
 - [v0.6 Recording-State Smoke Procedure](v0.6-recording-state-smoke.md)
 
 ## Supporting Documents

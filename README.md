@@ -26,11 +26,11 @@ Latest released version:
 - `v1.4.0` - Update System
 
 Current development target:
-- `v2.0` - Advanced Runtime Phase
+- `v2.0` - OCR Integration
 - Tracking issue: [#324](https://github.com/Tao-pyth/obs-duel-recorder/issues/324)
 
 Next roadmap target:
-- `v2.0` - Advanced Runtime Phase
+- `v2.1` - Statistics System
 
 ---
 
@@ -61,7 +61,8 @@ Current released foundation:
 - Update entrypoint, DB backup-before-migration, update-state diagnostics, and runtime preservation
 
 Planned roadmap capabilities:
-- GitHub Actions based packaging (`v2.0+`)
+- image-recognition-assisted metadata extraction (`v2.0`)
+- GitHub Actions based packaging and SHA256 checksum assets (`v2.0+`)
 
 ---
 
@@ -128,7 +129,7 @@ obs-duel-recorder/
 
 ### Planned After v1.4
 
-- `v2.0` - Advanced Runtime Phase
+- `v2.0` - OCR Integration
 - Later roadmap items include packaging and GitHub Pages documentation.
 
 ---
