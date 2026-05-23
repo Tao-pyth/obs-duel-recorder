@@ -11,6 +11,7 @@ from .db import DbInfo
 from .detection import DetectionRuntime, TemplateConfigError, load_template_config, load_templates
 from .health import API_VERSION, PID, STARTED_AT, WorkerDb, WorkerPaths, build_health_payload
 from .identity import INSTANCE_ID
+from .metadata import MatchMetadataStore, MetadataError
 from .overlay import OverlayPayloadError, OverlayState, apply_overlay_update
 from .queue import QueueCommandError, QueueStore
 from .recording import (
@@ -80,6 +81,7 @@ def create_app(*, runtime_dirs: RuntimeDirs, loaded_config: LoadedWorkerConfig, 
     app.state.queue_recovery = {"recovered": []}
     app.state.screenshot_store = None
     app.state.upload_store = None
+    app.state.metadata_store = None
     if db_info is not None:
         app.state.db = WorkerDb(
             db_path=db_info.db_path,
@@ -92,10 +94,12 @@ def create_app(*, runtime_dirs: RuntimeDirs, loaded_config: LoadedWorkerConfig, 
             db_path=db_info.db_path,
             screenshots_dir=runtime_dirs.screenshots_dir,
         )
+        app.state.metadata_store = MatchMetadataStore(db_info.db_path)
         app.state.upload_store = UploadStore(
             queue_store=app.state.queue_store,
             videos_dir=runtime_dirs.videos_dir,
             settings=build_upload_settings(user_data_dir=runtime_dirs.user_data_dir),
+            metadata_store=app.state.metadata_store,
         )
 
     @app.get("/health")
@@ -325,6 +329,107 @@ def create_app(*, runtime_dirs: RuntimeDirs, loaded_config: LoadedWorkerConfig, 
             **result,
             "recording_state": app.state.recording_state.as_payload(),
         }
+
+    @app.get("/matches")
+    def get_matches(query: str | None = None) -> dict[str, object]:
+        if app.state.metadata_store is None:
+            return _error_response(
+                status_code=503,
+                code="metadata_unavailable",
+                message="Match metadata storage is unavailable",
+            )
+        records = app.state.metadata_store.list_matches(query=query)
+        return {"items": [record.as_payload() for record in records]}
+
+    @app.post("/matches")
+    async def post_match(request: Request):
+        if app.state.metadata_store is None:
+            return _error_response(
+                status_code=503,
+                code="metadata_unavailable",
+                message="Match metadata storage is unavailable",
+            )
+        try:
+            payload = await request.json()
+            if not isinstance(payload, dict):
+                raise ValueError
+            return app.state.metadata_store.create_match(payload).as_payload()
+        except MetadataError as exc:
+            return _error_response(
+                status_code=400,
+                code=exc.code,
+                message="Match metadata request is invalid",
+                details=exc.details,
+            )
+        except ValueError:
+            return _error_response(
+                status_code=400,
+                code="metadata_payload_invalid",
+                message="Match metadata payload must be JSON object",
+            )
+
+    @app.get("/matches/{match_id}")
+    def get_match(match_id: int):
+        if app.state.metadata_store is None:
+            return _error_response(
+                status_code=503,
+                code="metadata_unavailable",
+                message="Match metadata storage is unavailable",
+            )
+        try:
+            return app.state.metadata_store.get_match(match_id).as_payload()
+        except MetadataError as exc:
+            return _error_response(
+                status_code=404 if exc.code == "match_not_found" else 400,
+                code=exc.code,
+                message="Match metadata request is invalid",
+                details=exc.details,
+            )
+
+    @app.put("/matches/{match_id}/metadata")
+    async def put_match_metadata(match_id: int, request: Request):
+        if app.state.metadata_store is None:
+            return _error_response(
+                status_code=503,
+                code="metadata_unavailable",
+                message="Match metadata storage is unavailable",
+            )
+        try:
+            payload = await request.json()
+            if not isinstance(payload, dict):
+                raise ValueError
+            return app.state.metadata_store.update_match(match_id, payload).as_payload()
+        except MetadataError as exc:
+            return _error_response(
+                status_code=404 if exc.code == "match_not_found" else 400,
+                code=exc.code,
+                message="Match metadata request is invalid",
+                details=exc.details,
+            )
+        except ValueError:
+            return _error_response(
+                status_code=400,
+                code="metadata_payload_invalid",
+                message="Match metadata payload must be JSON object",
+            )
+
+    @app.get("/matches/{match_id}/upload-metadata")
+    def get_match_upload_metadata(match_id: int):
+        if app.state.metadata_store is None:
+            return _error_response(
+                status_code=503,
+                code="metadata_unavailable",
+                message="Match metadata storage is unavailable",
+            )
+        try:
+            return app.state.metadata_store.render_upload_metadata(match_id)
+        except MetadataError as exc:
+            return _error_response(
+                status_code=404 if exc.code == "match_not_found" else 400,
+                code=exc.code,
+                message="Match upload metadata is invalid",
+                details=exc.details,
+            )
 
     @app.get("/screenshots")
     def get_screenshots(match_id: int | None = None, queue_item_id: int | None = None) -> dict[str, object]:

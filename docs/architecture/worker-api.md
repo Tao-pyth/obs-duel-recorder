@@ -304,3 +304,59 @@ Manual decisions continue to use `POST /queue/items/{item_id}/command`:
 The v1.0 upload API is defined by:
 - `docs/architecture/upload.md`
 - `docs/requirements/v1.0-youtube-upload-mvp-acceptance.md`
+
+---
+
+## v1.1 Match Metadata Endpoints
+
+v1.1 adds Worker-owned match metadata endpoints while preserving prior API compatibility.
+
+### `GET /matches`
+
+Purpose:
+- List match metadata records.
+- Optionally search lightweight local metadata fields.
+
+Query:
+- `query`: optional text search across opponent deck, memo, deck name, and result.
+
+### `POST /matches`
+
+Purpose:
+- Create a match metadata record.
+- Accept editable metadata fields with deterministic defaults.
+
+Request fields:
+- `deck_name`: optional string.
+- `opponent_deck`: optional string.
+- `result`: optional string.
+- `memo`: optional string.
+- `started_at`: optional string.
+- `ended_at`: optional string.
+- `title_template`: optional string.
+
+### `GET /matches/{match_id}`
+
+Purpose:
+- Return one match metadata record.
+
+### `PUT /matches/{match_id}/metadata`
+
+Purpose:
+- Update editable match metadata fields.
+- Reject invalid values without changing the existing record.
+- Allow post-upload edits for future generated metadata without rewriting an already uploaded YouTube record automatically.
+
+### `GET /matches/{match_id}/upload-metadata`
+
+Purpose:
+- Generate deterministic upload title, description, notes, and supported title-template variables.
+- Apply stable fallbacks for missing metadata and unknown template variables.
+
+### Upload integration
+
+`POST /upload/process-next` includes `upload_metadata` in the response when the processed queue item is linked to a `match_id` and metadata is available.
+
+The v1.1 match metadata API is defined by:
+- `docs/architecture/metadata.md`
+- `docs/requirements/v1.1-match-metadata-acceptance.md`

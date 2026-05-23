@@ -24,10 +24,10 @@ class SqliteFoundationTests(unittest.TestCase):
 
             db_info = init_db(runtime_dirs=runtime_dirs)
             self.assertTrue(db_info.db_path.exists())
-            self.assertGreaterEqual(db_info.schema_version, 4)
+            self.assertGreaterEqual(db_info.schema_version, 5)
             self.assertEqual(
                 db_info.applied_migrations,
-                ("0001_init", "0002_tables", "0003_queue_recovery", "0004_screenshots"),
+                ("0001_init", "0002_tables", "0003_queue_recovery", "0004_screenshots", "0005_match_metadata"),
             )
 
             conn = sqlite3.connect(db_info.db_path)
@@ -55,6 +55,14 @@ class SqliteFoundationTests(unittest.TestCase):
                 self.assertEqual(row[0], "ready_upload")
                 self.assertEqual(row[1], 0)
                 self.assertEqual(row[2], "{}")
+
+                metadata = conn.execute(
+                    "SELECT opponent_deck, memo, title_template FROM matches WHERE id = ?;",
+                    (match_id,),
+                ).fetchone()
+                self.assertEqual(metadata[0], "")
+                self.assertEqual(metadata[1], "")
+                self.assertEqual(metadata[2], "")
             finally:
                 conn.close()
 
@@ -110,6 +118,8 @@ class SqliteFoundationTests(unittest.TestCase):
             if migration_id == "0003_queue_recovery":
                 return ""
             if migration_id == "0004_screenshots":
+                return ""
+            if migration_id == "0005_match_metadata":
                 return ""
             raise AssertionError("unexpected migration id")
 

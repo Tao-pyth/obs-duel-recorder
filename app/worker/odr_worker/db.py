@@ -25,6 +25,7 @@ _MIGRATIONS: tuple[str, ...] = (
     "0002_tables",
     "0003_queue_recovery",
     "0004_screenshots",
+    "0005_match_metadata",
 )
 
 
