@@ -181,11 +181,13 @@ Goals:
 
 - Roadmap: `docs/roadmap.md` -> **v1.4 - Update System**
 - Version tracking issue: `#323` - `[v1.4] Update System release tracking`
-- Acceptance checklist: not created yet
-- Release readiness checklist: not created yet
+- Acceptance checklist: `docs/requirements/v1.4-update-system-acceptance.md`
+- Release readiness checklist: `docs/release/v1.4-release-readiness.md`
+- Update system architecture contract: `docs/architecture/update-system.md`
+- Worker API contract: `docs/architecture/worker-api.md`
 - Release record: not created yet
 - Requirements (relevant sections):
-  - `docs/requirements/requirements.md` -> Runtime Rules / Architecture / Platform
+  - `docs/requirements/requirements.md` -> Update Rules / Runtime Rules / Architecture / Platform
   - `AGENTS.md` -> Runtime Directory Rules / Responsibility Separation
 
 ---

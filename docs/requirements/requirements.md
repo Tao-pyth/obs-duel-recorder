@@ -89,6 +89,19 @@ The system separates responsibilities into:
 
 ---
 
+## Update Rules
+
+- `update.bat` is the canonical Windows update entrypoint.
+- Update validation must check target Worker/API compatibility before mutating runtime state.
+- Downgrades must be rejected unless a future release explicitly documents a supported path.
+- SQLite DB backup must be created before update-triggered migration execution when a DB exists.
+- Update state, installed version records, and DB backups are runtime data under `user_data/data/`.
+- Normal update must preserve OAuth tokens, DB, videos, screenshots, exports, logs, and runtime root overrides.
+- Partial update and migration failure diagnostics must point to backup/recovery guidance.
+- Update diagnostics must not expose OAuth secrets, tokens, local media contents, or full logs.
+
+---
+
 ## Overlay Rules
 
 Overlay supports:

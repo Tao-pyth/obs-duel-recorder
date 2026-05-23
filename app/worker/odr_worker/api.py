@@ -26,6 +26,7 @@ from .recording import (
 from .runtime_dirs import RuntimeDirs
 from .screenshots import ScreenshotError, ScreenshotStore
 from .setup_wizard import SetupWizardError, SetupWizardStore
+from .update_system import UpdateError, UpdateManager
 from .upload import UploadCommandError, UploadStore, build_upload_settings
 from .version import __version__
 
@@ -86,6 +87,7 @@ def create_app(*, runtime_dirs: RuntimeDirs, loaded_config: LoadedWorkerConfig, 
     app.state.metadata_store = None
     app.state.export_store = None
     app.state.setup_store = SetupWizardStore(runtime_dirs=runtime_dirs)
+    app.state.update_manager = UpdateManager(runtime_dirs=runtime_dirs)
     if db_info is not None:
         app.state.db = WorkerDb(
             db_path=db_info.db_path,
@@ -165,6 +167,53 @@ def create_app(*, runtime_dirs: RuntimeDirs, loaded_config: LoadedWorkerConfig, 
     @app.post("/setup/reset")
     def post_setup_reset():
         return app.state.setup_store.reset()
+
+    @app.get("/update/status")
+    def get_update_status() -> dict[str, object]:
+        return app.state.update_manager.status()
+
+    @app.post("/update/validate")
+    async def post_update_validate(request: Request):
+        try:
+            payload = await request.json()
+            if not isinstance(payload, dict):
+                raise ValueError
+            return app.state.update_manager.validate(payload)
+        except UpdateError as exc:
+            return _error_response(
+                status_code=400,
+                code=exc.code,
+                message="Update request is invalid",
+                details=exc.details,
+            )
+        except ValueError:
+            return _error_response(
+                status_code=400,
+                code="update_payload_invalid",
+                message="Update payload must be JSON object",
+            )
+
+    @app.post("/update/apply")
+    async def post_update_apply(request: Request):
+        try:
+            payload = await request.json()
+            if not isinstance(payload, dict):
+                raise ValueError
+            return app.state.update_manager.apply_update(payload)
+        except UpdateError as exc:
+            status_code = 409 if exc.code in {"update_validation_failed", "update_migration_failed"} else 400
+            return _error_response(
+                status_code=status_code,
+                code=exc.code,
+                message="Update could not be completed",
+                details=exc.details,
+            )
+        except ValueError:
+            return _error_response(
+                status_code=400,
+                code="update_payload_invalid",
+                message="Update payload must be JSON object",
+            )
 
     @app.get("/overlay/state")
     def get_overlay_state() -> dict[str, str]:
