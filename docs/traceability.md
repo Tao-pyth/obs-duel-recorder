@@ -168,6 +168,7 @@ Goals:
 ### Practical v1.0 - First Practical OBS Plugin Release
 
 - Roadmap: `docs/roadmap.md` -> **v1.0 - First Practical OBS Plugin Release**
+- Version tracking issue: `#401` - `[Practical v1.0] First Practical OBS Plugin Release tracking`
 - Release policy: `docs/release.md`
 - Previous practical readiness item: `#396` - `[v0.12] Release Packaging Automation release tracking`
 - Required evidence:
