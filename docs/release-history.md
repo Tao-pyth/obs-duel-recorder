@@ -215,3 +215,19 @@ The version tracking issue may contain the working release summary, but finalize
 - Deferred items: Update System remains in #323 for v1.4
 - Next version tracking issue: #323
 - Status: released
+
+### v1.4.0 - Update System
+
+- Version tracking issue: #323
+- Milestone: `v1.4` (not set)
+- Release readiness checklist: `docs/release/v1.4-release-readiness.md`
+- Tag: `v1.4.0`
+- Tag target: `333d3ce757b3724f223cec1f9a8b33046df7007b`
+- Release finalized at: `2026-05-23T12:48:01+09:00`
+- Tag finalized at: `2026-05-23T12:47:19+09:00`
+- Release summary: `docs/release/v1.4-release-summary.md`
+- Major child issues: #344, #345, #346, #347
+- Major PRs: #372
+- Deferred items: Advanced Runtime Phase remains in #324 for v2.0
+- Next version tracking issue: #324
+- Status: released

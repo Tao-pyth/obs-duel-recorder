@@ -23,11 +23,11 @@ Major and minor release completions are tagged as `vMajor.Minor.Patch`. See [Rel
 ## Current Development
 
 Latest released version:
-- `v1.3.0` - Setup Wizard
+- `v1.4.0` - Update System
 
 Current development target:
-- `v1.4` - Update System
-- Tracking issue: [#323](https://github.com/Tao-pyth/obs-duel-recorder/issues/323)
+- `v2.0` - Advanced Runtime Phase
+- Tracking issue: [#324](https://github.com/Tao-pyth/obs-duel-recorder/issues/324)
 
 Next roadmap target:
 - `v2.0` - Advanced Runtime Phase
@@ -58,10 +58,10 @@ Current released foundation:
 - Match metadata, memo, search, and upload metadata generation
 - Export archive generation with SQLite, metadata, screenshots, and video linkages
 - Setup wizard state and validation for runtime path, OBS integration, OAuth, and templates
+- Update entrypoint, DB backup-before-migration, update-state diagnostics, and runtime preservation
 
 Planned roadmap capabilities:
-- Update system (`v1.4`)
-- GitHub Actions based packaging (`v1.4+`)
+- GitHub Actions based packaging (`v2.0+`)
 
 ---
 
@@ -110,25 +110,25 @@ obs-duel-recorder/
 
 ### Latest Release
 
-- Version: `v1.3.0`
-- Scope: Setup Wizard
+- Version: `v1.4.0`
+- Scope: Update System
 - Status: released
-- Tag target: `c0579c1f9f3c892059d4bf27dc43e90754453730`
-- Tracking issue: [#322](https://github.com/Tao-pyth/obs-duel-recorder/issues/322)
+- Tag target: `333d3ce757b3724f223cec1f9a8b33046df7007b`
+- Tracking issue: [#323](https://github.com/Tao-pyth/obs-duel-recorder/issues/323)
 - Release record: [docs/release-history.md](docs/release-history.md)
 
-### Completed in v1.3
+### Completed in v1.4
 
-- Worker-owned setup wizard API
-- First-run, partial, complete, cancel, and reset state handling
-- Runtime path, OBS integration, OAuth, and template validation
-- Secret-safe setup diagnostics
-- Runtime-data-preserving reset/rerun behavior
-- v1.3 acceptance and release readiness documentation
+- Canonical Windows `update.bat` entrypoint
+- Worker-owned update status, validation, and apply API
+- DB backup-before-migration under `user_data/data/db/backups/`
+- Partial/failed update-state diagnostics and installed-version records
+- Runtime preservation for config, DB, videos, screenshots, exports, and logs
+- v1.4 acceptance and release readiness documentation
 
-### Planned After v1.3
+### Planned After v1.4
 
-- `v1.4` - Update System
+- `v2.0` - Advanced Runtime Phase
 - Later roadmap items include packaging and GitHub Pages documentation.
 
 ---

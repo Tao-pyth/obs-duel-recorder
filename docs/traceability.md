@@ -185,7 +185,7 @@ Goals:
 - Release readiness checklist: `docs/release/v1.4-release-readiness.md`
 - Update system architecture contract: `docs/architecture/update-system.md`
 - Worker API contract: `docs/architecture/worker-api.md`
-- Release record: not created yet
+- Release record: `docs/release-history.md`; detailed summary: `docs/release/v1.4-release-summary.md`
 - Requirements (relevant sections):
   - `docs/requirements/requirements.md` -> Update Rules / Runtime Rules / Architecture / Platform
   - `AGENTS.md` -> Runtime Directory Rules / Responsibility Separation
