@@ -13,6 +13,7 @@ usability.
 - #396 records completed release packaging automation for the v0.12 version gate.
 - #404 records completed Worker EXE bundled distribution and local download-to-first-run smoke for the v0.13 version gate.
 - The project remains pre-v1.0 until release publication and tag-naming gates are completed.
+- The planned active v1.0 publication tag is `v1.0.1` because `v1.0.0` already exists as a legacy non-product tag.
 - Existing `v1.x` and `v2.x` tags created before this policy are legacy non-product tags. They are preserved for auditability, but they are not part of the active product version sequence.
 - Older `Status: released` entries before this policy note mean "legacy implementation record completed" unless a record explicitly says it is a user-ready product release.
 
@@ -218,6 +219,20 @@ The version tracking issue may contain the working release summary, but finalize
 - Deferred items: public GitHub Release publication, final release asset selection, and tag approval remain in #401 for v1.0
 - Next version tracking issue: #401
 - Status: version gate complete; v1.0 publication is still pending
+
+### Active v1.0.1 - First Usable OBS Plugin Release
+
+- Version tracking issue: #401
+- Acceptance checklist: `docs/requirements/v1.0-first-usable-release-acceptance.md`
+- Release readiness checklist: `docs/release/v1.0-first-usable-release-readiness.md`
+- Release summary: `docs/release/v1.0-first-usable-release-summary.md`
+- Tag: `v1.0.1` planned
+- Tag target: pending final v1.0 release merge
+- Release finalized at: pending final publication
+- Prior gates: #393 / v0.11, #396 / v0.12, #404 / v0.13
+- Required final evidence: release ZIP, `SHA256SUMS.txt`, package validation, install/update verification, `user_data/` preservation verification, GitHub Release asset publication
+- Legacy conflict: existing `v1.0.0` is preserved and must not be moved, deleted, or overwritten
+- Status: publication gate pending; not yet a user-ready released version
 
 ### Legacy tag v1.0.0 - YouTube Upload MVP
 

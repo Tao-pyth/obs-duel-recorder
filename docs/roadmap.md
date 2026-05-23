@@ -9,7 +9,7 @@ This roadmap uses one version sequence based on user-visible usability.
 - The `v0.11` gate completed built OBS Plugin DLL, real OBS load smoke evidence, Dock visibility, Worker heartbeat, and basic recording control evidence.
 - The `v0.12` gate completed packaging workflow, release asset automation path, SHA256 checksum generation, and package layout validation.
 - The `v0.13` gate completed Worker EXE bundled distribution and local download-to-first-run smoke evidence.
-- A user-ready `v1.0` release still requires release publication and a recorded tag naming decision because legacy `v1.0.0` already exists.
+- A user-ready `v1.0` release still requires release publication and a recorded tag naming decision because legacy `v1.0.0` already exists. The planned active publication tag is `v1.0.1`.
 
 ---
 
@@ -141,12 +141,16 @@ Publish the first user-ready release after OBS plugin smoke, packaging, and prac
 - v0.12 packaging automation evidence accepted
 - v0.13 practical distribution readiness evidence accepted
 - release naming/tagging decision recorded without moving legacy tags
+- final ZIP/SHA verification completed
+- install/update and `user_data/` preservation evidence recorded
+- GitHub Release asset publication completed
 
 ### Deliverables
 
 - first usable OBS plugin release package
 - user-ready release notes
 - release publication evidence
+- active release tag `v1.0.1`, unless maintainers explicitly approve another non-conflicting tag
 
 ---
 

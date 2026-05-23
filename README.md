@@ -20,6 +20,7 @@ Important versioning note:
 - Project versions are assigned only by user-visible usability.
 - The project is still **pre-v1.0** because first public release publication and final tag approval are not complete yet.
 - The OBS Plugin DLL build, real OBS load smoke, packaging workflow, checksum gates, Worker EXE bundled distribution, and local download-to-first-run smoke are complete.
+- The planned active v1.0 publication tag is `v1.0.1` because legacy `v1.0.0` already exists.
 - Existing `v1.x` and `v2.x` tags are legacy non-product tags from before this rule. They are not part of the active version sequence and are not proof of a usable OBS plugin release.
 
 See [Release and tag policy](docs/release.md).
@@ -35,6 +36,7 @@ Latest release status:
 Current development target:
 - `v1.0` - First Usable OBS Plugin Release
 - Tracking issue: [#401](https://github.com/Tao-pyth/obs-duel-recorder/issues/401)
+- Planned active publication tag: `v1.0.1`
 
 Next roadmap target:
 - Public GitHub Release publication and final tag approval
@@ -74,7 +76,7 @@ Completed foundation:
 - Worker EXE bundled distribution and local download-to-first-run smoke evidence
 
 Planned roadmap capabilities:
-- Release publication and final tag naming (`v1.0`)
+- Release publication and final tag naming (`v1.0.1` planned)
 
 ---
 

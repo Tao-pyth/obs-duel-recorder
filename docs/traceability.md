@@ -185,14 +185,23 @@ Goals:
 
 - Roadmap: `docs/roadmap.md` -> **v1.0 - First Usable OBS Plugin Release**
 - Version tracking issue: `#401` - `[v1.0] First Usable OBS Plugin Release tracking`
+- Acceptance checklist: `docs/requirements/v1.0-first-usable-release-acceptance.md`
+- Release readiness checklist: `docs/release/v1.0-first-usable-release-readiness.md`
+- Release summary: `docs/release/v1.0-first-usable-release-summary.md`
 - Release policy: `docs/release.md`
+- Release record: `docs/release-history.md`
 - Previous version gate: `#404` - `[v0.13] Practical Distribution Readiness release tracking`
+- Planned active publication tag: `v1.0.1`
+- Legacy conflicting tag: `v1.0.0` - preserved; not part of the active usability-based sequence
 - Required evidence:
   - v0.11 OBS plugin real-load smoke accepted
   - v0.12 packaging automation accepted
   - v0.13 practical distribution readiness accepted
   - tag naming decision
   - public release asset publication
+  - ZIP / SHA256 verification
+  - install/update verification
+  - `user_data/` preservation verification
 
 ### Legacy record: v1.0 - YouTube Upload MVP
 
