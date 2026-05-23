@@ -116,7 +116,7 @@ obs-duel-recorder/
 - Version: `v2.1.0`
 - Scope: Statistics System
 - Status: released
-- Tag target: to be finalized after release commit merge
+- Tag target: `c7ba88b3e4524ac472ebab9f336afbfcdcf3330e`
 - Tracking issue: [#325](https://github.com/Tao-pyth/obs-duel-recorder/issues/325)
 - Release record: [docs/release-history.md](docs/release-history.md)
 
