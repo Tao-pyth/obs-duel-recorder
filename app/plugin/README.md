@@ -18,9 +18,9 @@ The Plugin must not:
 - directly manipulate SQLite
 - directly upload to YouTube
 
-## Current v2.0 OCR Integration
+## Current v2.1 Statistics System
 
-The current scaffold keeps the v0.5 overlay surface, v0.6 manual recording lifecycle controls, v0.7 queue recovery API compatibility, v0.8 template detection API compatibility, v0.9 screenshot API compatibility, v1.0 upload API compatibility, v1.1 match metadata API compatibility, v1.2 export API compatibility, v1.3 setup wizard API compatibility, v1.4 update API compatibility, and v2.0 image recognition API compatibility:
+The current scaffold keeps the v0.5 overlay surface, v0.6 manual recording lifecycle controls, v0.7 queue recovery API compatibility, v0.8 template detection API compatibility, v0.9 screenshot API compatibility, v1.0 upload API compatibility, v1.1 match metadata API compatibility, v1.2 export API compatibility, v1.3 setup wizard API compatibility, v1.4 update API compatibility, v2.0 image recognition API compatibility, and v2.1 statistics API compatibility:
 
 - Build a loadable OBS module.
 - Register minimal OBS Frontend API lifecycle hooks.
@@ -44,6 +44,7 @@ The current scaffold keeps the v0.5 overlay surface, v0.6 manual recording lifec
 - Require a v1.3-compatible Worker for setup status, setup validation, and reset/rerun state.
 - Require a v1.4-compatible Worker for update status, update validation, and DB backup/migration evidence.
 - Require a v2.0-compatible Worker for recognition candidate analysis and manual review audit records.
+- Require a v2.1-compatible Worker for read-only match/upload statistics and memo search.
 
 Current non-goals:
 - Full control UI beyond the v0.6 manual start/stop controls.
@@ -53,6 +54,7 @@ Current non-goals:
 - Full graphical setup wizard UI.
 - Full graphical updater UI.
 - Full graphical recognition correction UI beyond the Worker/metadata API boundary.
+- Full statistics dashboard UI beyond the Worker API boundary.
 
 ## Prerequisites
 
@@ -176,8 +178,8 @@ Defaults:
 - Worker command: `odr-worker`
 - Host: `127.0.0.1`
 - Port: `8787`
-- Expected Worker API version: `2.0`
-- Expected Worker version: `2.0.0`
+- Expected Worker API version: `2.1`
+- Expected Worker version: `2.1.0`
 - Heartbeat interval: 2000 ms
 - Heartbeat timeout threshold: 3 consecutive failed probes
 
