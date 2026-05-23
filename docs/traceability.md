@@ -246,7 +246,7 @@ Goals:
 - Runtime optimization architecture contract: `docs/architecture/runtime-optimization.md`
 - Plugin architecture contract: `docs/architecture/plugin-worker.md`
 - Worker API contract: `docs/architecture/worker-api.md`
-- Release record: not created yet
+- Release record: `docs/release/v2.3-release-summary.md`
 - Requirements (relevant sections):
   - `docs/requirements/requirements.md` -> Update Rules / Runtime Rules / Upload Rules / Queue States / Architecture / Platform
   - `AGENTS.md` -> Runtime Directory Rules / Responsibility Separation
