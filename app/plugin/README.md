@@ -124,7 +124,7 @@ Current keys:
 }
 ```
 
-`ODR_USER_DATA_DIR` remains a compatibility fallback for initial defaults. Once the settings file is saved, `user_data_dir` in the JSON file is the Plugin launch input.
+Initial `user_data_dir` defaults to `ODR_USER_DATA_DIR` when it is set, otherwise `%APPDATA%\obs-duel-recorder\user_data`. Once the settings file is saved, `user_data_dir` in the JSON file is the Plugin launch input.
 Missing `overlay` settings are loaded with defaults so existing v0.4 settings files remain valid.
 
 Settings flow:
@@ -180,23 +180,24 @@ The Dock `Start Recording` and `Stop Recording` buttons use the v0.6 recording-s
 ## Worker Launch Inputs
 
 Defaults:
-- Worker command: bundled `app\worker\odr-worker\odr-worker.exe` when present; developer fallback `odr-worker`
+- Worker command: bundled Worker executable when present; developer fallback `odr-worker`
 - Host: `127.0.0.1`
 - Port: `8787`
 - Expected Worker API version: `2.3`
 - Expected Worker version: `2.3.0`
 - Heartbeat interval: 2000 ms
 - Heartbeat timeout threshold: 3 consecutive failed probes
+- User data dir: `ODR_USER_DATA_DIR` when set, otherwise `%APPDATA%\obs-duel-recorder\user_data`
 
 These Worker values are internal compatibility gates. They do not replace the practical release gate that requires a built DLL and real OBS load smoke evidence.
 
 Startup behavior:
 - On OBS frontend ready, the Plugin loads `plugin-settings.json` and starts the Worker manager.
-- If `user_data_dir` is empty, startup is blocked with `config_error` and the Dock points to settings.
+- If `user_data_dir` is empty after defaults and settings are loaded, startup is blocked with `config_error` and the Dock points to settings.
 - The Plugin probes `GET /health` on the configured host/port.
 - If a compatible Worker is already running for the same `user_data_dir`, the Plugin reuses it.
 - If a reachable Worker reports a different runtime root, incompatible API version, or unexpected Worker version, startup is blocked and the Plugin logs diagnostics.
-- If no Worker is reachable, the Plugin starts the bundled Worker executable when it exists in the release ZIP layout.
+- If no Worker is reachable, the Plugin starts the bundled Worker executable when it exists in the OBS plugin install layout or release ZIP layout.
 - If the bundled Worker executable is not present, the Plugin falls back to `odr-worker --host <host> --port <port>` for developer checkouts.
 - In both cases, `ODR_USER_DATA_DIR` is set in the child process environment.
 

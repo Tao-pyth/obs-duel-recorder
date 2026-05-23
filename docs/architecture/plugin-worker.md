@@ -117,7 +117,7 @@ The plugin must define these launch inputs deterministically:
 
 - `ODR_USER_DATA_DIR` (required): absolute path to the runtime root directory.
   - The Worker creates subdirectories under this root (`config/`, `data/`, `logs/`).
-  - If unset, the Worker defaults to `<repo>/user_data/` (repo-layout dependent).
+  - The Plugin uses `%APPDATA%\obs-duel-recorder\user_data` as the normal packaged default when `ODR_USER_DATA_DIR` is not set.
   - The singleton scope is this resolved runtime root.
 - `host` / `port` (recommended): bind address for the localhost HTTP API.
   - Defaults (Worker v0.2 scaffold): `127.0.0.1:8787`.
@@ -128,12 +128,26 @@ Optional:
 
 ### Recommended Invocation
 
-Packaged releases should prefer invoking the bundled Worker executable:
+Packaged releases should prefer invoking the bundled Worker executable from the
+OBS plugin install layout:
+
+- `<OBS>/obs-plugins/worker/odr-worker/odr-worker.exe --host 127.0.0.1 --port 8787`
+
+The Plugin resolves the bundled executable relative to the Plugin DLL:
+
+```text
+obs-plugins/
+|-- 64bit/
+|   `-- obs-duel-recorder.dll
+`-- worker/
+    `-- odr-worker/
+        `-- odr-worker.exe
+```
+
+The release ZIP source layout uses the same parent/sibling relationship before
+users copy files into OBS:
 
 - `<package>/app/worker/odr-worker/odr-worker.exe --host 127.0.0.1 --port 8787`
-
-The Plugin resolves the bundled executable relative to the Plugin DLL package
-layout:
 
 ```text
 app/

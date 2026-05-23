@@ -1,7 +1,13 @@
 @echo off
 setlocal
 cd /d "%~dp0"
-set "ODR_USER_DATA_DIR=%~dp0user_data"
+if not defined ODR_USER_DATA_DIR (
+  if defined APPDATA (
+    set "ODR_USER_DATA_DIR=%APPDATA%\obs-duel-recorder\user_data"
+  ) else (
+    set "ODR_USER_DATA_DIR=%~dp0user_data"
+  )
+)
 set "ODR_WORKER_EXE=%~dp0app\worker\odr-worker\odr-worker.exe"
 if exist "%ODR_WORKER_EXE%" (
   "%ODR_WORKER_EXE%" update %*

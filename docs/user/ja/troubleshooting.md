@@ -8,7 +8,8 @@
 
 1. OBS Duel Recorder Dock の状態を確認します。
 2. `user_data_dir` が正しいか確認します。
-3. Worker の `/health` を確認します。
+3. OBS の `obs-plugins\worker\odr-worker\odr-worker.exe` が存在するか確認します。
+4. Worker の `/health` を確認します。
 
 ```powershell
 Invoke-WebRequest http://127.0.0.1:8787/health | Select-Object -ExpandProperty Content
@@ -16,12 +17,15 @@ Invoke-WebRequest http://127.0.0.1:8787/health | Select-Object -ExpandProperty C
 
 `config_error` の場合は設定パスを見直します。`api_incompatible` の場合は Plugin と Worker のバージョンが一致しているか確認します。
 
+通常の ZIP 配置では、Plugin は OBS の `obs-plugins\64bit\obs-duel-recorder.dll` から見て `..\worker\odr-worker\odr-worker.exe` を優先します。そこに Worker EXE がない場合、開発者向けの `odr-worker` fallback を試します。
+
 ## Plugin Dock が表示されない
 
 1. OBS Studio x64 を使用しているか確認します。
 2. Plugin DLL が OBS の plugin path に配置されているか確認します。
 3. OBS のログで `OBS Duel Recorder plugin startup` を探します。
-4. 依存 DLL や Qt/OBS SDK の配置漏れがないか確認します。
+4. OBS のログで `OBS Duel Recorder dock registered` を探します。
+5. 依存 DLL や Qt/OBS SDK の配置漏れがないか確認します。
 
 ## 録画が開始または停止しない
 
@@ -56,6 +60,7 @@ Invoke-WebRequest http://127.0.0.1:8787/health | Select-Object -ExpandProperty C
 1. `update.bat status` を実行します。
 2. `partial_update_detected` が true の場合、`docs/user/ja/update.md` の復旧手順を確認します。
 3. DB migration 失敗時は backup directory を確認します。
+4. `update.bat` が `app\worker\odr-worker\odr-worker.exe` を見つけられるか確認します。
 
 更新処理は `user_data/` の設定、DB、動画、スクリーンショット、エクスポート、ログを削除しない設計です。
 

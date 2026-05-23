@@ -36,9 +36,11 @@ evidence that:
 - Worker heartbeat and compatibility checks pass (completed by #387 / v0.11),
 - basic manual recording start/stop behavior is smoke-tested (completed by #387 / v0.11),
 - release ZIP packaging and checksum assets are reproducible (completed by #396 / v0.12),
-- the release ZIP includes a bundled Worker executable path for normal users,
-- clean install and download-to-first-run evidence is accepted,
-- packaging/update instructions are usable for a normal user.
+- the release ZIP includes a bundled Worker executable path for normal users (completed by #404 / v0.13),
+- clean install and download-to-first-run evidence is accepted (completed by #404 / v0.13),
+- packaging/update instructions are usable for a normal user (completed by #404 / v0.13),
+- public release assets are approved and published,
+- the final v1.0 tag naming decision is recorded.
 
 Existing `v1.x` and `v2.x` tags created before this rule are legacy non-product
 tags. They must not be interpreted as active release versions. Do not move or
@@ -139,9 +141,9 @@ The v0.12 readiness checklist is a completed version gate for release packaging
 automation, release asset automation, SHA256 checksum publication, and v1.0
 handoff documentation.
 
-The v0.13 readiness checklist is the active pre-v1.0 gate for practical
-distribution readiness. It must prove that normal Windows users can use the
-release ZIP without manually setting up Python, pip, or a virtual environment.
+The v0.13 readiness checklist is a completed pre-v1.0 gate for practical
+distribution readiness. It proves that normal Windows users can use the release
+ZIP without manually setting up Python, pip, or a virtual environment.
 
 Do not retroactively create a `v0.1.0` tag unless explicitly approved.
 
