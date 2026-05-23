@@ -133,6 +133,25 @@ Setup wizard validation:
 Invoke-WebRequest http://127.0.0.1:8787/setup/validate -Method Post | Select-Object -ExpandProperty Content
 ```
 
+Update status:
+
+```powershell
+Invoke-WebRequest http://127.0.0.1:8787/update/status | Select-Object -ExpandProperty Content
+```
+
+Update validation:
+
+```powershell
+Invoke-WebRequest http://127.0.0.1:8787/update/validate -Method Post -ContentType "application/json" -Body '{"current_version":"1.3.0"}' | Select-Object -ExpandProperty Content
+```
+
+Canonical Windows update entrypoint:
+
+```powershell
+.\update.bat validate --from-version 1.3.0
+.\update.bat apply --from-version 1.3.0
+```
+
 Configuration scaffold (v0.2):
 - default config path: `user_data/config/worker.toml`
 - docs: `docs/architecture/worker-config.md`

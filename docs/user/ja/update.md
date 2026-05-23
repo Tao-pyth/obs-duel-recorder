@@ -9,30 +9,40 @@
 ## 更新前の確認
 
 - OBS を終了してから更新してください。
-- TODO: 現在のバージョン/配布物の確認方法（リリース形式確定後）
+- 更新前のバージョンが分かる場合は控えてください。例: `v1.3.0`
+- 更新前に `update.bat validate --from-version <現在のバージョン>` を実行し、互換性エラーがないことを確認します。
 
 ## バックアップ
 
-- **必須**: `user_data/` はランタイムデータのため、更新時も保持する想定です。
-- 不具合に備えて、更新前に `user_data/` を必ず退避してください。
-- TODO: 退避する場所（例: 別フォルダ/別ドライブ）
+- `user_data/` はランタイムデータのため、更新時も保持します。
+- DB が存在する場合、`update.bat apply` は migration 実行前に `user_data/data/db/backups/` へ SQLite バックアップを作成します。
+- 念のため、重要な更新前は `user_data/` 全体を別フォルダまたは別ドライブへ退避してください。
 
 ## 更新手順
 
 1. リリース ZIP をダウンロードします。
 2. アプリ/プラグインのファイルを更新します。
 3. `user_data/` を上書きしないよう注意します。
-4. OBS と Worker を起動して動作確認します。
+4. `update.bat validate --from-version <現在のバージョン>` を実行します。
+5. `update.bat apply --from-version <現在のバージョン>` を実行します。
+6. OBS と Worker を起動して動作確認します。
 
 ## 保持されるデータ
 
-- `user_data/` 配下（例: 設定、ログ、動画、DB 等）
-- TODO: 将来の構成確定後に詳細を追記
+- `user_data/config/`（設定、OAuth secrets など）
+- `user_data/data/db/`（SQLite DB とバックアップ）
+- `user_data/data/videos/`
+- `user_data/data/screenshots/`
+- `user_data/data/exports/`
+- `user_data/logs/`
+
+## 失敗時の復旧
+
+- `user_data/data/update-state.json` を確認します。
+- `status` が `failed` の場合、`backup_path` に記録された DB バックアップを確認します。
+- OBS を停止したまま、必要に応じてバックアップ DB を `user_data/data/db/odr.sqlite3` へ戻します。
+- 旧バージョンのアプリ/プラグインへ戻す場合も、`user_data/` は削除しないでください。
 
 ## うまくいかないとき
 
 - [トラブルシューティング](troubleshooting.md)
-
-## TODO
-
-- TODO: 配布形式（インストーラ/zip）確定後に手順を確定する

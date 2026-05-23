@@ -451,3 +451,55 @@ Error behavior:
 The v1.3 setup wizard API is defined by:
 - `docs/architecture/setup-wizard.md`
 - `docs/requirements/v1.3-setup-wizard-acceptance.md`
+
+---
+
+## v1.4 Update Endpoints
+
+v1.4 adds Worker-owned update validation and update-state diagnostics while preserving prior API compatibility.
+
+### `GET /update/status`
+
+Purpose:
+- Return the last update state.
+- Detect partial or failed update state.
+- Surface the target Worker/API version and DB backup directory.
+
+Response fields:
+- `status`: `idle`, `in_progress`, `completed`, `failed`, or `invalid`
+- `partial_update_detected`: boolean
+- `current_version`: last installed version, or `unknown`
+- `target_version`: Worker version from the running code
+- `api_version`: Worker API version
+- `state_path`: update-state file path
+- `backup_dir`: DB backup directory
+- `last_update`: persisted update state object
+
+### `POST /update/validate`
+
+Purpose:
+- Validate version/API compatibility before mutation.
+- Reject unsupported downgrade paths.
+- Report whether the SQLite DB exists for backup.
+
+Request fields:
+- `current_version`: optional SemVer string for the installed version before update
+- `target_version`: optional SemVer string; defaults to the running Worker version
+- `expected_api_version`: optional API version; defaults to the running Worker API version
+
+### `POST /update/apply`
+
+Purpose:
+- Record update `in_progress` state.
+- Back up SQLite before migration execution when a DB exists.
+- Run deterministic Worker migrations.
+- Record `completed` or `failed` state with recovery guidance.
+
+Error behavior:
+- Invalid payloads return HTTP 400 with `code=update_payload_invalid`.
+- Validation failures return HTTP 409 with `code=update_validation_failed`.
+- Migration failures return HTTP 409 with `code=update_migration_failed`.
+
+The v1.4 update API is defined by:
+- `docs/architecture/update-system.md`
+- `docs/requirements/v1.4-update-system-acceptance.md`
