@@ -78,6 +78,17 @@ The system separates responsibilities into:
 
 ---
 
+## Setup Rules
+
+- Setup wizard state is runtime data and must live under `user_data/data/`.
+- Setup actions must not delete, move, overwrite, or migrate existing runtime data.
+- First-run, partial, complete, cancel, reset, and rerun states must be distinguishable.
+- Setup validation must report actionable diagnostics for runtime path, OBS integration, OAuth, and templates.
+- OAuth validation must never return token or client-secret contents.
+- Local template setup must not distribute or commit game assets.
+
+---
+
 ## Overlay Rules
 
 Overlay supports:

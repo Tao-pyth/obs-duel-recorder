@@ -25,6 +25,7 @@ from .recording import (
 )
 from .runtime_dirs import RuntimeDirs
 from .screenshots import ScreenshotError, ScreenshotStore
+from .setup_wizard import SetupWizardError, SetupWizardStore
 from .upload import UploadCommandError, UploadStore, build_upload_settings
 from .version import __version__
 
@@ -84,6 +85,7 @@ def create_app(*, runtime_dirs: RuntimeDirs, loaded_config: LoadedWorkerConfig, 
     app.state.upload_store = None
     app.state.metadata_store = None
     app.state.export_store = None
+    app.state.setup_store = SetupWizardStore(runtime_dirs=runtime_dirs)
     if db_info is not None:
         app.state.db = WorkerDb(
             db_path=db_info.db_path,
@@ -118,6 +120,51 @@ def create_app(*, runtime_dirs: RuntimeDirs, loaded_config: LoadedWorkerConfig, 
             "pid": PID,
             "started_at": STARTED_AT,
         }
+
+    @app.get("/setup/status")
+    def get_setup_status():
+        try:
+            return app.state.setup_store.status()
+        except SetupWizardError as exc:
+            return _error_response(
+                status_code=400,
+                code=exc.code,
+                message="Setup wizard state is invalid",
+                details=exc.details,
+            )
+
+    @app.post("/setup/validate")
+    def post_setup_validate() -> dict[str, object]:
+        return {"validations": app.state.setup_store.validate()}
+
+    @app.post("/setup/steps/{step_id}/complete")
+    async def post_setup_step_complete(step_id: str, request: Request):
+        try:
+            payload = await request.json()
+            if not isinstance(payload, dict):
+                raise ValueError
+            return app.state.setup_store.complete_step(step_id, payload)
+        except SetupWizardError as exc:
+            return _error_response(
+                status_code=400,
+                code=exc.code,
+                message="Setup wizard request is invalid",
+                details=exc.details,
+            )
+        except ValueError:
+            return _error_response(
+                status_code=400,
+                code="setup_payload_invalid",
+                message="Setup wizard payload must be JSON object",
+            )
+
+    @app.post("/setup/cancel")
+    def post_setup_cancel():
+        return app.state.setup_store.cancel()
+
+    @app.post("/setup/reset")
+    def post_setup_reset():
+        return app.state.setup_store.reset()
 
     @app.get("/overlay/state")
     def get_overlay_state() -> dict[str, str]:
