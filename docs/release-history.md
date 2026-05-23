@@ -4,6 +4,15 @@ This document records completed release outcomes for OBS Duel Recorder.
 
 Use this file as the durable index for release point information. If a release needs more detail, create a version-specific summary under `docs/release/` and link it from this file.
 
+## Practical Readiness Note
+
+As of #389, this history distinguishes practical user-ready releases from historical/internal implementation milestones.
+
+- The project remains pre-v1.0 for practical OBS plugin user readiness until #387 or its successor records real OBS load smoke evidence.
+- Existing `v1.x` and `v2.x` tags are preserved historical/internal milestone tags.
+- Older `Status: released` entries before this policy note mean "roadmap milestone released" unless a record explicitly says it is a practical user-ready OBS plugin release.
+- Do not interpret `v2.0.0` through `v2.3.0` as proof that an installable OBS plugin release is user-ready.
+
 ## Recording Policy
 
 For each completed release, record at least:
@@ -244,9 +253,9 @@ The version tracking issue may contain the working release summary, but finalize
 - Release summary: `docs/release/v2.0-release-summary.md`
 - Major child issues: #348, #349, #350, #351
 - Major PRs: #375
-- Deferred items: Statistics System remains in #325 for v2.1; GitHub Pages Documentation remains in #326 for v2.2; Runtime Optimization remains in #327 for v2.3; packaging ZIP workflow remains v2.x follow-up under `docs/architecture/packaging.md`
+- Deferred items: Statistics System remains in #325 for v2.1; GitHub Pages Documentation remains in #326 for v2.2; Runtime Optimization remains in #327 for v2.3; practical OBS plugin smoke remains in #387; packaging automation moves to the v0.x practical readiness track
 - Next version tracking issue: #325
-- Status: released
+- Status: internal milestone complete; not a practical user-ready OBS plugin release
 
 ### v2.1.0 - Statistics System
 
@@ -260,9 +269,9 @@ The version tracking issue may contain the working release summary, but finalize
 - Release summary: `docs/release/v2.1-release-summary.md`
 - Major child issues: #352, #353, #354, #355
 - Major PRs: #378
-- Deferred items: GitHub Pages Documentation remains in #326 for v2.2; Runtime Optimization remains in #327 for v2.3; packaging ZIP workflow remains v2.x follow-up under `docs/architecture/packaging.md`
+- Deferred items: GitHub Pages Documentation remains in #326 for v2.2; Runtime Optimization remains in #327 for v2.3; practical OBS plugin smoke remains in #387; packaging automation moves to the v0.x practical readiness track
 - Next version tracking issue: #326
-- Status: released
+- Status: internal milestone complete; not a practical user-ready OBS plugin release
 
 ### v2.2.0 - GitHub Pages Documentation
 
@@ -276,9 +285,9 @@ The version tracking issue may contain the working release summary, but finalize
 - Release summary: `docs/release/v2.2-release-summary.md`
 - Major child issues: #356, #357, #358, #359
 - Major PRs: #381
-- Deferred items: Runtime Optimization remains in #327 for v2.3; packaging ZIP workflow remains v2.x follow-up under `docs/architecture/packaging.md`
+- Deferred items: Runtime Optimization remains in #327 for v2.3; practical OBS plugin smoke remains in #387; packaging automation moves to the v0.x practical readiness track
 - Next version tracking issue: #327
-- Status: released
+- Status: internal milestone complete; not a practical user-ready OBS plugin release
 
 ### v2.3.0 - Runtime Optimization
 
@@ -293,6 +302,6 @@ The version tracking issue may contain the working release summary, but finalize
 - Release summary: `docs/release/v2.3-release-summary.md`
 - Major child issues: #360, #361, #362, #363
 - Major PRs: #384
-- Deferred items: packaging ZIP workflow remains v2.x follow-up under `docs/architecture/packaging.md`; release asset automation and checksum publication remain future packaging work
+- Deferred items: practical OBS plugin smoke remains in #387; packaging ZIP workflow, release asset automation, and checksum publication move to v0.12 on the practical readiness track
 - Next version tracking issue: none yet
-- Status: released
+- Status: internal milestone complete; not a practical user-ready OBS plugin release

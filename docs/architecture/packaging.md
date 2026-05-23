@@ -1,6 +1,6 @@
 # Packaging
 
-This document defines the release packaging direction for v2.0+.
+This document defines the release packaging direction for `v0.12 - Release Packaging Automation` on the practical readiness track.
 
 ## Release ZIP
 
