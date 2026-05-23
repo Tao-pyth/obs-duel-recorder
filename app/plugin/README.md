@@ -18,9 +18,9 @@ The Plugin must not:
 - directly manipulate SQLite
 - directly upload to YouTube
 
-## Current v2.2 GitHub Pages Documentation
+## Current v2.3 Runtime Optimization
 
-The current scaffold keeps the v0.5 overlay surface, v0.6 manual recording lifecycle controls, v0.7 queue recovery API compatibility, v0.8 template detection API compatibility, v0.9 screenshot API compatibility, v1.0 upload API compatibility, v1.1 match metadata API compatibility, v1.2 export API compatibility, v1.3 setup wizard API compatibility, v1.4 update API compatibility, v2.0 image recognition API compatibility, v2.1 statistics API compatibility, and v2.2 documentation publication compatibility:
+The current scaffold keeps the v0.5 overlay surface, v0.6 manual recording lifecycle controls, v0.7 queue recovery API compatibility, v0.8 template detection API compatibility, v0.9 screenshot API compatibility, v1.0 upload API compatibility, v1.1 match metadata API compatibility, v1.2 export API compatibility, v1.3 setup wizard API compatibility, v1.4 update API compatibility, v2.0 image recognition API compatibility, v2.1 statistics API compatibility, v2.2 documentation publication compatibility, and v2.3 runtime optimization compatibility:
 
 - Build a loadable OBS module.
 - Register minimal OBS Frontend API lifecycle hooks.
@@ -46,6 +46,7 @@ The current scaffold keeps the v0.5 overlay surface, v0.6 manual recording lifec
 - Require a v2.0-compatible Worker for recognition candidate analysis and manual review audit records.
 - Require a v2.1-compatible Worker for read-only match/upload statistics and memo search.
 - Require a v2.2-compatible Worker/Plugin version pair for the documented GitHub Pages release line.
+- Require a v2.3-compatible Worker for optimized queue/upload polling and recovery diagnostics.
 
 Current non-goals:
 - Full control UI beyond the v0.6 manual start/stop controls.
@@ -56,7 +57,7 @@ Current non-goals:
 - Full graphical updater UI.
 - Full graphical recognition correction UI beyond the Worker/metadata API boundary.
 - Full statistics dashboard UI beyond the Worker API boundary.
-- Runtime optimization UI beyond the Worker API boundary.
+- Packaging/update distribution UI beyond the Worker API boundary.
 
 ## Prerequisites
 
@@ -180,8 +181,8 @@ Defaults:
 - Worker command: `odr-worker`
 - Host: `127.0.0.1`
 - Port: `8787`
-- Expected Worker API version: `2.2`
-- Expected Worker version: `2.2.0`
+- Expected Worker API version: `2.3`
+- Expected Worker version: `2.3.0`
 - Heartbeat interval: 2000 ms
 - Heartbeat timeout threshold: 3 consecutive failed probes
 

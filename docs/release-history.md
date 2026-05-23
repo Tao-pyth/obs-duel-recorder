@@ -279,3 +279,20 @@ The version tracking issue may contain the working release summary, but finalize
 - Deferred items: Runtime Optimization remains in #327 for v2.3; packaging ZIP workflow remains v2.x follow-up under `docs/architecture/packaging.md`
 - Next version tracking issue: #327
 - Status: released
+
+### v2.3.0 - Runtime Optimization
+
+- Version tracking issue: #327
+- Milestone: `v2.3` (not set)
+- Release readiness checklist: `docs/release/v2.3-release-readiness.md`
+- Runtime baseline: `docs/release/v2.3-runtime-baseline.md`
+- Tag: `v2.3.0`
+- Tag target: pending tag-record PR
+- Release finalized at: `2026-05-23T15:45:18+09:00`
+- Tag finalized at: pending tag-record PR
+- Release summary: `docs/release/v2.3-release-summary.md`
+- Major child issues: #360, #361, #362, #363
+- Major PRs: #384
+- Deferred items: packaging ZIP workflow remains v2.x follow-up under `docs/architecture/packaging.md`; release asset automation and checksum publication remain future packaging work
+- Next version tracking issue: none yet
+- Status: release finalization pending tag record

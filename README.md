@@ -23,11 +23,11 @@ Major and minor release completions are tagged as `vMajor.Minor.Patch`. See [Rel
 ## Current Development
 
 Latest released version:
-- `v2.2.0` - GitHub Pages Documentation
+- `v2.3.0` - Runtime Optimization
 
 Current development target:
-- `v2.3` - Runtime Optimization
-- Tracking issue: [#327](https://github.com/Tao-pyth/obs-duel-recorder/issues/327)
+- Post-v2.3 roadmap planning
+- Tracking issue: none yet
 
 Next roadmap target:
 - Later v2.x roadmap work after v2.3 is tracked in GitHub issues.
@@ -62,9 +62,9 @@ Current released foundation:
 - Image-recognition-assisted result, rank, and DP metadata candidates with manual review/correction audit
 - Read-only match, deck, opponent, upload, and memo statistics
 - GitHub Pages documentation publication with static HTML artifact generation
+- Runtime queue/upload optimization, DB indexes, and recovery diagnostics
 
 Planned roadmap capabilities:
-- Runtime optimization (`v2.3`)
 - GitHub Actions based packaging and SHA256 checksum assets (`v2.0+`)
 
 ---
@@ -114,24 +114,24 @@ obs-duel-recorder/
 
 ### Latest Release
 
-- Version: `v2.2.0`
-- Scope: GitHub Pages Documentation
+- Version: `v2.3.0`
+- Scope: Runtime Optimization
 - Status: released
-- Tag target: `ab8b18ae63c854addfaaca1c40922118360d2907`
-- Tracking issue: [#326](https://github.com/Tao-pyth/obs-duel-recorder/issues/326)
+- Tag target: pending tag-record PR
+- Tracking issue: [#327](https://github.com/Tao-pyth/obs-duel-recorder/issues/327)
 - Release record: [docs/release-history.md](docs/release-history.md)
 
-### Completed in v2.2
+### Completed in v2.3
 
-- GitHub Pages publication workflow and publication contract
-- Static documentation artifact generation with HTML entry points
-- Published documentation exclusions for runtime data, credentials, logs, databases, screenshots, videos, and game assets
-- Japanese setup, usage, queue, troubleshooting, FAQ, and YouTube setup documentation completion
-- Documentation validation gate for Markdown links, Japanese user docs coverage, and Pages artifact generation
+- SQL aggregation for upload status counts without queue item materialization
+- Single-row next upload candidate selection with `ORDER BY id LIMIT 1`
+- Runtime queue indexes for state-first polling and recovery paths
+- SQLite busy timeout for queue connections
+- Startup recovery diagnostics with scanned count, recovered count, and duration evidence
+- v2.3 runtime baseline, regression threshold, and long-session fixture documentation
 
-### Planned After v2.2
+### Planned After v2.3
 
-- `v2.3` - Runtime Optimization
 - Later roadmap items include packaging automation and release asset hardening.
 
 ---
