@@ -67,6 +67,17 @@ The system separates responsibilities into:
 
 ---
 
+## Export Rules
+
+- Exports are Worker-owned and written under `user_data/data/exports/`.
+- Export archives must include a manifest that records app version, API version, schema version, included artifacts, and missing files.
+- Export creation must not mutate live runtime state.
+- Failed exports must not leave misleading completed archives.
+- OAuth tokens, client secrets, logs, temporary files, and config secrets must be excluded by default.
+- Videos are linkage-only by default; explicit video inclusion must be opt-in.
+
+---
+
 ## Overlay Rules
 
 Overlay supports:

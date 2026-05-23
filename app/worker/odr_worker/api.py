@@ -9,6 +9,7 @@ from fastapi.responses import JSONResponse
 from .config import LoadedWorkerConfig, get_repo_root
 from .db import DbInfo
 from .detection import DetectionRuntime, TemplateConfigError, load_template_config, load_templates
+from .exports import ExportError, ExportStore
 from .health import API_VERSION, PID, STARTED_AT, WorkerDb, WorkerPaths, build_health_payload
 from .identity import INSTANCE_ID
 from .metadata import MatchMetadataStore, MetadataError
@@ -82,6 +83,7 @@ def create_app(*, runtime_dirs: RuntimeDirs, loaded_config: LoadedWorkerConfig, 
     app.state.screenshot_store = None
     app.state.upload_store = None
     app.state.metadata_store = None
+    app.state.export_store = None
     if db_info is not None:
         app.state.db = WorkerDb(
             db_path=db_info.db_path,
@@ -101,6 +103,7 @@ def create_app(*, runtime_dirs: RuntimeDirs, loaded_config: LoadedWorkerConfig, 
             settings=build_upload_settings(user_data_dir=runtime_dirs.user_data_dir),
             metadata_store=app.state.metadata_store,
         )
+        app.state.export_store = ExportStore(db_path=db_info.db_path, runtime_dirs=runtime_dirs)
 
     @app.get("/health")
     def health() -> dict[str, object]:
@@ -586,6 +589,43 @@ def create_app(*, runtime_dirs: RuntimeDirs, loaded_config: LoadedWorkerConfig, 
                 status_code=400,
                 code="upload_payload_invalid",
                 message="Upload payload must be JSON object",
+            )
+
+    @app.get("/exports")
+    def get_exports() -> dict[str, object]:
+        if app.state.export_store is None:
+            return _error_response(
+                status_code=503,
+                code="export_unavailable",
+                message="Export storage is unavailable",
+            )
+        return {"items": [record.as_payload() for record in app.state.export_store.list_exports()]}
+
+    @app.post("/exports")
+    async def post_export(request: Request):
+        if app.state.export_store is None:
+            return _error_response(
+                status_code=503,
+                code="export_unavailable",
+                message="Export storage is unavailable",
+            )
+        try:
+            payload = await request.json()
+            if not isinstance(payload, dict):
+                raise ValueError
+            return app.state.export_store.create_export(payload)
+        except ExportError as exc:
+            return _error_response(
+                status_code=400,
+                code=exc.code,
+                message="Export request is invalid",
+                details=exc.details,
+            )
+        except ValueError:
+            return _error_response(
+                status_code=400,
+                code="export_payload_invalid",
+                message="Export payload must be JSON object",
             )
 
     @app.exception_handler(Exception)
