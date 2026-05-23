@@ -80,6 +80,7 @@ Architecture documents describe technical behavior and responsibility boundaries
 - [Statistics](architecture/statistics.md)
 - [Runtime optimization](architecture/runtime-optimization.md)
 - [Upload provider](architecture/upload-provider.md)
+- [v0.11 OBS plugin smoke procedure](architecture/v0.11-obs-plugin-smoke.md)
 - [v0.5 OBS overlay smoke procedure](architecture/v0.5-overlay-smoke.md)
 - [v0.6 recording-state smoke procedure](architecture/v0.6-recording-state-smoke.md)
 
