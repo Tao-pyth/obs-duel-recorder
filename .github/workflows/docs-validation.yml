@@ -25,3 +25,6 @@ jobs:
       - name: Validate Japanese user docs coverage
         shell: powershell
         run: python scripts/validate_jp_user_docs_coverage.py --root .
+
+      - name: Build documentation site artifact
+        run: python scripts/build_docs_site.py --root . --output build/docs-site

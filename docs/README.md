@@ -9,6 +9,7 @@ This directory is the documentation entry point for OBS Duel Recorder.
 - [Traceability](traceability.md)
 - [Release and tag policy](release.md)
 - [Release history](release-history.md)
+- [GitHub Pages publication](pages.md)
 - [Version tracking issue template](release/version-tracking-issue-template.md)
 - [v0.2 release readiness checklist](release/v0.2-release-readiness.md)
 - [v0.3 release readiness checklist](release/v0.3-release-readiness.md)
@@ -99,11 +100,13 @@ Quick validation commands (run from the repository root):
 ```powershell
 powershell -NoLogo -NoProfile -ExecutionPolicy Bypass -File docs/tools/validate_markdown_links.ps1
 python scripts/validate_jp_user_docs_coverage.py --root .
+python scripts/build_docs_site.py --root . --output build/docs-site
 ```
 
 Notes:
 - Markdown links: checks `README*.md` and `docs/**/*.md`.
 - JP user docs coverage: checks English ↔ Japanese topic coverage.
+- Pages artifact: builds generated documentation under `build/docs-site/`.
 
 ## Documentation Rules
 

@@ -1,31 +1,31 @@
 # キュー / 履歴
 
-← [日本語ユーザードキュメント](index.md)
+-> [日本語ユーザードキュメント](index.md)
 
-このページは、録画後のアップロード待ち項目（キュー）と履歴の考え方をまとめます。
+アップロードキューは Worker が所有します。OBS Plugin は SQLite を直接編集せず、Worker API を通じて状態を確認します。
 
-ステータス注記: このページには、未リリースの手順や UI 名称が含まれる可能性があります。利用可否は [ロードマップ](../../roadmap.md) で確認してください。
+## 主な状態
 
-## キューとは
+- `ready_upload`: アップロード待ちです。
+- `uploading`: アップロード処理中です。
+- `uploaded`: YouTube video id または URL が記録済みです。
+- `upload_failed`: 通信失敗などで retry 可能です。
+- `quota_waiting`: YouTube quota 待ちです。
+- `need_manual_review`: 認証不足、曖昧な失敗、retry 上限などで手動確認が必要です。
+- `discarded`: 処理対象から外れています。
 
-- 録画が完了した動画が、アップロード対象として並ぶ想定です。
-- アップロード結果に応じて状態が変わります。
+## 状態確認
 
-## 代表的な状態（例）
+```powershell
+Invoke-WebRequest http://127.0.0.1:8787/queue/items | Select-Object -ExpandProperty Content
+Invoke-WebRequest http://127.0.0.1:8787/upload/status | Select-Object -ExpandProperty Content
+```
 
-- `ready_upload`: アップロード待ち
-- `uploading`: アップロード中
-- `uploaded`: アップロード完了
-- `upload_failed`: 失敗（リトライ可能）
-- `quota_waiting`: クォータ待ち
-- `need_manual_review`: 手動確認が必要
+## retry 前に確認すること
 
-## リトライ
+- ローカル動画ファイルが存在するか。
+- OAuth token と client secret が配置されているか。
+- YouTube quota 待ちではないか。
+- `last_error_code` と `manual_review_reason` に二重アップロードの可能性がないか。
 
-- TODO: リトライ前に確認するポイント
-- TODO: 連続リトライを避ける指針（必要なら）
-
-## 関連ページ
-
-- [使い方](usage.md)
-- [トラブルシューティング](troubleshooting.md)
+曖昧な失敗では、二重アップロード防止を優先して `need_manual_review` に降格します。

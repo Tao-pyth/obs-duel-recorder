@@ -76,7 +76,7 @@ Validate, at a minimum:
 
 - Japanese pages exist for the user-facing topics described by the English user docs.
 - Major sections remain traceable (Japanese may split an English page into multiple guides, but should cover the same core topics).
-- "TODO-only" pages are allowed early, but they should still contain the intended section structure and a link back to the Japanese index.
+- TODO-only pages are not acceptable for released user-facing documentation. Placeholder pages may exist only before the relevant version is released, and they must still contain the intended section structure and a link back to the Japanese index.
 
 ### Automated check (Python)
 
@@ -99,6 +99,9 @@ This check:
 
 Scheduled documentation validation runs from `.github/workflows/docs-validation.yml`.
 It runs weekly and can also be started manually with `workflow_dispatch`.
+
+GitHub Pages publication validation runs from `.github/workflows/pages.yml`.
+It validates Markdown links, validates Japanese user docs coverage, builds `build/docs-site/`, uploads the Pages artifact, and deploys only after those steps pass.
 
 This section defines the recommended **reporting behavior** for scheduled documentation validation runs.
 
@@ -132,4 +135,5 @@ This repository already defines the local commands; a scheduled workflow can run
 ```powershell
 powershell -ExecutionPolicy Bypass -File docs/tools/validate_markdown_links.ps1
 python scripts/validate_jp_user_docs_coverage.py
+python scripts/build_docs_site.py --root . --output build/docs-site
 ```

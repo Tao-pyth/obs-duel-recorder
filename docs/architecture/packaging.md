@@ -40,3 +40,9 @@ Release ZIPs must not include:
 - GitHub Actions may build and upload draft artifacts automatically.
 - Release publication or attaching final assets should require maintainer approval unless a later policy explicitly enables full automation.
 - A SHA256 checksum must be generated for each release ZIP.
+
+## Relationship To GitHub Pages
+
+GitHub Pages is documentation publication only and is defined by `docs/pages.md`.
+
+The Pages artifact must not include plugin DLLs, Worker packages, release ZIP files, checksums, runtime data, credentials, screenshots, videos, logs, DBs, local template images, or game assets.

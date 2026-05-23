@@ -1,0 +1,61 @@
+name: GitHub Pages documentation
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "README.md"
+      - "docs/**"
+      - "scripts/build_docs_site.py"
+      - ".github/workflows/pages.yml"
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build documentation site
+    runs-on: windows-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Validate Markdown links
+        shell: powershell
+        run: powershell -ExecutionPolicy Bypass -File docs/tools/validate_markdown_links.ps1
+
+      - name: Validate Japanese user docs coverage
+        shell: powershell
+        run: python scripts/validate_jp_user_docs_coverage.py --root .
+
+      - name: Build Pages artifact
+        run: python scripts/build_docs_site.py --root . --output build/docs-site
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: build/docs-site
+
+  deploy:
+    name: Deploy documentation site
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Deploy Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

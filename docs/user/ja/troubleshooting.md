@@ -1,42 +1,73 @@
 # トラブルシューティング
 
-← [日本語ユーザードキュメント](index.md)
+-> [日本語ユーザードキュメント](index.md)
 
-このページは、よくある症状と切り分けの入口をまとめます。
+このページは、よくある問題の切り分け入口です。秘密情報、OAuth token、client secret、動画、スクリーンショット、DB を issue や PR に貼らないでください。
 
-ステータス注記: このページには、未リリースの手順や UI 名称が含まれる可能性があります。利用可否は [ロードマップ](../../roadmap.md) で確認してください。
+## Worker が起動しない
 
-## 起動しない / 動作しない
+1. OBS Duel Recorder Dock の状態を確認します。
+2. `user_data_dir` が正しいか確認します。
+3. Worker の `/health` を確認します。
 
-- OBS を再起動します。
-- Worker を再起動します。
-- ログ（`user_data/logs/`）を確認します。
-- TODO: 設定ファイルの場所/確認手順（仕様確定後）
+```powershell
+Invoke-WebRequest http://127.0.0.1:8787/health | Select-Object -ExpandProperty Content
+```
 
-## OBS の問題
+`config_error` の場合は設定パスを見直します。`api_incompatible` の場合は Plugin と Worker のバージョンが一致しているか確認します。
 
-- Dock UI が表示されない
-  - まずはプラグイン導入手順を見直してください: [OBS セットアップ](obs-setup.md)
-- TODO: 録画が開始/停止しない（実装確定後に切り分け手順を追記）
+## Plugin Dock が表示されない
 
-## YouTube の問題
+1. OBS Studio x64 を使用しているか確認します。
+2. Plugin DLL が OBS の plugin path に配置されているか確認します。
+3. OBS のログで `OBS Duel Recorder plugin startup` を探します。
+4. 依存 DLL や Qt/OBS SDK の配置漏れがないか確認します。
 
-- YouTube にログインできない / アップロードできない
-  - OAuth 設定を見直してください: [YouTube セットアップ](youtube-setup.md)
-- TODO: エラー別の対処（クォータ等）
+## 録画が開始または停止しない
 
-## キューの問題
+1. `/recording/state` を確認します。
+2. Dock の手動 Start/Stop が失敗する場合は、Worker state と OBS recording state がずれていないか確認します。
+3. 自動録画の場合は `/detection/state` と `/detection/templates` を確認します。
 
-- キューが進まない
-  - 状態を確認してください: [キュー / 履歴](queue.md)
-- TODO: 失敗が続くときの確認ポイント（実装確定後）
+認識候補 API は録画トリガではありません。録画開始/停止の判定は detection/template matching 側を確認してください。
 
-## ログの場所
+## YouTube アップロードに失敗する
 
-- ログは通常 `user_data/logs/` に保存されます。
-- TODO: 代表的なログファイル名/確認方法
+1. `/upload/status` を確認します。
+2. `client_secret_configured` と `token_configured` が `true` か確認します。
+3. `/queue/items` で対象 item の state、retry_count、last_error_code、manual_review_reason を確認します。
 
-## TODO
+主な状態:
 
-- TODO: エラー別の対処フローを追加する
-- TODO: FAQ への誘導を整理する
+- `upload_failed`: 通信失敗など。原因確認後に retry できます。
+- `quota_waiting`: YouTube quota 待ちです。次回試行時刻を確認します。
+- `need_manual_review`: 認証不足、曖昧な失敗、retry 上限などです。二重アップロードを避けるため手動確認してください。
+- `discarded`: ローカル動画欠損などで処理対象から外れています。
+
+## キューが進まない
+
+1. `/queue/items` で state を確認します。
+2. `ready_upload` がない場合、処理対象はありません。
+3. `uploading` が残っている場合、Worker 再起動時に安全側へ復旧されます。
+4. 失敗が続く場合は動画ファイル、OAuth、quota、network を確認します。
+
+## 更新に失敗する
+
+1. `update.bat status` を実行します。
+2. `partial_update_detected` が true の場合、`docs/user/ja/update.md` の復旧手順を確認します。
+3. DB migration 失敗時は backup directory を確認します。
+
+更新処理は `user_data/` の設定、DB、動画、スクリーンショット、エクスポート、ログを削除しない設計です。
+
+## 認識候補が間違っている
+
+1. `/recognition/candidates` で候補を確認します。
+2. 正しい候補は confirm、誤りは correct または reject します。
+3. 低信頼候補は自動で match metadata を上書きしません。
+
+## 統計が期待と違う
+
+1. `/statistics/summary` で result count を確認します。
+2. 空欄や未知の result は `unknown` に分類されます。
+3. Win rate は `win / (win + loss + draw)` で計算され、unknown は分母に入りません。
+4. deck/opponent の集計は trim と case-insensitive key に基づきます。
