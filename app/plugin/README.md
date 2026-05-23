@@ -180,7 +180,7 @@ The Dock `Start Recording` and `Stop Recording` buttons use the v0.6 recording-s
 ## Worker Launch Inputs
 
 Defaults:
-- Worker command: `odr-worker`
+- Worker command: bundled `app\worker\odr-worker\odr-worker.exe` when present; developer fallback `odr-worker`
 - Host: `127.0.0.1`
 - Port: `8787`
 - Expected Worker API version: `2.3`
@@ -196,7 +196,9 @@ Startup behavior:
 - The Plugin probes `GET /health` on the configured host/port.
 - If a compatible Worker is already running for the same `user_data_dir`, the Plugin reuses it.
 - If a reachable Worker reports a different runtime root, incompatible API version, or unexpected Worker version, startup is blocked and the Plugin logs diagnostics.
-- If no Worker is reachable, the Plugin starts `odr-worker --host <host> --port <port>` with `ODR_USER_DATA_DIR` in the child process environment.
+- If no Worker is reachable, the Plugin starts the bundled Worker executable when it exists in the release ZIP layout.
+- If the bundled Worker executable is not present, the Plugin falls back to `odr-worker --host <host> --port <port>` for developer checkouts.
+- In both cases, `ODR_USER_DATA_DIR` is set in the child process environment.
 
 Heartbeat behavior:
 - `/health` is the readiness and heartbeat source of truth.

@@ -5,6 +5,8 @@ import sqlite3
 import sys
 import tempfile
 import unittest
+from contextlib import redirect_stdout
+from io import StringIO
 from pathlib import Path
 from unittest import mock
 
@@ -134,6 +136,17 @@ class UpdateSystemTests(unittest.TestCase):
             )
             self.assertEqual(applied.status_code, 200)
             self.assertEqual(applied.json()["status"], "completed")
+
+    def test_worker_cli_dispatches_update_command(self) -> None:
+        from odr_worker.__main__ import main as worker_main
+
+        with tempfile.TemporaryDirectory() as tmp:
+            output = StringIO()
+            with redirect_stdout(output):
+                result = worker_main(["update", "status", "--user-data-dir", str(Path(tmp) / "user_data")])
+
+        self.assertEqual(result, 0)
+        self.assertIn('"status": "idle"', output.getvalue())
 
     def test_backup_is_valid_sqlite_copy(self) -> None:
         from odr_worker.update_system import UpdateManager

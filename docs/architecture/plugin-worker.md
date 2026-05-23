@@ -128,11 +128,28 @@ Optional:
 
 ### Recommended Invocation
 
-The plugin should prefer invoking the packaged CLI entrypoint when available:
+Packaged releases should prefer invoking the bundled Worker executable:
+
+- `<package>/app/worker/odr-worker/odr-worker.exe --host 127.0.0.1 --port 8787`
+
+The Plugin resolves the bundled executable relative to the Plugin DLL package
+layout:
+
+```text
+app/
+|-- plugin/
+|   `-- obs-duel-recorder.dll
+`-- worker/
+    `-- odr-worker/
+        `-- odr-worker.exe
+```
+
+For developer checkouts, the plugin may fall back to the installed CLI
+entrypoint:
 
 - `odr-worker --host 127.0.0.1 --port 8787`
 
-If the plugin embeds Python or launches via `python -m`, the command must still behave equivalently and use the same `ODR_USER_DATA_DIR`.
+If the plugin embeds Python or launches via `python -m`, the command must still behave equivalently and use the same `ODR_USER_DATA_DIR`. That path is not the normal user install path for packaged releases.
 
 ### Startup Handshake
 

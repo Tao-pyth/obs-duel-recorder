@@ -41,6 +41,14 @@ def _apply_cli_overrides(loaded_config: LoadedWorkerConfig, args: argparse.Names
 
 
 def main(argv: list[str] | None = None) -> int:
+    if argv is None:
+        argv = sys.argv[1:]
+
+    if argv and argv[0] == "update":
+        from .update_system import main as update_main
+
+        return update_main(argv[1:])
+
     parser = build_parser()
     args = parser.parse_args(argv)
 
