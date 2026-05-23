@@ -35,6 +35,7 @@ Latest practical release status:
 
 Current development target:
 - `v1.0` - First Practical OBS Plugin Release
+- Tracking issue: [#401](https://github.com/Tao-pyth/obs-duel-recorder/issues/401)
 
 Next roadmap target:
 - Practical install/update verification and release publication
@@ -125,7 +126,7 @@ obs-duel-recorder/
 - Practical version: none yet
 - Practical status: pre-v1.0; OBS Plugin DLL build/load smoke and packaging automation are complete, practical install/update verification is not complete
 - Latest completed practical readiness gate: [#396](https://github.com/Tao-pyth/obs-duel-recorder/issues/396)
-- Current practical tracking target: `v1.0` - First Practical OBS Plugin Release
+- Current practical tracking issue: [#401](https://github.com/Tao-pyth/obs-duel-recorder/issues/401)
 - Latest internal milestone: `v2.3.0`
 - Internal milestone tag target: `5c6a8ea7f01d364dcdf9f24e656b1a4d262c3142`
 - Release record: [docs/release-history.md](docs/release-history.md)

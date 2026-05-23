@@ -197,8 +197,8 @@ The version tracking issue may contain the working release summary, but finalize
 - Major child issues: none
 - Major PRs: #399
 - Packaging evidence: local package build with real `build/plugin/Release/obs-duel-recorder.dll`; CI package builder validation with fixture DLL; ZIP layout validation; external `SHA256SUMS.txt` generation
-- Deferred items: practical install/update verification, runtime data preservation verification, release publication, and practical tag naming decision remain for v1.0
-- Next version tracking issue: practical `v1.0` First Practical OBS Plugin Release
+- Deferred items: practical install/update verification, runtime data preservation verification, release publication, and practical tag naming decision remain for #401
+- Next version tracking issue: #401
 - Status: practical readiness gate complete; not a final user-ready OBS plugin release
 
 ### v1.0.0 - YouTube Upload MVP
