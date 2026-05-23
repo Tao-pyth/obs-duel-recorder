@@ -35,7 +35,7 @@ The project is currently **pre-v1.0 on the practical release track**. A practica
 - the OBS Duel Recorder Dock appears (completed by #387 / v0.11),
 - Worker heartbeat and compatibility checks pass (completed by #387 / v0.11),
 - basic manual recording start/stop behavior is smoke-tested (completed by #387 / v0.11),
-- release ZIP packaging and checksum assets are reproducible,
+- release ZIP packaging and checksum assets are reproducible (completed by #396 / v0.12),
 - packaging/update instructions are usable for a normal user.
 
 Existing historical/internal tags such as `v1.0.0` through `v2.3.0` must not be interpreted as practical user-ready release evidence. Do not move or overwrite those tags. If a future practical `v1.0` tag would conflict with an existing historical/internal tag, record the exact naming decision before tagging.
@@ -125,7 +125,7 @@ Use a version-scoped readiness checklist before tagging:
 
 The v0.11 readiness checklist is a practical-readiness gate, not a packaged release approval by itself. It was completed together with the OBS real-load smoke evidence tracked by #387 and coordinated through #393.
 
-The v0.12 readiness checklist is the current practical-readiness gate for release packaging automation, release asset automation, SHA256 checksum publication, and v1.0 handoff documentation.
+The v0.12 readiness checklist is a completed practical-readiness gate for release packaging automation, release asset automation, SHA256 checksum publication, and v1.0 handoff documentation.
 
 Do not retroactively create a `v0.1.0` tag unless explicitly approved.
 
