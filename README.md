@@ -16,11 +16,11 @@ The project is designed around an OBS Plugin + Python Worker architecture.
 | Minor | planned roadmap features |
 | Patch | bug fixes and non-roadmap changes |
 
-Important readiness note:
-- The project is still **pre-v1.0 for practical user readiness** because practical install/update verification and release publication are not complete yet.
-- The OBS Plugin DLL build and real OBS load smoke gate was completed in #387.
-- Existing `v1.x` and `v2.x` tags are historical/internal development milestones, not proof of a user-ready OBS plugin release.
-- Practical user-ready versioning remains on the `v0.x` readiness track until the v1.0 install, update, publication, and tag-naming gates are satisfied.
+Important versioning note:
+- Project versions are assigned only by user-visible usability.
+- The project is still **pre-v1.0** because install/update verification and release publication are not complete yet.
+- The OBS Plugin DLL build, real OBS load smoke, packaging workflow, and checksum gates are complete.
+- Existing `v1.x` and `v2.x` tags are legacy non-product tags from before this rule. They are not part of the active version sequence and are not proof of a usable OBS plugin release.
 
 See [Release and tag policy](docs/release.md).
 
@@ -28,17 +28,16 @@ See [Release and tag policy](docs/release.md).
 
 ## Current Development
 
-Latest practical release status:
-- Practical release package: none yet; the project remains pre-v1.0 for user readiness.
-- Latest completed practical readiness gate: `v0.12` - Release Packaging Automation
-- Latest internal milestone tag: `v2.3.0` - Runtime Optimization
+Latest release status:
+- Released user-ready version: none yet; the project remains pre-v1.0.
+- Latest completed version gate: `v0.12` - Release Packaging Automation
 
 Current development target:
-- `v1.0` - First Practical OBS Plugin Release
+- `v1.0` - First Usable OBS Plugin Release
 - Tracking issue: [#401](https://github.com/Tao-pyth/obs-duel-recorder/issues/401)
 
 Next roadmap target:
-- Practical install/update verification and release publication
+- Install/update verification and release publication
 
 ---
 
@@ -56,7 +55,7 @@ Yu-Gi-Oh! Master Duel assets are not distributed with this software.
 
 Status note: This list includes current foundations and planned roadmap capabilities. For release availability, use [Current Development](#current-development), [Current Status](#current-status), and the [Roadmap](docs/roadmap.md) as the source of truth.
 
-Current released foundation:
+Completed foundation:
 - SQLite runtime storage foundation
 - Worker runtime, health, logging, and migration foundations
 - OBS Plugin skeleton and Worker lifecycle management
@@ -74,7 +73,7 @@ Current released foundation:
 - OBS Plugin DLL build and real OBS load smoke evidence
 
 Planned roadmap capabilities:
-- Practical install/update verification and release publication (`v1.0`)
+- Install/update verification and release publication (`v1.0`)
 
 ---
 
@@ -123,28 +122,26 @@ obs-duel-recorder/
 
 ### Latest Release
 
-- Practical version: none yet
-- Practical status: pre-v1.0; OBS Plugin DLL build/load smoke and packaging automation are complete, practical install/update verification is not complete
-- Latest completed practical readiness gate: [#396](https://github.com/Tao-pyth/obs-duel-recorder/issues/396)
-- Current practical tracking issue: [#401](https://github.com/Tao-pyth/obs-duel-recorder/issues/401)
-- Latest internal milestone: `v2.3.0`
-- Internal milestone tag target: `5c6a8ea7f01d364dcdf9f24e656b1a4d262c3142`
+- Released user-ready version: none yet
+- Status: pre-v1.0; OBS Plugin DLL build/load smoke and packaging automation are complete, install/update verification is not complete
+- Latest completed version gate: [#396](https://github.com/Tao-pyth/obs-duel-recorder/issues/396)
+- Current version tracking issue: [#401](https://github.com/Tao-pyth/obs-duel-recorder/issues/401)
 - Release record: [docs/release-history.md](docs/release-history.md)
 
-### Completed Internal Milestone v2.3
+### Completed Legacy Implementation Work
 
 - SQL aggregation for upload status counts without queue item materialization
 - Single-row next upload candidate selection with `ORDER BY id LIMIT 1`
 - Runtime queue indexes for state-first polling and recovery paths
 - SQLite busy timeout for queue connections
 - Startup recovery diagnostics with scanned count, recovered count, and duration evidence
-- v2.3 runtime baseline, regression threshold, and long-session fixture documentation
+- Runtime baseline, regression threshold, and long-session fixture documentation
 
-### Practical Readiness Gates
+### Version Gates
 
 - `v0.11` - OBS Plugin Real Load Smoke
 - `v0.12` - Release Packaging Automation
-- `v1.0` - First Practical OBS Plugin Release (current)
+- `v1.0` - First Usable OBS Plugin Release (current)
 
 ---
 

@@ -1,6 +1,6 @@
 # Packaging
 
-This document defines the release packaging direction for `v0.12 - Release Packaging Automation` on the practical readiness track.
+This document defines the release packaging direction for `v0.12 - Release Packaging Automation` on the active usability-based version sequence.
 
 ## Release ZIP
 

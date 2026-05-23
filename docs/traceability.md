@@ -127,9 +127,9 @@ Goals:
 ### v0.10 - Roadmap And Versioning Realignment
 
 - Roadmap: `docs/roadmap.md` -> **v0.10 - Roadmap And Versioning Realignment**
-- Version tracking issue: `#389` - `[Planning] Reconcile roadmap and versioning with v0.x practical readiness`
-- Release policy: `docs/release.md` -> Practical Readiness Policy
-- Release record: `docs/release-history.md` -> Practical Readiness Note
+- Version tracking issue: `#389`
+- Release policy: `docs/release.md` -> Usability-Based Versioning Policy
+- Release record: `docs/release-history.md` -> Usability Versioning Note
 - README status: `README.md` -> Current Development / Current Status
 - Requirements (relevant sections):
   - `docs/requirements/requirements.md` -> Architecture / Platform / Runtime Rules
@@ -165,22 +165,22 @@ Goals:
   - `docs/requirements/requirements.md` -> Packaging Rules / Runtime Rules / Architecture / Platform
   - `AGENTS.md` -> Runtime Directory Rules / Responsibility Separation
 
-### Practical v1.0 - First Practical OBS Plugin Release
+### v1.0 - First Usable OBS Plugin Release
 
-- Roadmap: `docs/roadmap.md` -> **v1.0 - First Practical OBS Plugin Release**
-- Version tracking issue: `#401` - `[Practical v1.0] First Practical OBS Plugin Release tracking`
+- Roadmap: `docs/roadmap.md` -> **v1.0 - First Usable OBS Plugin Release**
+- Version tracking issue: `#401` - `[v1.0] First Usable OBS Plugin Release tracking`
 - Release policy: `docs/release.md`
-- Previous practical readiness item: `#396` - `[v0.12] Release Packaging Automation release tracking`
+- Previous version gate: `#396` - `[v0.12] Release Packaging Automation release tracking`
 - Required evidence:
   - v0.11 OBS plugin real-load smoke accepted
   - v0.12 packaging automation accepted
-  - practical install/update verification
+  - install/update verification
   - runtime data preservation verification
-  - practical tag naming decision
+  - tag naming decision
 
-### Internal v1.0 - YouTube Upload MVP
+### Legacy record: v1.0 - YouTube Upload MVP
 
-- Roadmap: `docs/roadmap.md` -> **v1.0 - YouTube Upload MVP**
+- Roadmap: `docs/roadmap.md` -> **Legacy record: v1.0 - YouTube Upload MVP**
 - Version tracking issue: `#318` - `[v1.0] YouTube Upload MVP release tracking`
 - Acceptance checklist: `docs/requirements/v1.0-youtube-upload-mvp-acceptance.md`
 - Release readiness checklist: `docs/release/v1.0-release-readiness.md`
@@ -191,9 +191,9 @@ Goals:
   - `docs/requirements/requirements.md` -> Upload Rules / Queue States / Architecture / Platform / Runtime Rules
   - `AGENTS.md` -> Runtime Directory Rules / Responsibility Separation
 
-### v1.1 - Match Metadata
+### Legacy record: v1.1 - Match Metadata
 
-- Roadmap: `docs/roadmap.md` -> **v1.1 - Match Metadata**
+- Roadmap: `docs/roadmap.md` -> **Legacy record: v1.1 - Match Metadata**
 - Version tracking issue: `#320` - `[v1.1] Match Metadata release tracking`
 - Acceptance checklist: `docs/requirements/v1.1-match-metadata-acceptance.md`
 - Release readiness checklist: `docs/release/v1.1-release-readiness.md`
@@ -205,9 +205,9 @@ Goals:
   - `docs/requirements/requirements.md` -> Match Data / Upload Rules / Architecture / Platform / Runtime Rules
   - `AGENTS.md` -> Runtime Directory Rules / Responsibility Separation
 
-### v1.2 - Export System
+### Legacy record: v1.2 - Export System
 
-- Roadmap: `docs/roadmap.md` -> **v1.2 - Export System**
+- Roadmap: `docs/roadmap.md` -> **Legacy record: v1.2 - Export System**
 - Version tracking issue: `#321` - `[v1.2] Export System release tracking`
 - Acceptance checklist: `docs/requirements/v1.2-export-system-acceptance.md`
 - Release readiness checklist: `docs/release/v1.2-release-readiness.md`
@@ -218,9 +218,9 @@ Goals:
   - `docs/requirements/requirements.md` -> Export Rules / Match Data / Queue / Screenshot Rules / Architecture / Platform / Runtime Rules
   - `AGENTS.md` -> Runtime Directory Rules / Responsibility Separation
 
-### v1.3 - Setup Wizard
+### Legacy record: v1.3 - Setup Wizard
 
-- Roadmap: `docs/roadmap.md` -> **v1.3 - Setup Wizard**
+- Roadmap: `docs/roadmap.md` -> **Legacy record: v1.3 - Setup Wizard**
 - Version tracking issue: `#322` - `[v1.3] Setup Wizard release tracking`
 - Acceptance checklist: `docs/requirements/v1.3-setup-wizard-acceptance.md`
 - Release readiness checklist: `docs/release/v1.3-release-readiness.md`
@@ -231,9 +231,9 @@ Goals:
   - `docs/requirements/requirements.md` -> Setup Rules / Architecture / Platform / Runtime Rules
   - `AGENTS.md` -> Runtime Directory Rules / Responsibility Separation
 
-### v1.4 - Update System
+### Legacy record: v1.4 - Update System
 
-- Roadmap: `docs/roadmap.md` -> **v1.4 - Update System**
+- Roadmap: `docs/roadmap.md` -> **Legacy record: v1.4 - Update System**
 - Version tracking issue: `#323` - `[v1.4] Update System release tracking`
 - Acceptance checklist: `docs/requirements/v1.4-update-system-acceptance.md`
 - Release readiness checklist: `docs/release/v1.4-release-readiness.md`
@@ -246,11 +246,11 @@ Goals:
 
 ---
 
-## v2.x
+## Legacy v2 Records
 
-### v2.0 - OCR Integration
+### Legacy record: v2.0 - OCR Integration
 
-- Roadmap: `docs/roadmap.md` -> **v2.0 - OCR Integration**
+- Roadmap: `docs/roadmap.md` -> **Legacy record: v2.0 - OCR Integration**
 - Version tracking issue: `#324` - `[v2.0] OCR Integration release tracking`
 - Acceptance checklist: `docs/requirements/v2.0-ocr-integration-acceptance.md`
 - Release readiness checklist: `docs/release/v2.0-release-readiness.md`
@@ -264,9 +264,9 @@ Goals:
   - `docs/requirements/requirements.md` -> Image Recognition Rules / Upload Rules / Packaging Rules / Detection Rules / Match Data / Runtime Rules
   - `AGENTS.md` -> Runtime Directory Rules / Responsibility Separation
 
-### v2.1 - Statistics System
+### Legacy record: v2.1 - Statistics System
 
-- Roadmap: `docs/roadmap.md` -> **v2.1 - Statistics System**
+- Roadmap: `docs/roadmap.md` -> **Legacy record: v2.1 - Statistics System**
 - Version tracking issue: `#325` - `[v2.1] Statistics System release tracking`
 - Acceptance checklist: `docs/requirements/v2.1-statistics-system-acceptance.md`
 - Release readiness checklist: `docs/release/v2.1-release-readiness.md`
@@ -277,9 +277,9 @@ Goals:
   - `docs/requirements/requirements.md` -> Statistics Rules / Match Data / Upload Rules / Runtime Rules / Architecture / Platform
   - `AGENTS.md` -> Runtime Directory Rules / Responsibility Separation
 
-### v2.2 - GitHub Pages Documentation
+### Legacy record: v2.2 - GitHub Pages Documentation
 
-- Roadmap: `docs/roadmap.md` -> **v2.2 - GitHub Pages Documentation**
+- Roadmap: `docs/roadmap.md` -> **Legacy record: v2.2 - GitHub Pages Documentation**
 - Version tracking issue: `#326` - `[v2.2] GitHub Pages Documentation release tracking`
 - Acceptance checklist: `docs/requirements/v2.2-github-pages-documentation-acceptance.md`
 - Release readiness checklist: `docs/release/v2.2-release-readiness.md`
@@ -291,9 +291,9 @@ Goals:
   - `docs/README.md` -> Documentation Rules / Validation
   - `AGENTS.md` -> Runtime Directory Rules / Responsibility Separation
 
-### v2.3 - Runtime Optimization
+### Legacy record: v2.3 - Runtime Optimization
 
-- Roadmap: `docs/roadmap.md` -> **v2.3 - Runtime Optimization**
+- Roadmap: `docs/roadmap.md` -> **Legacy record: v2.3 - Runtime Optimization**
 - Version tracking issue: `#327` - `[v2.3] Runtime Optimization release tracking`
 - Acceptance checklist: `docs/requirements/v2.3-runtime-optimization-acceptance.md`
 - Release readiness checklist: `docs/release/v2.3-release-readiness.md`
