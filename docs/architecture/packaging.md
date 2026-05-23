@@ -70,6 +70,38 @@ normally created by `scripts/build_worker_exe.ps1` under
 packaged releases; source-based Worker execution is kept as a developer
 fallback.
 
+## Worker Executable Bundle Decision
+
+The v0.13 distribution gate uses PyInstaller to create the Windows Worker
+executable bundle.
+
+Decision reasons:
+- PyInstaller has a stable Windows onedir output model that fits the current ZIP
+  layout without requiring an installer.
+- The Worker already exposes a small CLI entrypoint, so PyInstaller can bundle
+  the FastAPI/Uvicorn runtime with limited packaging glue.
+- The generated directory can be validated by the existing PowerShell package
+  builder and checksum flow.
+- PyInstaller can be kept as an optional `bundle` dependency, so normal Worker
+  development and tests do not need the bundling toolchain.
+
+Constraints:
+- The executable bundle is Windows-only for the active release target.
+- The release workflow must build the Worker executable before packaging.
+- Runtime data, logs, DBs, screenshots, videos, OAuth files, secrets, and game
+  assets must remain outside the executable bundle and release ZIP.
+- Source-based Worker execution remains a developer fallback, not the normal
+  user install path.
+
+Rejected alternatives for v0.13:
+- Nuitka: a stronger optimization/compiler path, but it adds more build
+  complexity than this release gate needs.
+- cx_Freeze: workable for Python app freezing, but PyInstaller has simpler
+  workflow integration for the current PowerShell ZIP builder.
+- Requiring user-installed Python: rejected for v1.0 practical distribution
+  because normal users should not need to install Python, pip, or a virtual
+  environment manually.
+
 The release workflow can either read `build/plugin/Release/obs-duel-recorder.dll`
 from the workspace or download an artifact named by `plugin_dll_artifact_name`.
 It builds the bundled Worker executable before creating the release package and
