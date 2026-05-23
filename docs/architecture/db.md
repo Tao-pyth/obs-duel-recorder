@@ -35,14 +35,29 @@ Initial (v0.3):
 - `id`
 - `created_at`
 
+v1.1 match metadata columns:
+- `deck_name`
+- `opponent_deck`
+- `result`
+- `memo`
+- `started_at`
+- `ended_at`
+- `title_template`
+- `updated_at`
+
+v1.1 metadata indexes:
+- `idx_matches_opponent_deck`
+- `idx_matches_result`
+- `idx_matches_started_at`
+
+Searchable v1.1 metadata fields:
+- `opponent_deck`
+- `memo`
+- `deck_name`
+- `result`
+
 Planned (future; evolves via migrations):
-- deck_name
 - deck_seq
-- opponent_deck
-- result
-- memo
-- started_at
-- ended_at
 - video_path
 - screenshot_path
 - upload_status

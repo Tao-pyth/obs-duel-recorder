@@ -105,10 +105,11 @@ class MockYouTubeUploader:
 
 
 class UploadStore:
-    def __init__(self, *, queue_store: QueueStore, videos_dir: Path, settings: UploadSettings):
+    def __init__(self, *, queue_store: QueueStore, videos_dir: Path, settings: UploadSettings, metadata_store: Any = None):
         self.queue_store = queue_store
         self.videos_dir = videos_dir
         self.settings = settings
+        self.metadata_store = metadata_store
         self.uploader = MockYouTubeUploader()
 
     def status(self) -> dict[str, object]:
@@ -151,11 +152,20 @@ class UploadStore:
         uploading = self.queue_store.apply_command(item.id, {"action": "start_upload"})
         outcome = self.uploader.upload(uploading, payload)
         final_item = self._apply_outcome(uploading, outcome)
-        return {
+        result = {
             "processed": True,
             "outcome": outcome.outcome,
             "item": final_item.as_payload(),
         }
+        upload_metadata = self._upload_metadata(final_item)
+        if upload_metadata is not None:
+            result["upload_metadata"] = upload_metadata
+        return result
+
+    def _upload_metadata(self, item: QueueItem) -> dict[str, object] | None:
+        if self.metadata_store is None or item.match_id is None:
+            return None
+        return self.metadata_store.render_upload_metadata(item.match_id)
 
     def _next_ready_item(self) -> QueueItem | None:
         items = self.queue_store.list_items(state="ready_upload")

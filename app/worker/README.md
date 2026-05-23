@@ -97,6 +97,18 @@ Mock upload processing example:
 Invoke-WebRequest http://127.0.0.1:8787/upload/process-next -Method Post -ContentType "application/json" -Body '{"mock_result":"success","youtube_video_id":"abc123"}' | Select-Object -ExpandProperty Content
 ```
 
+Create match metadata:
+
+```powershell
+Invoke-WebRequest http://127.0.0.1:8787/matches -Method Post -ContentType "application/json" -Body '{"deck_name":"Sample Deck","opponent_deck":"Sample Opponent","result":"win","memo":"Match notes"}' | Select-Object -ExpandProperty Content
+```
+
+Generate upload metadata:
+
+```powershell
+Invoke-WebRequest http://127.0.0.1:8787/matches/1/upload-metadata | Select-Object -ExpandProperty Content
+```
+
 Configuration scaffold (v0.2):
 - default config path: `user_data/config/worker.toml`
 - docs: `docs/architecture/worker-config.md`

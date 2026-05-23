@@ -10,7 +10,7 @@ from .identity import INSTANCE_ID
 from .version import __version__
 
 
-API_VERSION = "1.0"
+API_VERSION = "1.1"
 _START_TIME = time.monotonic()
 PID = os.getpid()
 STARTED_AT = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")

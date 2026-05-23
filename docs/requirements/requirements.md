@@ -57,6 +57,16 @@ The system separates responsibilities into:
 
 ---
 
+## Match Data
+
+- Match metadata is Worker-owned and persisted in SQLite.
+- Editable match metadata includes deck name, opponent deck, result, memo, started time, ended time, and title template.
+- Metadata validation failures must be actionable and must not change the existing record.
+- Upload title, description, and notes generation must be deterministic.
+- Post-upload metadata edits update future generated metadata but do not rewrite an already uploaded YouTube record automatically.
+
+---
+
 ## Overlay Rules
 
 Overlay supports:
