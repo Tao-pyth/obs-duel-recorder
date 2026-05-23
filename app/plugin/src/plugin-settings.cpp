@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <cstdint>
 #include <string>
+#include <vector>
 
 namespace odr::plugin {
 namespace {
@@ -47,6 +48,61 @@ std::wstring parent_directory(const std::wstring &path)
 		return {};
 	}
 	return path.substr(0, pos);
+}
+
+bool file_exists(const std::wstring &path)
+{
+	if (path.empty()) {
+		return false;
+	}
+#ifdef _WIN32
+	const DWORD attributes = GetFileAttributesW(path.c_str());
+	return attributes != INVALID_FILE_ATTRIBUTES && (attributes & FILE_ATTRIBUTE_DIRECTORY) == 0;
+#else
+	return false;
+#endif
+}
+
+std::wstring current_module_path()
+{
+#ifdef _WIN32
+	HMODULE module = nullptr;
+	if (!GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
+				 GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+				reinterpret_cast<LPCWSTR>(&current_module_path), &module)) {
+		return {};
+	}
+
+	std::vector<wchar_t> buffer(MAX_PATH);
+	while (true) {
+		const DWORD written = GetModuleFileNameW(module, buffer.data(), static_cast<DWORD>(buffer.size()));
+		if (written == 0) {
+			return {};
+		}
+		if (written < buffer.size() - 1) {
+			return std::wstring(buffer.data(), written);
+		}
+		buffer.resize(buffer.size() * 2);
+	}
+#else
+	return {};
+#endif
+}
+
+std::wstring default_worker_command()
+{
+	const std::wstring plugin_dir = parent_directory(current_module_path());
+	if (plugin_dir.empty()) {
+		return L"odr-worker";
+	}
+
+	const std::wstring app_dir = parent_directory(plugin_dir);
+	const std::wstring packaged_worker = app_dir + L"\\worker\\odr-worker\\odr-worker.exe";
+	if (file_exists(packaged_worker)) {
+		return packaged_worker;
+	}
+
+	return L"odr-worker";
 }
 
 bool ensure_directory(const std::wstring &path)
@@ -277,6 +333,7 @@ WorkerLaunchConfig make_launch_config(const PluginSettings &settings)
 	WorkerLaunchConfig config;
 	config.endpoint = settings.endpoint;
 	config.user_data_dir = settings.user_data_dir;
+	config.command = default_worker_command();
 	return config;
 }
 

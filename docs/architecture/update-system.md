@@ -37,6 +37,27 @@ Normal update flow must preserve:
 7. On success, the updater writes `completed` state and updates `installed-version.json`.
 8. On failure, the updater writes `failed` state with backup path and recovery guidance.
 
+## Packaged Worker Entrypoint
+
+Packaged releases must prefer the bundled Worker executable:
+
+```text
+app/worker/odr-worker/odr-worker.exe
+```
+
+`update.bat` runs the bundled executable with the `update` subcommand when it is
+present:
+
+```powershell
+app\worker\odr-worker\odr-worker.exe update validate
+app\worker\odr-worker\odr-worker.exe update apply
+```
+
+The source-based `python -m odr_worker.update_system` path is a developer
+fallback for repository checkouts. If neither the bundled executable nor
+`python` is available, `update.bat` must fail with an actionable diagnostic that
+identifies the expected bundled Worker path.
+
 ## Version Compatibility
 
 - Downgrades are rejected when both current and target versions are SemVer values.
