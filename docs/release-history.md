@@ -169,12 +169,13 @@ The version tracking issue may contain the working release summary, but finalize
 - Release readiness checklist: `docs/release/v0.11-release-readiness.md`
 - Acceptance checklist: `docs/requirements/v0.11-obs-plugin-real-load-smoke-acceptance.md`
 - Smoke procedure: `docs/architecture/v0.11-obs-plugin-smoke.md`
-- Tag: `v0.11.0` intended after this release record is merged
-- Intended tag target: pending merge commit of the v0.11 completion documentation PR
+- Tag: `v0.11.0`
+- Tag target: `c91a6a3ac2530417871683eff535092d9903fc46`
 - Release finalized at: `2026-05-23T18:05:02+09:00`
+- Tag finalized at: `2026-05-23T18:18:36+09:00`
 - Release summary: `docs/release/v0.11-release-summary.md`
 - Major child issues: #387
-- Major PRs: #394, #395
+- Major PRs: #394, #395, #397
 - Smoke evidence: portable OBS 32.1.2 load smoke; Dock display; Worker API `2.3` / Worker version `2.3.0`; manual recording start/stop; overlay Text Source reuse/update; plugin startup/shutdown logs
 - Deferred items: packaging ZIP workflow, release asset automation, and SHA256 checksum publication remain in #396 for v0.12
 - Next version tracking issue: #396
