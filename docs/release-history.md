@@ -199,3 +199,19 @@ The version tracking issue may contain the working release summary, but finalize
 - Deferred items: Setup Wizard remains in #322 for v1.3
 - Next version tracking issue: #322
 - Status: released
+
+### v1.3.0 - Setup Wizard
+
+- Version tracking issue: #322
+- Milestone: `v1.3` (not set)
+- Release readiness checklist: `docs/release/v1.3-release-readiness.md`
+- Tag: `v1.3.0`
+- Tag target: `c0579c1f9f3c892059d4bf27dc43e90754453730`
+- Release finalized at: `2026-05-23T12:26:36+09:00`
+- Tag finalized at: `2026-05-23T12:26:04+09:00`
+- Release summary: `docs/release/v1.3-release-summary.md`
+- Major child issues: #340, #341, #342, #343
+- Major PRs: #370
+- Deferred items: Update System remains in #323 for v1.4
+- Next version tracking issue: #323
+- Status: released
