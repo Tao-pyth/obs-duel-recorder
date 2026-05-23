@@ -4,15 +4,16 @@ This document records completed release outcomes for OBS Duel Recorder.
 
 Use this file as the durable index for release point information. If a release needs more detail, create a version-specific summary under `docs/release/` and link it from this file.
 
-## Practical Readiness Note
+## Usability Versioning Note
 
-As of #389, this history distinguishes practical user-ready releases from historical/internal implementation milestones.
+As of #401, this project uses one active version sequence based on user-visible
+usability.
 
-- #387 records completed OBS Plugin DLL build and real OBS load smoke evidence for the v0.11 practical readiness gate.
-- The project remains pre-v1.0 for practical OBS plugin user readiness until practical install/update verification, release publication, and tag-naming gates are completed.
-- Existing `v1.x` and `v2.x` tags are preserved historical/internal milestone tags.
-- Older `Status: released` entries before this policy note mean "roadmap milestone released" unless a record explicitly says it is a practical user-ready OBS plugin release.
-- Do not interpret `v2.0.0` through `v2.3.0` as proof that an installable OBS plugin release is user-ready.
+- #387 records completed OBS Plugin DLL build and real OBS load smoke evidence for the v0.11 version gate.
+- #396 records completed release packaging automation for the v0.12 version gate.
+- The project remains pre-v1.0 until install/update verification, release publication, and tag-naming gates are completed.
+- Existing `v1.x` and `v2.x` tags created before this policy are legacy non-product tags. They are preserved for auditability, but they are not part of the active product version sequence.
+- Older `Status: released` entries before this policy note mean "legacy implementation record completed" unless a record explicitly says it is a user-ready product release.
 
 ## Recording Policy
 
@@ -179,7 +180,7 @@ The version tracking issue may contain the working release summary, but finalize
 - Smoke evidence: portable OBS 32.1.2 load smoke; Dock display; Worker API `2.3` / Worker version `2.3.0`; manual recording start/stop; overlay Text Source reuse/update; plugin startup/shutdown logs
 - Deferred items: packaging ZIP workflow, release asset automation, and SHA256 checksum publication remain in #396 for v0.12
 - Next version tracking issue: #396
-- Status: practical readiness gate complete; not a packaged user-ready OBS plugin release
+- Status: version gate complete; not a packaged user-ready OBS plugin release
 
 ### v0.12.0 - Release Packaging Automation
 
@@ -197,11 +198,11 @@ The version tracking issue may contain the working release summary, but finalize
 - Major child issues: none
 - Major PRs: #399
 - Packaging evidence: local package build with real `build/plugin/Release/obs-duel-recorder.dll`; CI package builder validation with fixture DLL; ZIP layout validation; external `SHA256SUMS.txt` generation
-- Deferred items: practical install/update verification, runtime data preservation verification, release publication, and practical tag naming decision remain for #401
+- Deferred items: install/update verification, runtime data preservation verification, release publication, and tag naming decision remain for #401
 - Next version tracking issue: #401
-- Status: practical readiness gate complete; not a final user-ready OBS plugin release
+- Status: version gate complete; not a final user-ready OBS plugin release
 
-### v1.0.0 - YouTube Upload MVP
+### Legacy tag v1.0.0 - YouTube Upload MVP
 
 - Version tracking issue: #318
 - Milestone: `v1.0` (not set)
@@ -215,9 +216,9 @@ The version tracking issue may contain the working release summary, but finalize
 - Major PRs: #364
 - Deferred items: Match Metadata remains in #320 for v1.1
 - Next version tracking issue: #320
-- Status: released
+- Status: legacy implementation record; not part of the active usability-based version sequence
 
-### v1.1.0 - Match Metadata
+### Legacy tag v1.1.0 - Match Metadata
 
 - Version tracking issue: #320
 - Milestone: `v1.1` (not set)
@@ -231,9 +232,9 @@ The version tracking issue may contain the working release summary, but finalize
 - Major PRs: #366
 - Deferred items: Export System remains in #321 for v1.2
 - Next version tracking issue: #321
-- Status: released
+- Status: legacy implementation record; not part of the active usability-based version sequence
 
-### v1.2.0 - Export System
+### Legacy tag v1.2.0 - Export System
 
 - Version tracking issue: #321
 - Milestone: `v1.2` (not set)
@@ -247,9 +248,9 @@ The version tracking issue may contain the working release summary, but finalize
 - Major PRs: #368
 - Deferred items: Setup Wizard remains in #322 for v1.3
 - Next version tracking issue: #322
-- Status: released
+- Status: legacy implementation record; not part of the active usability-based version sequence
 
-### v1.3.0 - Setup Wizard
+### Legacy tag v1.3.0 - Setup Wizard
 
 - Version tracking issue: #322
 - Milestone: `v1.3` (not set)
@@ -263,9 +264,9 @@ The version tracking issue may contain the working release summary, but finalize
 - Major PRs: #370
 - Deferred items: Update System remains in #323 for v1.4
 - Next version tracking issue: #323
-- Status: released
+- Status: legacy implementation record; not part of the active usability-based version sequence
 
-### v1.4.0 - Update System
+### Legacy tag v1.4.0 - Update System
 
 - Version tracking issue: #323
 - Milestone: `v1.4` (not set)
@@ -279,9 +280,9 @@ The version tracking issue may contain the working release summary, but finalize
 - Major PRs: #372
 - Deferred items: Advanced Runtime Phase remains in #324 for v2.0
 - Next version tracking issue: #324
-- Status: released
+- Status: legacy implementation record; not part of the active usability-based version sequence
 
-### v2.0.0 - OCR Integration
+### Legacy tag v2.0.0 - OCR Integration
 
 - Version tracking issue: #324
 - Milestone: `v2.0` (not set)
@@ -293,11 +294,11 @@ The version tracking issue may contain the working release summary, but finalize
 - Release summary: `docs/release/v2.0-release-summary.md`
 - Major child issues: #348, #349, #350, #351
 - Major PRs: #375
-- Deferred items: Statistics System remains in #325 for v2.1; GitHub Pages Documentation remains in #326 for v2.2; Runtime Optimization remains in #327 for v2.3; practical OBS plugin smoke was completed later by #387 / v0.11; packaging automation moves to the v0.x practical readiness track
+- Deferred items: Statistics System remains in #325 for v2.1; GitHub Pages Documentation remains in #326 for v2.2; Runtime Optimization remains in #327 for v2.3; OBS plugin smoke was completed later by #387 / v0.11; packaging automation was completed later by #396 / v0.12
 - Next version tracking issue: #325
-- Status: internal milestone complete; not a practical user-ready OBS plugin release
+- Status: legacy implementation record; not part of the active usability-based version sequence
 
-### v2.1.0 - Statistics System
+### Legacy tag v2.1.0 - Statistics System
 
 - Version tracking issue: #325
 - Milestone: `v2.1` (not set)
@@ -309,11 +310,11 @@ The version tracking issue may contain the working release summary, but finalize
 - Release summary: `docs/release/v2.1-release-summary.md`
 - Major child issues: #352, #353, #354, #355
 - Major PRs: #378
-- Deferred items: GitHub Pages Documentation remains in #326 for v2.2; Runtime Optimization remains in #327 for v2.3; practical OBS plugin smoke was completed later by #387 / v0.11; packaging automation moves to the v0.x practical readiness track
+- Deferred items: GitHub Pages Documentation remains in #326 for v2.2; Runtime Optimization remains in #327 for v2.3; OBS plugin smoke was completed later by #387 / v0.11; packaging automation was completed later by #396 / v0.12
 - Next version tracking issue: #326
-- Status: internal milestone complete; not a practical user-ready OBS plugin release
+- Status: legacy implementation record; not part of the active usability-based version sequence
 
-### v2.2.0 - GitHub Pages Documentation
+### Legacy tag v2.2.0 - GitHub Pages Documentation
 
 - Version tracking issue: #326
 - Milestone: `v2.2` (not set)
@@ -325,11 +326,11 @@ The version tracking issue may contain the working release summary, but finalize
 - Release summary: `docs/release/v2.2-release-summary.md`
 - Major child issues: #356, #357, #358, #359
 - Major PRs: #381
-- Deferred items: Runtime Optimization remains in #327 for v2.3; practical OBS plugin smoke was completed later by #387 / v0.11; packaging automation moves to the v0.x practical readiness track
+- Deferred items: Runtime Optimization remains in #327 for v2.3; OBS plugin smoke was completed later by #387 / v0.11; packaging automation was completed later by #396 / v0.12
 - Next version tracking issue: #327
-- Status: internal milestone complete; not a practical user-ready OBS plugin release
+- Status: legacy implementation record; not part of the active usability-based version sequence
 
-### v2.3.0 - Runtime Optimization
+### Legacy tag v2.3.0 - Runtime Optimization
 
 - Version tracking issue: #327
 - Milestone: `v2.3` (not set)
@@ -342,6 +343,6 @@ The version tracking issue may contain the working release summary, but finalize
 - Release summary: `docs/release/v2.3-release-summary.md`
 - Major child issues: #360, #361, #362, #363
 - Major PRs: #384
-- Deferred items: practical OBS plugin smoke was completed later by #387 / v0.11; packaging ZIP workflow, release asset automation, and checksum publication move to v0.12 on the practical readiness track
+- Deferred items: OBS plugin smoke was completed later by #387 / v0.11; packaging ZIP workflow, release asset automation, and checksum publication were completed later by #396 / v0.12
 - Next version tracking issue: none yet
-- Status: internal milestone complete; not a practical user-ready OBS plugin release
+- Status: legacy implementation record; not part of the active usability-based version sequence

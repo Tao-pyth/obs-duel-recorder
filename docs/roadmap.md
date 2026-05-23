@@ -1,15 +1,14 @@
 # Roadmap
 
-## Practical Readiness Note
+## Versioning Note
 
-This roadmap separates practical user readiness from historical/internal development milestones.
+This roadmap uses one version sequence based on user-visible usability.
 
-- The project is currently on the `v0.x` practical readiness track.
-- Existing `v1.x` and `v2.x` tags are historical/internal development milestones.
+- The project is currently pre-v1.0.
+- Existing `v1.x` and `v2.x` tags are legacy non-product tags from before this rule.
 - The `v0.11` gate completed built OBS Plugin DLL, real OBS load smoke evidence, Dock visibility, Worker heartbeat, and basic recording control evidence.
 - The `v0.12` gate completed packaging workflow, release asset automation path, SHA256 checksum generation, and package layout validation.
-- A user-ready `v1.0` practical release still requires practical install/update verification, runtime data preservation verification, and a recorded practical tag naming decision.
-- The exact practical `v1.0` tag naming must be confirmed before tagging because historical/internal `v1.0.0` already exists.
+- A user-ready `v1.0` release still requires install/update verification, runtime data preservation verification, and a recorded tag naming decision because legacy `v1.0.0` already exists.
 
 ---
 
@@ -26,9 +25,10 @@ This roadmap separates practical user readiness from historical/internal develop
 
 ---
 
-# Practical Readiness Track
+# Active Version Roadmap
 
-This is the authoritative roadmap for user-facing readiness.
+This is the authoritative roadmap. Version numbers are assigned only when the
+corresponding usability gate is satisfied.
 
 ---
 
@@ -36,20 +36,20 @@ This is the authoritative roadmap for user-facing readiness.
 
 ### Goals
 
-Reconcile roadmap and versioning with practical OBS plugin readiness.
+Reconcile roadmap and versioning with OBS plugin usability.
 
 ### Planned
 
-- clarify `v0.x` practical readiness status
-- classify existing `v1.x` and `v2.x` tags as historical/internal milestones
-- define practical `v1.0` promotion gates
-- connect OBS real-load smoke evidence to the practical roadmap
+- clarify `v0.x` usability status
+- classify existing `v1.x` and `v2.x` tags as legacy non-product tags
+- define `v1.0` promotion gates
+- connect OBS real-load smoke evidence to the active roadmap
 
 ### Deliverables
 
 - corrected README and roadmap wording
 - release policy clarification
-- release history practical-readiness note
+- release history usability note
 
 ---
 
@@ -101,11 +101,11 @@ Create a reproducible GitHub Actions based release packaging flow.
 
 ---
 
-## v1.0 - First Practical OBS Plugin Release
+## v1.0 - First Usable OBS Plugin Release
 
 ### Goals
 
-Publish the first practical user-ready release after OBS plugin smoke and packaging gates pass.
+Publish the first user-ready release after OBS plugin smoke and packaging gates pass.
 
 ### Planned
 
@@ -113,19 +113,21 @@ Publish the first practical user-ready release after OBS plugin smoke and packag
 - v0.12 packaging automation evidence accepted
 - user-facing install/update documentation verified
 - runtime data preservation rules verified
-- release naming/tagging decision recorded without moving historical tags
+- release naming/tagging decision recorded without moving legacy tags
 
 ### Deliverables
 
-- first practical OBS plugin release package
+- first usable OBS plugin release package
 - user-ready release notes
 - install/update verification evidence
 
 ---
 
-# Historical Internal Milestone Archive
+# Legacy Implementation Archive
 
-The following milestones record internal implementation progress. They are useful development history, but they do not by themselves prove a user-ready OBS plugin release.
+The following records preserve earlier implementation planning. They are not
+part of the active product version sequence unless a record is also listed in
+the Active Version Roadmap above.
 
 ---
 
@@ -352,7 +354,7 @@ Create screenshot capture system.
 
 ---
 
-# v1 - Upload Phase
+# Legacy v1 Records - Upload Phase
 
 Initial usable release phase.
 
@@ -364,7 +366,7 @@ Goals:
 
 ---
 
-## v1.0 - YouTube Upload MVP
+## Legacy record: v1.0 - YouTube Upload MVP
 
 ### Goals
 
@@ -387,7 +389,7 @@ Create automatic YouTube uploads.
 
 ---
 
-## v1.1 - Match Metadata
+## Legacy record: v1.1 - Match Metadata
 
 ### Goals
 
@@ -409,7 +411,7 @@ Support duel metadata management.
 
 ---
 
-## v1.2 - Export System
+## Legacy record: v1.2 - Export System
 
 ### Goals
 
@@ -430,7 +432,7 @@ Support external archive export.
 
 ---
 
-## v1.3 - Setup Wizard
+## Legacy record: v1.3 - Setup Wizard
 
 ### Goals
 
@@ -450,7 +452,7 @@ Improve first-time user onboarding.
 
 ---
 
-## v1.4 - Update System
+## Legacy record: v1.4 - Update System
 
 ### Goals
 
@@ -472,13 +474,13 @@ Create safe runtime update support.
 
 ---
 
-# v2 - Advanced Runtime Phase
+# Legacy v2 Records - Advanced Runtime Phase
 
 Advanced automation and analysis phase.
 
 ---
 
-## v2.0 - OCR Integration
+## Legacy record: v2.0 - OCR Integration
 
 ### Goals
 
@@ -502,7 +504,7 @@ Implementation note:
 
 ---
 
-## v2.1 - Statistics System
+## Legacy record: v2.1 - Statistics System
 
 ### Goals
 
@@ -522,7 +524,7 @@ Create long-term duel analysis support.
 
 ---
 
-## v2.2 - GitHub Pages Documentation
+## Legacy record: v2.2 - GitHub Pages Documentation
 
 ### Goals
 
@@ -542,7 +544,7 @@ Create user-facing documentation site.
 
 ---
 
-## v2.3 - Runtime Optimization
+## Legacy record: v2.3 - Runtime Optimization
 
 ### Goals
 

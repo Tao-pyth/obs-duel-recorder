@@ -19,16 +19,16 @@ vMajor.Minor.Patch
 Examples:
 - `v0.1.0`
 - `v0.2.0`
-- `v1.0.0`
+- `v0.12.0`
 
-## Practical Readiness Policy
+## Usability-Based Versioning Policy
 
-As of #389, version labels are split into two meanings:
+As of #401, OBS Duel Recorder no longer uses separate usability and implementation
+version tracks. A version number is valid for the active product roadmap only
+when it reflects user-visible usability.
 
-- **Practical release track**: user-facing readiness for installing and running the OBS plugin.
-- **Historical/internal milestone track**: implementation milestones that may have tags but do not by themselves prove a user-ready OBS plugin release.
-
-The project is currently **pre-v1.0 on the practical release track**. A practical `v1.0` release requires accepted evidence that:
+The project is currently **pre-v1.0**. A `v1.0` release requires accepted
+evidence that:
 
 - the Plugin DLL can be built in Release configuration (completed by #387 / v0.11),
 - the DLL loads in a real Windows OBS Studio x64 runtime without crashing (completed by #387 / v0.11),
@@ -38,7 +38,11 @@ The project is currently **pre-v1.0 on the practical release track**. A practica
 - release ZIP packaging and checksum assets are reproducible (completed by #396 / v0.12),
 - packaging/update instructions are usable for a normal user.
 
-Existing historical/internal tags such as `v1.0.0` through `v2.3.0` must not be interpreted as practical user-ready release evidence. Do not move or overwrite those tags. If a future practical `v1.0` tag would conflict with an existing historical/internal tag, record the exact naming decision before tagging.
+Existing `v1.x` and `v2.x` tags created before this rule are legacy non-product
+tags. They must not be interpreted as active release versions. Do not move or
+overwrite existing tags without explicit maintainer approval. If a future
+usability-based version conflicts with a legacy tag name, record the exact
+publication/tag naming decision before tagging.
 
 ## Version Terms
 
@@ -46,10 +50,10 @@ Use separate terms for released and in-development versions:
 
 - `released_version`: the latest completed and published version.
 - `current_development_version`: the version currently being developed toward the next release boundary.
-- `practical_readiness_version`: the user-facing readiness track for installable OBS plugin releases.
-- `internal_milestone_version`: the Worker/API or implementation milestone track used for historical development records.
 
-Avoid using a single `current_version` term when it is unclear whether it means a released version or an in-development target.
+Do not introduce a second version term for implementation-only progress. Work
+that is not user-usable may be tracked by issue, PR, or legacy record,
+but it must not become an active product version number.
 
 ## Major and Minor Release Tracking
 
@@ -97,7 +101,8 @@ If a completed release needs a patch boundary, create a small patch tracking iss
 
 Tags are required when a major or minor version is completed and merged into `main`.
 
-For practical readiness releases, tags are required only after the practical readiness gate for that version is met. Internal milestone tags may exist, but they must be documented as internal milestones when practical readiness has not been proven.
+Tags are required only after the usability gate for that version is met.
+Implementation-only work must not create a product version tag.
 
 Required tag points:
 - Major release completion: tag the merged release commit as `vX.0.0`, unless the release plan explicitly defines a different minor or patch number.
@@ -123,9 +128,13 @@ Use a version-scoped readiness checklist before tagging:
 - v0.11: `docs/release/v0.11-release-readiness.md`
 - v0.12: `docs/release/v0.12-release-readiness.md`
 
-The v0.11 readiness checklist is a practical-readiness gate, not a packaged release approval by itself. It was completed together with the OBS real-load smoke evidence tracked by #387 and coordinated through #393.
+The v0.11 readiness checklist is a version gate, not a packaged release
+approval by itself. It was completed together with the OBS real-load smoke
+evidence tracked by #387 and coordinated through #393.
 
-The v0.12 readiness checklist is a completed practical-readiness gate for release packaging automation, release asset automation, SHA256 checksum publication, and v1.0 handoff documentation.
+The v0.12 readiness checklist is a completed version gate for release packaging
+automation, release asset automation, SHA256 checksum publication, and v1.0
+handoff documentation.
 
 Do not retroactively create a `v0.1.0` tag unless explicitly approved.
 
@@ -160,7 +169,7 @@ When a major or minor roadmap milestone is completed:
 6. Create the release tag if the available GitHub tooling supports tag creation.
 7. If tag creation is not available, report the intended tag name and target commit SHA.
 8. Save release point information to persistent release docs.
-9. Confirm version information such as `practical_readiness_version`, `internal_milestone_version`, `released_version`, and `current_development_version` is updated where defined.
+9. Confirm version information such as `released_version` and `current_development_version` is updated where defined.
 10. Confirm the next version tracking issue is created from `docs/roadmap.md`.
 11. Link the next version tracking issue from the completed tracking issue.
 
