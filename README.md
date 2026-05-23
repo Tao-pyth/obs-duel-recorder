@@ -23,14 +23,14 @@ Major and minor release completions are tagged as `vMajor.Minor.Patch`. See [Rel
 ## Current Development
 
 Latest released version:
-- `v1.1.0` - Match Metadata
+- `v1.2.0` - Export System
 
 Current development target:
-- `v1.2` - Export System
-- Tracking issue: [#321](https://github.com/Tao-pyth/obs-duel-recorder/issues/321)
+- `v1.3` - Setup Wizard
+- Tracking issue: [#322](https://github.com/Tao-pyth/obs-duel-recorder/issues/322)
 
 Next roadmap target:
-- `v1.3` - Setup Wizard
+- `v1.4` - Update System
 
 ---
 
@@ -56,9 +56,9 @@ Current released foundation:
 - Screenshot capture and linkage
 - YouTube upload MVP boundary
 - Match metadata, memo, search, and upload metadata generation
+- Export archive generation with SQLite, metadata, screenshots, and video linkages
 
 Planned roadmap capabilities:
-- Export system (`v1.2`)
 - Setup wizard (`v1.3`)
 - Update system (`v1.4`)
 - GitHub Actions based packaging (`v1.4+`)
@@ -110,26 +110,26 @@ obs-duel-recorder/
 
 ### Latest Release
 
-- Version: `v1.1.0`
-- Scope: Match Metadata
+- Version: `v1.2.0`
+- Scope: Export System
 - Status: released
-- Tag target: `afbb6fa73db60afb50a20e1de4e0dccb8b25b65b`
-- Tracking issue: [#320](https://github.com/Tao-pyth/obs-duel-recorder/issues/320)
+- Tag target: `1f307e8dba227bed8de3cbd10a089210959f07e5`
+- Tracking issue: [#321](https://github.com/Tao-pyth/obs-duel-recorder/issues/321)
 - Release record: [docs/release-history.md](docs/release-history.md)
 
-### Completed in v1.1
+### Completed in v1.2
 
-- Worker-owned match metadata API
-- Opponent deck, deck name, result, timestamp, title template, and Match Memo persistence
-- Metadata search across opponent deck, memo, deck name, and result
-- Deterministic upload title, description, and notes generation
-- Upload process metadata handoff for linked queue items
-- v1.1 acceptance and release readiness documentation
+- Worker-owned export API
+- ZIP archive generation under `user_data/data/exports/`
+- SQLite snapshot, metadata JSON, screenshot file, and video linkage export
+- Manifest output with included artifacts, missing files, schema version, and exclusion rules
+- Secret, config, log, and temporary-file exclusion by default
+- v1.2 acceptance and release readiness documentation
 
-### Planned After v1.1
+### Planned After v1.2
 
-- `v1.2` - Export System
-- Later roadmap items include setup wizard, update system, packaging, and GitHub Pages documentation.
+- `v1.3` - Setup Wizard
+- Later roadmap items include update system, packaging, and GitHub Pages documentation.
 
 ---
 

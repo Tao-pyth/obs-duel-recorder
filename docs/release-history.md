@@ -183,3 +183,19 @@ The version tracking issue may contain the working release summary, but finalize
 - Deferred items: Export System remains in #321 for v1.2
 - Next version tracking issue: #321
 - Status: released
+
+### v1.2.0 - Export System
+
+- Version tracking issue: #321
+- Milestone: `v1.2` (not set)
+- Release readiness checklist: `docs/release/v1.2-release-readiness.md`
+- Tag: `v1.2.0`
+- Tag target: `1f307e8dba227bed8de3cbd10a089210959f07e5`
+- Release finalized at: `2026-05-23T12:10:23+09:00`
+- Tag finalized at: `2026-05-23T12:09:43+09:00`
+- Release summary: `docs/release/v1.2-release-summary.md`
+- Major child issues: #336, #337, #338, #339
+- Major PRs: #368
+- Deferred items: Setup Wizard remains in #322 for v1.3
+- Next version tracking issue: #322
+- Status: released
