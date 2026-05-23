@@ -30,11 +30,11 @@ class UpdateSystemTests(unittest.TestCase):
         runtime_dirs = self._runtime()
         manager = UpdateManager(runtime_dirs=runtime_dirs)
 
-        downgrade = manager.validate({"current_version": "1.4.0", "target_version": "1.3.0"})
+        downgrade = manager.validate({"current_version": "2.0.0", "target_version": "1.4.0"})
         self.assertFalse(downgrade["valid"])
         self.assertEqual(downgrade["errors"][0]["code"], "downgrade_unsupported")
 
-        api_mismatch = manager.validate({"current_version": "1.3.0", "expected_api_version": "1.3"})
+        api_mismatch = manager.validate({"current_version": "1.4.0", "expected_api_version": "1.4"})
         self.assertFalse(api_mismatch["valid"])
         self.assertEqual(api_mismatch["errors"][0]["code"], "api_version_mismatch")
 
@@ -61,14 +61,14 @@ class UpdateSystemTests(unittest.TestCase):
         self.assertEqual(result["status"], "completed")
         backup_path = Path(str(result["backup_path"]))
         self.assertTrue(backup_path.exists())
-        self.assertIn("odr-20260523T130000Z-1.4.0.sqlite3", backup_path.name)
+        self.assertIn("odr-20260523T130000Z-2.0.0.sqlite3", backup_path.name)
         for path in preserved:
             self.assertTrue(path.exists(), path)
 
         state = json.loads((runtime_dirs.data_dir / "update-state.json").read_text(encoding="utf-8"))
         installed = json.loads((runtime_dirs.data_dir / "installed-version.json").read_text(encoding="utf-8"))
         self.assertEqual(state["status"], "completed")
-        self.assertEqual(installed["version"], "1.4.0")
+        self.assertEqual(installed["version"], "2.0.0")
 
     def test_apply_records_failure_after_backup_when_migration_fails(self) -> None:
         from odr_worker.db import DbInitError
@@ -122,9 +122,9 @@ class UpdateSystemTests(unittest.TestCase):
 
             status = client.get("/update/status")
             self.assertEqual(status.status_code, 200)
-            self.assertEqual(status.json()["target_version"], "1.4.0")
+            self.assertEqual(status.json()["target_version"], "2.0.0")
 
-            invalid = client.post("/update/validate", json={"expected_api_version": "1.3"})
+            invalid = client.post("/update/validate", json={"expected_api_version": "1.4"})
             self.assertEqual(invalid.status_code, 200)
             self.assertFalse(invalid.json()["valid"])
 

@@ -23,14 +23,14 @@ Major and minor release completions are tagged as `vMajor.Minor.Patch`. See [Rel
 ## Current Development
 
 Latest released version:
-- `v1.4.0` - Update System
+- `v2.0.0` - OCR Integration
 
 Current development target:
-- `v2.0` - OCR Integration
-- Tracking issue: [#324](https://github.com/Tao-pyth/obs-duel-recorder/issues/324)
+- `v2.1` - Statistics System
+- Tracking issue: [#325](https://github.com/Tao-pyth/obs-duel-recorder/issues/325)
 
 Next roadmap target:
-- `v2.1` - Statistics System
+- `v2.2` - GitHub Pages Documentation
 
 ---
 
@@ -59,9 +59,10 @@ Current released foundation:
 - Export archive generation with SQLite, metadata, screenshots, and video linkages
 - Setup wizard state and validation for runtime path, OBS integration, OAuth, and templates
 - Update entrypoint, DB backup-before-migration, update-state diagnostics, and runtime preservation
+- Image-recognition-assisted result, rank, and DP metadata candidates with manual review/correction audit
 
 Planned roadmap capabilities:
-- image-recognition-assisted metadata extraction (`v2.0`)
+- statistics and memo analysis (`v2.1`)
 - GitHub Actions based packaging and SHA256 checksum assets (`v2.0+`)
 
 ---
@@ -111,25 +112,25 @@ obs-duel-recorder/
 
 ### Latest Release
 
-- Version: `v1.4.0`
-- Scope: Update System
+- Version: `v2.0.0`
+- Scope: OCR Integration
 - Status: released
-- Tag target: `333d3ce757b3724f223cec1f9a8b33046df7007b`
-- Tracking issue: [#323](https://github.com/Tao-pyth/obs-duel-recorder/issues/323)
+- Tag target: to be finalized after release commit merge
+- Tracking issue: [#324](https://github.com/Tao-pyth/obs-duel-recorder/issues/324)
 - Release record: [docs/release-history.md](docs/release-history.md)
 
-### Completed in v1.4
+### Completed in v2.0
 
-- Canonical Windows `update.bat` entrypoint
-- Worker-owned update status, validation, and apply API
-- DB backup-before-migration under `user_data/data/db/backups/`
-- Partial/failed update-state diagnostics and installed-version records
-- Runtime preservation for config, DB, videos, screenshots, exports, and logs
-- v1.4 acceptance and release readiness documentation
+- Worker-owned image recognition provider boundary
+- Deterministic fixture-backed recognition without heavyweight OCR/ML runtime dependency
+- Result, rank, and DP candidate extraction with confidence and evidence
+- Persisted candidate audit records for confirm, correct, and reject actions
+- Manual correction through the existing match metadata boundary
+- v2.0 acceptance and release readiness documentation
 
-### Planned After v1.4
+### Planned After v2.0
 
-- `v2.0` - OCR Integration
+- `v2.1` - Statistics System
 - Later roadmap items include packaging and GitHub Pages documentation.
 
 ---

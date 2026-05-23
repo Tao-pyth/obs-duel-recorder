@@ -231,3 +231,19 @@ The version tracking issue may contain the working release summary, but finalize
 - Deferred items: Advanced Runtime Phase remains in #324 for v2.0
 - Next version tracking issue: #324
 - Status: released
+
+### v2.0.0 - OCR Integration
+
+- Version tracking issue: #324
+- Milestone: `v2.0` (not set)
+- Release readiness checklist: `docs/release/v2.0-release-readiness.md`
+- Tag: `v2.0.0`
+- Tag target: to be finalized after release commit merge
+- Release finalized at: `2026-05-23T14:19:47+09:00`
+- Tag finalized at: pending
+- Release summary: `docs/release/v2.0-release-summary.md`
+- Major child issues: #348, #349, #350, #351
+- Major PRs: #375
+- Deferred items: Statistics System remains in #325 for v2.1; GitHub Pages Documentation remains in #326 for v2.2; Runtime Optimization remains in #327 for v2.3; packaging ZIP workflow remains v2.x follow-up under `docs/architecture/packaging.md`
+- Next version tracking issue: #325
+- Status: release finalization in progress

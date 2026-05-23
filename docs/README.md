@@ -34,6 +34,7 @@ This directory is the documentation entry point for OBS Duel Recorder.
 - [v1.2 release summary](release/v1.2-release-summary.md)
 - [v1.3 release summary](release/v1.3-release-summary.md)
 - [v1.4 release summary](release/v1.4-release-summary.md)
+- [v2.0 release summary](release/v2.0-release-summary.md)
 - [v0.1 Repository Foundation acceptance checklist](requirements/v0.1-acceptance.md)
 - [v0.3 SQLite Foundation acceptance checklist](requirements/v0.3-sqlite-foundation-acceptance.md)
 - [v0.4 OBS Plugin Skeleton acceptance checklist](requirements/v0.4-obs-plugin-skeleton-acceptance.md)
