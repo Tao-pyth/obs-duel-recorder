@@ -124,6 +124,39 @@ Goals:
   - `docs/requirements/requirements.md` -> Match Data / Queue / Architecture / Platform / Runtime Rules
   - `AGENTS.md` -> Runtime Directory Rules / Responsibility Separation
 
+### v0.10 - Roadmap And Versioning Realignment
+
+- Roadmap: `docs/roadmap.md` -> **v0.10 - Roadmap And Versioning Realignment**
+- Version tracking issue: `#389` - `[Planning] Reconcile roadmap and versioning with v0.x practical readiness`
+- Release policy: `docs/release.md` -> Practical Readiness Policy
+- Release record: `docs/release-history.md` -> Practical Readiness Note
+- README status: `README.md` -> Current Development / Current Status
+- Requirements (relevant sections):
+  - `docs/requirements/requirements.md` -> Architecture / Platform / Runtime Rules
+  - `AGENTS.md` -> Responsibility Separation
+
+### v0.11 - OBS Plugin Real Load Smoke
+
+- Roadmap: `docs/roadmap.md` -> **v0.11 - OBS Plugin Real Load Smoke**
+- Version tracking issue: `#393` - `[v0.11] OBS Plugin Real Load Smoke release tracking`
+- Smoke evidence gate: `#387` - `[Verification] OBS Plugin DLL build and real OBS load smoke confirmation`
+- Acceptance checklist: `docs/requirements/v0.11-obs-plugin-real-load-smoke-acceptance.md`
+- Release readiness checklist: `docs/release/v0.11-release-readiness.md`
+- Plugin scaffold/build notes: `app/plugin/README.md`
+- Worker API contract: `docs/architecture/worker-api.md`
+- Requirements (relevant sections):
+  - `docs/requirements/requirements.md` -> Architecture / Platform / Runtime Rules
+  - `AGENTS.md` -> Logging Rules / Runtime Directory Rules / Responsibility Separation
+
+### v0.12 - Release Packaging Automation
+
+- Roadmap: `docs/roadmap.md` -> **v0.12 - Release Packaging Automation**
+- Packaging architecture contract: `docs/architecture/packaging.md`
+- Release policy: `docs/release.md`
+- Requirements (relevant sections):
+  - `docs/requirements/requirements.md` -> Packaging Rules / Runtime Rules / Architecture / Platform
+  - `AGENTS.md` -> Runtime Directory Rules / Responsibility Separation
+
 ### v1.0 - YouTube Upload MVP
 
 - Roadmap: `docs/roadmap.md` -> **v1.0 - YouTube Upload MVP**

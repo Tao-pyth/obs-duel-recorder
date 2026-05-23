@@ -119,6 +119,9 @@ Use a version-scoped readiness checklist before tagging:
 - v0.2: `docs/release/v0.2-release-readiness.md`
 - v0.3: `docs/release/v0.3-release-readiness.md`
 - v0.4: `docs/release/v0.4-release-readiness.md`
+- v0.11: `docs/release/v0.11-release-readiness.md`
+
+The v0.11 readiness checklist is a practical-readiness gate, not a tag approval by itself. It must be completed together with the OBS real-load smoke evidence tracked by #387 and coordinated through #393.
 
 Do not retroactively create a `v0.1.0` tag unless explicitly approved.
 
