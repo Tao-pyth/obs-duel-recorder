@@ -287,12 +287,12 @@ The version tracking issue may contain the working release summary, but finalize
 - Release readiness checklist: `docs/release/v2.3-release-readiness.md`
 - Runtime baseline: `docs/release/v2.3-runtime-baseline.md`
 - Tag: `v2.3.0`
-- Tag target: pending tag-record PR
+- Tag target: `5c6a8ea7f01d364dcdf9f24e656b1a4d262c3142`
 - Release finalized at: `2026-05-23T15:45:18+09:00`
-- Tag finalized at: pending tag-record PR
+- Tag finalized at: `2026-05-23T15:52:12+09:00`
 - Release summary: `docs/release/v2.3-release-summary.md`
 - Major child issues: #360, #361, #362, #363
 - Major PRs: #384
 - Deferred items: packaging ZIP workflow remains v2.x follow-up under `docs/architecture/packaging.md`; release asset automation and checksum publication remain future packaging work
 - Next version tracking issue: none yet
-- Status: release finalization pending tag record
+- Status: released
