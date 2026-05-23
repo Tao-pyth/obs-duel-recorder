@@ -366,19 +366,23 @@ Advanced automation and analysis phase.
 
 ### Goals
 
-Add OCR-assisted metadata analysis.
+Add image-recognition-assisted metadata analysis.
+
+Implementation note:
+- v2.0 starts with image recognition fixtures and an abstract Worker provider boundary.
+- Heavyweight OCR or ML runtime dependencies are not required for v2.0.
 
 ### Planned
 
-- result OCR
-- rank OCR
-- DP OCR
-- OCR-assisted verification
-- OCR fallback support
+- result recognition
+- rank recognition
+- DP recognition
+- recognition-assisted verification
+- manual correction fallback support
 
 ### Deliverables
 
-- OCR-assisted metadata extraction
+- image-recognition-assisted metadata extraction
 
 ---
 
