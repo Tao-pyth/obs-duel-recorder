@@ -263,3 +263,19 @@ The version tracking issue may contain the working release summary, but finalize
 - Deferred items: GitHub Pages Documentation remains in #326 for v2.2; Runtime Optimization remains in #327 for v2.3; packaging ZIP workflow remains v2.x follow-up under `docs/architecture/packaging.md`
 - Next version tracking issue: #326
 - Status: released
+
+### v2.2.0 - GitHub Pages Documentation
+
+- Version tracking issue: #326
+- Milestone: `v2.2` (not set)
+- Release readiness checklist: `docs/release/v2.2-release-readiness.md`
+- Tag: `v2.2.0`
+- Tag target: pending tag-record PR
+- Release finalized at: `2026-05-23T15:20:28+09:00`
+- Tag finalized at: pending tag-record PR
+- Release summary: `docs/release/v2.2-release-summary.md`
+- Major child issues: #356, #357, #358, #359
+- Major PRs: #381
+- Deferred items: Runtime Optimization remains in #327 for v2.3; packaging ZIP workflow remains v2.x follow-up under `docs/architecture/packaging.md`
+- Next version tracking issue: #327
+- Status: release finalization pending tag record

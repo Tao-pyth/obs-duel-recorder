@@ -204,7 +204,7 @@ Goals:
 - Packaging architecture contract: `docs/architecture/packaging.md`
 - Upload provider architecture contract: `docs/architecture/upload-provider.md`
 - Worker API contract: `docs/architecture/worker-api.md`
-- Release record: not created yet
+- Release record: `docs/release/v2.0-release-summary.md`
 - Scope note: packaging and upload-provider documents record v2.x preparation contracts; v2.0 implementation remains image-recognition-first unless child issues explicitly expand scope.
 - Requirements (relevant sections):
   - `docs/requirements/requirements.md` -> Image Recognition Rules / Upload Rules / Packaging Rules / Detection Rules / Match Data / Runtime Rules
@@ -218,7 +218,7 @@ Goals:
 - Release readiness checklist: `docs/release/v2.1-release-readiness.md`
 - Statistics architecture contract: `docs/architecture/statistics.md`
 - Worker API contract: `docs/architecture/worker-api.md`
-- Release record: not created yet
+- Release record: `docs/release/v2.1-release-summary.md`
 - Requirements (relevant sections):
   - `docs/requirements/requirements.md` -> Statistics Rules / Match Data / Upload Rules / Runtime Rules / Architecture / Platform
   - `AGENTS.md` -> Runtime Directory Rules / Responsibility Separation
@@ -231,7 +231,7 @@ Goals:
 - Release readiness checklist: `docs/release/v2.2-release-readiness.md`
 - Documentation validation policy: `docs/validation.md`
 - Packaging architecture contract: `docs/architecture/packaging.md`
-- Release record: not created yet
+- Release record: `docs/release/v2.2-release-summary.md`
 - Requirements (relevant sections):
   - `docs/requirements/requirements.md` -> Packaging Rules / Runtime Rules / Architecture / Platform
   - `docs/README.md` -> Documentation Rules / Validation
