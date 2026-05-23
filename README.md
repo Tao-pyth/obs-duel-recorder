@@ -17,9 +17,10 @@ The project is designed around an OBS Plugin + Python Worker architecture.
 | Patch | bug fixes and non-roadmap changes |
 
 Important readiness note:
-- The project is still **pre-v1.0 for practical user readiness** because the OBS Plugin DLL has not yet been built and smoke-tested in a real OBS runtime.
+- The project is still **pre-v1.0 for practical user readiness** because reproducible packaging, release assets, checksums, and install/update documentation are not complete yet.
+- The OBS Plugin DLL build and real OBS load smoke gate was completed in #387.
 - Existing `v1.x` and `v2.x` tags are historical/internal development milestones, not proof of a user-ready OBS plugin release.
-- Practical user-ready versioning resumes on the `v0.x` readiness track until the v1.0 OBS plugin smoke gate is satisfied.
+- Practical user-ready versioning remains on the `v0.x` readiness track until the v1.0 packaging, install, and update gates are satisfied.
 
 See [Release and tag policy](docs/release.md).
 
@@ -28,16 +29,16 @@ See [Release and tag policy](docs/release.md).
 ## Current Development
 
 Latest practical release status:
-- Practical release: none yet; the project remains `v0.x` / pre-v1.0 for user readiness.
+- Practical release package: none yet; the project remains `v0.x` / pre-v1.0 for user readiness.
+- Latest completed practical readiness gate: `v0.11` - OBS Plugin Real Load Smoke
 - Latest internal milestone tag: `v2.3.0` - Runtime Optimization
 
 Current development target:
-- `v0.11` - OBS Plugin Real Load Smoke
-- Tracking issue: [#393](https://github.com/Tao-pyth/obs-duel-recorder/issues/393)
-- Smoke evidence gate: [#387](https://github.com/Tao-pyth/obs-duel-recorder/issues/387)
+- `v0.12` - Release Packaging Automation
+- Tracking issue: [#396](https://github.com/Tao-pyth/obs-duel-recorder/issues/396)
 
 Next roadmap target:
-- `v0.12` - Release Packaging Automation
+- `v1.0` - First Practical OBS Plugin Release
 
 ---
 
@@ -70,9 +71,9 @@ Current released foundation:
 - Read-only match, deck, opponent, upload, and memo statistics
 - GitHub Pages documentation publication with static HTML artifact generation
 - Runtime queue/upload optimization, DB indexes, and recovery diagnostics
+- OBS Plugin DLL build and real OBS load smoke evidence
 
 Planned roadmap capabilities:
-- OBS Plugin DLL build and real OBS load smoke (`v0.11`)
 - GitHub Actions based packaging and SHA256 checksum assets (`v0.12`)
 
 ---
@@ -123,9 +124,9 @@ obs-duel-recorder/
 ### Latest Release
 
 - Practical version: none yet
-- Practical status: pre-v1.0; OBS Plugin DLL build/load smoke is not complete
-- Current practical tracking issue: [#393](https://github.com/Tao-pyth/obs-duel-recorder/issues/393)
-- Current smoke evidence gate: [#387](https://github.com/Tao-pyth/obs-duel-recorder/issues/387)
+- Practical status: pre-v1.0; OBS Plugin DLL build/load smoke is complete, packaging automation is not complete
+- Latest completed practical readiness gate: [#387](https://github.com/Tao-pyth/obs-duel-recorder/issues/387)
+- Current practical tracking issue: [#396](https://github.com/Tao-pyth/obs-duel-recorder/issues/396)
 - Latest internal milestone: `v2.3.0`
 - Internal milestone tag target: `5c6a8ea7f01d364dcdf9f24e656b1a4d262c3142`
 - Release record: [docs/release-history.md](docs/release-history.md)
@@ -142,7 +143,7 @@ obs-duel-recorder/
 ### Practical Readiness Gates
 
 - `v0.11` - OBS Plugin Real Load Smoke
-- `v0.12` - Release Packaging Automation
+- `v0.12` - Release Packaging Automation (current)
 - `v1.0` - First Practical OBS Plugin Release
 
 ---

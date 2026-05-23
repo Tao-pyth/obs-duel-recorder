@@ -142,6 +142,7 @@ Goals:
 - Smoke evidence gate: `#387` - `[Verification] OBS Plugin DLL build and real OBS load smoke confirmation`
 - Acceptance checklist: `docs/requirements/v0.11-obs-plugin-real-load-smoke-acceptance.md`
 - Release readiness checklist: `docs/release/v0.11-release-readiness.md`
+- Release record: `docs/release-history.md`; detailed summary: `docs/release/v0.11-release-summary.md`
 - Smoke procedure: `docs/architecture/v0.11-obs-plugin-smoke.md`
 - Plugin scaffold/build notes: `app/plugin/README.md`
 - Worker API contract: `docs/architecture/worker-api.md`
@@ -152,6 +153,9 @@ Goals:
 ### v0.12 - Release Packaging Automation
 
 - Roadmap: `docs/roadmap.md` -> **v0.12 - Release Packaging Automation**
+- Version tracking issue: `#396` - `[v0.12] Release Packaging Automation release tracking`
+- Acceptance checklist: `docs/requirements/v0.12-release-packaging-automation-acceptance.md`
+- Release readiness checklist: `docs/release/v0.12-release-readiness.md`
 - Packaging architecture contract: `docs/architecture/packaging.md`
 - Release policy: `docs/release.md`
 - Requirements (relevant sections):
