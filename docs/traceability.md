@@ -156,13 +156,28 @@ Goals:
 - Version tracking issue: `#396` - `[v0.12] Release Packaging Automation release tracking`
 - Acceptance checklist: `docs/requirements/v0.12-release-packaging-automation-acceptance.md`
 - Release readiness checklist: `docs/release/v0.12-release-readiness.md`
+- Release record: `docs/release-history.md`; detailed summary: `docs/release/v0.12-release-summary.md`
 - Packaging architecture contract: `docs/architecture/packaging.md`
+- Packaging scripts: `scripts/build_release_package.ps1`, `scripts/validate_release_package.ps1`
+- GitHub Actions workflow: `.github/workflows/release-package.yml`
 - Release policy: `docs/release.md`
 - Requirements (relevant sections):
   - `docs/requirements/requirements.md` -> Packaging Rules / Runtime Rules / Architecture / Platform
   - `AGENTS.md` -> Runtime Directory Rules / Responsibility Separation
 
-### v1.0 - YouTube Upload MVP
+### Practical v1.0 - First Practical OBS Plugin Release
+
+- Roadmap: `docs/roadmap.md` -> **v1.0 - First Practical OBS Plugin Release**
+- Release policy: `docs/release.md`
+- Previous practical readiness item: `#396` - `[v0.12] Release Packaging Automation release tracking`
+- Required evidence:
+  - v0.11 OBS plugin real-load smoke accepted
+  - v0.12 packaging automation accepted
+  - practical install/update verification
+  - runtime data preservation verification
+  - practical tag naming decision
+
+### Internal v1.0 - YouTube Upload MVP
 
 - Roadmap: `docs/roadmap.md` -> **v1.0 - YouTube Upload MVP**
 - Version tracking issue: `#318` - `[v1.0] YouTube Upload MVP release tracking`

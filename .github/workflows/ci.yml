@@ -40,6 +40,13 @@ jobs:
             if (-not $_) { throw "Smoke report heading was not found: $report" }
           }
 
+      - name: Validate release package builder
+        shell: powershell
+        run: |
+          New-Item -ItemType Directory -Force -Path build/plugin/Release | Out-Null
+          Set-Content -LiteralPath build/plugin/Release/obs-duel-recorder.dll -Value "ci fixture dll for package layout validation" -Encoding ASCII
+          powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build_release_package.ps1 -Version v0.12.0 -PluginDllPath build/plugin/Release/obs-duel-recorder.dll -OutputDir build/release -Clean
+
   worker-tests:
     name: Worker unit tests
     runs-on: windows-latest

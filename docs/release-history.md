@@ -9,7 +9,7 @@ Use this file as the durable index for release point information. If a release n
 As of #389, this history distinguishes practical user-ready releases from historical/internal implementation milestones.
 
 - #387 records completed OBS Plugin DLL build and real OBS load smoke evidence for the v0.11 practical readiness gate.
-- The project remains pre-v1.0 for practical OBS plugin user readiness until packaging, release asset, checksum, install, and update gates are completed.
+- The project remains pre-v1.0 for practical OBS plugin user readiness until practical install/update verification, release publication, and tag-naming gates are completed.
 - Existing `v1.x` and `v2.x` tags are preserved historical/internal milestone tags.
 - Older `Status: released` entries before this policy note mean "roadmap milestone released" unless a record explicitly says it is a practical user-ready OBS plugin release.
 - Do not interpret `v2.0.0` through `v2.3.0` as proof that an installable OBS plugin release is user-ready.
@@ -180,6 +180,25 @@ The version tracking issue may contain the working release summary, but finalize
 - Deferred items: packaging ZIP workflow, release asset automation, and SHA256 checksum publication remain in #396 for v0.12
 - Next version tracking issue: #396
 - Status: practical readiness gate complete; not a packaged user-ready OBS plugin release
+
+### v0.12.0 - Release Packaging Automation
+
+- Version tracking issue: #396
+- Release readiness checklist: `docs/release/v0.12-release-readiness.md`
+- Acceptance checklist: `docs/requirements/v0.12-release-packaging-automation-acceptance.md`
+- Packaging architecture: `docs/architecture/packaging.md`
+- Packaging workflow: `.github/workflows/release-package.yml`
+- Packaging scripts: `scripts/build_release_package.ps1`, `scripts/validate_release_package.ps1`
+- Tag: `v0.12.0` intended after this release record is merged
+- Intended tag target: pending merge commit of the v0.12 completion PR
+- Release finalized at: `2026-05-23T18:30:01+09:00`
+- Release summary: `docs/release/v0.12-release-summary.md`
+- Major child issues: none
+- Major PRs: pending v0.12 completion PR
+- Packaging evidence: local package build with real `build/plugin/Release/obs-duel-recorder.dll`; CI package builder validation with fixture DLL; ZIP layout validation; external `SHA256SUMS.txt` generation
+- Deferred items: practical install/update verification, runtime data preservation verification, release publication, and practical tag naming decision remain for v1.0
+- Next version tracking issue: practical `v1.0` First Practical OBS Plugin Release
+- Status: practical readiness gate complete; not a final user-ready OBS plugin release
 
 ### v1.0.0 - YouTube Upload MVP
 

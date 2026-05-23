@@ -7,7 +7,8 @@ This roadmap separates practical user readiness from historical/internal develop
 - The project is currently on the `v0.x` practical readiness track.
 - Existing `v1.x` and `v2.x` tags are historical/internal development milestones.
 - The `v0.11` gate completed built OBS Plugin DLL, real OBS load smoke evidence, Dock visibility, Worker heartbeat, and basic recording control evidence.
-- A user-ready `v1.0` practical release still requires `v0.12` packaging evidence, install/update documentation, runtime data preservation verification, and a recorded practical tag naming decision.
+- The `v0.12` gate completed packaging workflow, release asset automation path, SHA256 checksum generation, and package layout validation.
+- A user-ready `v1.0` practical release still requires practical install/update verification, runtime data preservation verification, and a recorded practical tag naming decision.
 - The exact practical `v1.0` tag naming must be confirmed before tagging because historical/internal `v1.0.0` already exists.
 
 ---
