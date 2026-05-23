@@ -28,8 +28,8 @@ As of #401, OBS Duel Recorder no longer uses separate usability and implementati
 version tracks. A version number is valid for the active product roadmap only
 when it reflects user-visible usability.
 
-The project is currently **pre-v1.0**. A `v1.0` release requires accepted
-evidence that:
+The project reached its first user-ready OBS Plugin release at `v1.0.1`. A
+`v1.0` release requires accepted evidence that:
 
 - the Plugin DLL can be built in Release configuration (completed by #387 / v0.11),
 - the DLL loads in a real Windows OBS Studio x64 runtime without crashing (completed by #387 / v0.11),
@@ -50,9 +50,7 @@ usability-based version conflicts with a legacy tag name, record the exact
 publication/tag naming decision before tagging.
 
 For the active v1.0 publication gate, the existing `v1.0.0` tag is a legacy
-non-product tag. The planned active publication tag is `v1.0.1` unless
-maintainers explicitly approve a different non-conflicting tag before
-publication.
+non-product tag. The active publication tag is `v1.0.1`.
 
 ## Version Terms
 
@@ -156,6 +154,8 @@ The active v1.0 readiness checklist is the publication gate for the first
 normal-user GitHub Release package. It must record final ZIP/SHA verification,
 install/update preservation evidence, Release asset publication, and the
 non-conflicting tag decision before #401 closes.
+
+The active v1.0 checklist was completed for `v1.0.1`.
 
 Do not retroactively create a `v0.1.0` tag unless explicitly approved.
 
