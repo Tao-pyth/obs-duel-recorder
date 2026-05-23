@@ -121,6 +121,18 @@ List export archives:
 Invoke-WebRequest http://127.0.0.1:8787/exports | Select-Object -ExpandProperty Content
 ```
 
+Setup wizard status:
+
+```powershell
+Invoke-WebRequest http://127.0.0.1:8787/setup/status | Select-Object -ExpandProperty Content
+```
+
+Setup wizard validation:
+
+```powershell
+Invoke-WebRequest http://127.0.0.1:8787/setup/validate -Method Post | Select-Object -ExpandProperty Content
+```
+
 Configuration scaffold (v0.2):
 - default config path: `user_data/config/worker.toml`
 - docs: `docs/architecture/worker-config.md`

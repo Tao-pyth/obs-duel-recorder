@@ -11,6 +11,7 @@ Architecture documents describe technical behavior, responsibility boundaries, a
 - [Upload Flow](upload.md)
 - [Match Metadata](metadata.md)
 - [Export System](export.md)
+- [Setup Wizard](setup-wizard.md)
 - [v0.6 Recording-State Smoke Procedure](v0.6-recording-state-smoke.md)
 
 ## Supporting Documents

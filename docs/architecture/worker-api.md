@@ -403,3 +403,51 @@ Error behavior:
 The v1.2 export API is defined by:
 - `docs/architecture/export.md`
 - `docs/requirements/v1.2-export-system-acceptance.md`
+
+---
+
+## v1.3 Setup Wizard Endpoints
+
+v1.3 adds Worker-owned setup state and validation endpoints while preserving prior API compatibility.
+
+### `GET /setup/status`
+
+Purpose:
+- Return first-run, partial, complete, cancel, and reset state.
+- Return current setup step and each setup step validation status.
+- Surface the runtime setup state file path.
+
+### `POST /setup/validate`
+
+Purpose:
+- Validate setup prerequisites without mutating setup state.
+- Return runtime path, OBS integration, OAuth, and template validation diagnostics.
+
+### `POST /setup/steps/{step_id}/complete`
+
+Purpose:
+- Mark one setup step complete or incomplete.
+- Persist setup progress under runtime data.
+
+Request:
+- `completed`: optional boolean, default `true`.
+
+### `POST /setup/cancel`
+
+Purpose:
+- Record setup cancellation without deleting completed steps or runtime data.
+
+### `POST /setup/reset`
+
+Purpose:
+- Clear completed setup steps and increment the reset counter.
+- Preserve existing runtime data.
+
+Error behavior:
+- Unknown setup steps return HTTP 400 with `code=setup_step_unknown`.
+- Invalid payloads return HTTP 400 with `code=setup_payload_invalid`.
+- Invalid persisted setup state returns HTTP 400 with `code=setup_state_invalid`.
+
+The v1.3 setup wizard API is defined by:
+- `docs/architecture/setup-wizard.md`
+- `docs/requirements/v1.3-setup-wizard-acceptance.md`
