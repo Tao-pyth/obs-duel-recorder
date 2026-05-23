@@ -167,3 +167,19 @@ The version tracking issue may contain the working release summary, but finalize
 - Deferred items: Match Metadata remains in #320 for v1.1
 - Next version tracking issue: #320
 - Status: released
+
+### v1.1.0 - Match Metadata
+
+- Version tracking issue: #320
+- Milestone: `v1.1` (not set)
+- Release readiness checklist: `docs/release/v1.1-release-readiness.md`
+- Tag: `v1.1.0`
+- Tag target: `afbb6fa73db60afb50a20e1de4e0dccb8b25b65b`
+- Release finalized at: `2026-05-23T11:35:46+09:00`
+- Tag finalized at: `2026-05-23T11:34:46+09:00`
+- Release summary: `docs/release/v1.1-release-summary.md`
+- Major child issues: #332, #333, #334, #335
+- Major PRs: #366
+- Deferred items: Export System remains in #321 for v1.2
+- Next version tracking issue: #321
+- Status: released

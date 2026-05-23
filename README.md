@@ -23,14 +23,14 @@ Major and minor release completions are tagged as `vMajor.Minor.Patch`. See [Rel
 ## Current Development
 
 Latest released version:
-- `v1.0.0` - YouTube Upload MVP
+- `v1.1.0` - Match Metadata
 
 Current development target:
-- `v1.1` - Match Metadata
-- Tracking issue: [#320](https://github.com/Tao-pyth/obs-duel-recorder/issues/320)
+- `v1.2` - Export System
+- Tracking issue: [#321](https://github.com/Tao-pyth/obs-duel-recorder/issues/321)
 
 Next roadmap target:
-- `v1.2` - Export System
+- `v1.3` - Setup Wizard
 
 ---
 
@@ -55,10 +55,12 @@ Current released foundation:
 - OBS overlay Text Source integration
 - Screenshot capture and linkage
 - YouTube upload MVP boundary
+- Match metadata, memo, search, and upload metadata generation
 
 Planned roadmap capabilities:
-- Match memo support (`v1.1`)
 - Export system (`v1.2`)
+- Setup wizard (`v1.3`)
+- Update system (`v1.4`)
 - GitHub Actions based packaging (`v1.4+`)
 
 ---
@@ -108,26 +110,26 @@ obs-duel-recorder/
 
 ### Latest Release
 
-- Version: `v1.0.0`
-- Scope: YouTube Upload MVP
+- Version: `v1.1.0`
+- Scope: Match Metadata
 - Status: released
-- Tag target: `30dfd9b0d1670a4cbbe3bc0f4bf328bcc7bc67d1`
-- Tracking issue: [#318](https://github.com/Tao-pyth/obs-duel-recorder/issues/318)
+- Tag target: `afbb6fa73db60afb50a20e1de4e0dccb8b25b65b`
+- Tracking issue: [#320](https://github.com/Tao-pyth/obs-duel-recorder/issues/320)
 - Release record: [docs/release-history.md](docs/release-history.md)
 
-### Completed in v1.0
+### Completed in v1.1
 
-- Worker-owned upload status API
-- Deterministic mocked upload processing for CI and smoke checks
-- Upload success, retryable failure, quota wait, missing file, auth/manual-review, and ambiguous outcome handling
-- YouTube video id and URL persistence
-- OAuth scope, privacy, and secret-redaction contract
-- v1.0 acceptance and release readiness documentation
+- Worker-owned match metadata API
+- Opponent deck, deck name, result, timestamp, title template, and Match Memo persistence
+- Metadata search across opponent deck, memo, deck name, and result
+- Deterministic upload title, description, and notes generation
+- Upload process metadata handoff for linked queue items
+- v1.1 acceptance and release readiness documentation
 
-### Planned After v1.0
+### Planned After v1.1
 
-- `v1.1` - Match Metadata
-- Later roadmap items include metadata management, export, packaging, and GitHub Pages documentation.
+- `v1.2` - Export System
+- Later roadmap items include setup wizard, update system, packaging, and GitHub Pages documentation.
 
 ---
 

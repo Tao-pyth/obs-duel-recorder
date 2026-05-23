@@ -146,9 +146,20 @@ Goals:
 - Metadata architecture contract: `docs/architecture/metadata.md`
 - Database contract: `docs/architecture/db.md`
 - Worker API contract: `docs/architecture/worker-api.md`
-- Release record: not created yet
+- Release record: `docs/release-history.md`; detailed summary: `docs/release/v1.1-release-summary.md`
 - Requirements (relevant sections):
   - `docs/requirements/requirements.md` -> Match Data / Upload Rules / Architecture / Platform / Runtime Rules
+  - `AGENTS.md` -> Runtime Directory Rules / Responsibility Separation
+
+### v1.2 - Export System
+
+- Roadmap: `docs/roadmap.md` -> **v1.2 - Export System**
+- Version tracking issue: `#321` - `[v1.2] Export System release tracking`
+- Acceptance checklist: not created yet
+- Release readiness checklist: not created yet
+- Release record: not created yet
+- Requirements (relevant sections):
+  - `docs/requirements/requirements.md` -> Match Data / Queue / Screenshot Rules / Architecture / Platform / Runtime Rules
   - `AGENTS.md` -> Runtime Directory Rules / Responsibility Separation
 
 ---
@@ -200,3 +211,4 @@ The version tracking issue itself is not an implementation work item.
 - Refs #250
 - Refs #318
 - Refs #320
+- Refs #321
