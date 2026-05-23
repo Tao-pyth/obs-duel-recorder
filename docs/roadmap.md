@@ -1,5 +1,16 @@
 # Roadmap
 
+## Practical Readiness Note
+
+This roadmap separates practical user readiness from historical/internal development milestones.
+
+- The project is currently on the `v0.x` practical readiness track.
+- Existing `v1.x` and `v2.x` tags are historical/internal development milestones.
+- A user-ready `v1.0` practical release requires a built OBS Plugin DLL, real OBS load smoke evidence, Dock visibility, Worker heartbeat, and basic recording control evidence.
+- The exact practical `v1.0` tag naming must be confirmed before tagging because historical/internal `v1.0.0` already exists.
+
+---
+
 ## Versioning Policy
 
 - Major:
@@ -10,6 +21,108 @@
 
 - Patch:
   bug fixes, runtime fixes, migration fixes, non-roadmap changes
+
+---
+
+# Practical Readiness Track
+
+This is the authoritative roadmap for user-facing readiness.
+
+---
+
+## v0.10 - Roadmap And Versioning Realignment
+
+### Goals
+
+Reconcile roadmap and versioning with practical OBS plugin readiness.
+
+### Planned
+
+- clarify `v0.x` practical readiness status
+- classify existing `v1.x` and `v2.x` tags as historical/internal milestones
+- define practical `v1.0` promotion gates
+- connect OBS real-load smoke evidence to the practical roadmap
+
+### Deliverables
+
+- corrected README and roadmap wording
+- release policy clarification
+- release history practical-readiness note
+
+---
+
+## v0.11 - OBS Plugin Real Load Smoke
+
+### Goals
+
+Prove that the plugin can be built and loaded in a real OBS runtime.
+
+### Planned
+
+- Release build of `obs-duel-recorder.dll`
+- real OBS Studio x64 load smoke
+- Dock visibility confirmation
+- plugin startup/shutdown log confirmation
+- Worker heartbeat and v2.3 internal API compatibility confirmation
+- manual recording start/stop smoke
+- overlay Text Source creation/reuse smoke
+
+### Deliverables
+
+- real OBS smoke evidence linked from #387
+- confirmed plugin DLL path and build command
+- redaction-checked smoke report
+
+---
+
+## v0.12 - Release Packaging Automation
+
+### Goals
+
+Create a reproducible GitHub Actions based release packaging flow.
+
+### Planned
+
+- packaging ZIP workflow
+- release asset automation
+- SHA256 checksum publication
+- release artifact layout validation
+- update.bat-compatible package contents
+
+### Deliverables
+
+- GitHub Actions generated release ZIP
+- release asset upload procedure
+- published checksum evidence
+- documented package layout
+
+---
+
+## v1.0 - First Practical OBS Plugin Release
+
+### Goals
+
+Publish the first practical user-ready release after OBS plugin smoke and packaging gates pass.
+
+### Planned
+
+- v0.11 real OBS plugin smoke evidence accepted
+- v0.12 packaging automation evidence accepted
+- user-facing install/update documentation verified
+- runtime data preservation rules verified
+- release naming/tagging decision recorded without moving historical tags
+
+### Deliverables
+
+- first practical OBS plugin release package
+- user-ready release notes
+- install/update verification evidence
+
+---
+
+# Historical Internal Milestone Archive
+
+The following milestones record internal implementation progress. They are useful development history, but they do not by themselves prove a user-ready OBS plugin release.
 
 ---
 
@@ -443,29 +556,6 @@ Improve long-term runtime stability.
 ### Deliverables
 
 - long-session runtime stability
-
----
-
-## v2.4 - Release Packaging Automation
-
-### Goals
-
-Create a reproducible GitHub Actions based release packaging flow.
-
-### Planned
-
-- packaging ZIP workflow
-- release asset automation
-- SHA256 checksum publication
-- release artifact layout validation
-- update.bat-compatible package contents
-
-### Deliverables
-
-- GitHub Actions generated release ZIP
-- release asset upload procedure
-- published checksum evidence
-- documented package layout
 
 ---
 
