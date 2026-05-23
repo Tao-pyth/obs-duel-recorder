@@ -1,52 +1,50 @@
 # YouTube セットアップ
 
-- [ユーザードキュメント（日本語）に戻る](index.md)
+-> [日本語ユーザードキュメント](index.md)
 
-このページは、YouTube へアップロードするための OAuth セットアップと、安全な運用のための注意点をまとめた「骨子（スケルトン）」です。
+YouTube upload は Worker が管理します。OAuth 情報はローカルの `user_data/` 配下に保存し、リポジトリ、GitHub Pages、release ZIP には含めません。
 
-ステータス注記: このページには、未リリースの手順や UI 名称が含まれる可能性があります。利用可否は [ロードマップ](../../roadmap.md) で確認してください。
+## 必要なファイル
 
-## 事前準備
-
-- Google アカウント
-- アップロード先の YouTube チャンネル
-- PC にインストール済みの OBS Studio
-
-## OAuth セットアップ（概要）
-
-1. アプリ（OBS Plugin / Worker）から Google OAuth でログインします。
-2. 必要な同意画面を確認し、許可します。
-3. OAuth トークンをローカルに保存します。
-
-注: 詳細な手順（Google Cloud 側の設定、同意画面、クライアントIDの作成など）は、実装とドキュメントが揃い次第このページに追記します。
-
-## アップロード設定
-
-- 公開範囲（公開 / 限定公開 / 非公開）
-- タイトル・説明・タグなどのテンプレート
-- デフォルトの動画カテゴリ
-
-注: 設定項目の具体名・保存先は v1.0（YouTube Upload MVP）の設計・実装に合わせて確定します。
-
-## Secrets / Token の安全性（重要）
-
-- OAuth トークンやクライアントシークレット等の機密情報は **git にコミットしない** でください。
-- 機密情報はローカルに保存し、共有・転載・貼り付けを避けてください。
-- リポジトリ規約として、以下のパスは常に git 管理対象外にします（`AGENTS.md` 参照）。
+既定の配置先:
 
 ```text
-config/secrets/
 user_data/config/secrets/
 ```
 
-## TODO
+必要なファイル:
 
-- [ ] Google Cloud 側の OAuth 同意画面 / 認証情報の作成手順を追記
-- [ ] Worker/Plugin からの OAuth 実行フロー（どの画面/操作で開始するか）を追記
-- [ ] トークン保存場所・バックアップ/移行方針を追記
-- [ ] よくある失敗（同意画面の設定ミス、認証情報の種類、権限不足など）を追記
+- `youtube-client-secret.json`
+- `youtube-token.json`
 
-## 次にやること
+## 状態確認
 
-- [初回セットアップ](first-setup.md)
-- [使い方](usage.md)
+```powershell
+Invoke-WebRequest http://127.0.0.1:8787/upload/status | Select-Object -ExpandProperty Content
+```
+
+確認する項目:
+
+- `client_secret_configured`
+- `token_configured`
+- `queue_counts`
+- `manual_actions`
+
+## 失敗時の分類
+
+- quota: `quota_waiting`
+- auth: `need_manual_review`
+- network: `upload_failed`
+- ambiguous: `need_manual_review`
+
+曖昧な失敗では、アップロード済みか判断できない可能性があります。二重アップロード防止のため、手動確認してから retry、discard、mark_uploaded を選択してください。
+
+## 秘密情報の扱い
+
+以下は issue、PR、ログ添付、GitHub Pages、release ZIP に含めないでください。
+
+- OAuth token
+- client secret
+- authorization code
+- bearer token
+- YouTube API response の秘密情報
