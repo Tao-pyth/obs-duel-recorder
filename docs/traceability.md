@@ -165,15 +165,31 @@ Goals:
   - `docs/requirements/requirements.md` -> Packaging Rules / Runtime Rules / Architecture / Platform
   - `AGENTS.md` -> Runtime Directory Rules / Responsibility Separation
 
+### v0.13 - Practical Distribution Readiness
+
+- Roadmap: `docs/roadmap.md` -> **v0.13 - Practical Distribution Readiness**
+- Version tracking issue: `#404` - `[v0.13] Practical Distribution Readiness release tracking`
+- Acceptance checklist: `docs/requirements/v0.13-practical-distribution-readiness-acceptance.md`
+- Release readiness checklist: `docs/release/v0.13-release-readiness.md`
+- Previous version gate: `#396` - `[v0.12] Release Packaging Automation release tracking`
+- Packaging architecture contract: `docs/architecture/packaging.md`
+- Update system architecture contract: `docs/architecture/update-system.md`
+- Plugin Worker launch contract: `docs/architecture/plugin-worker.md`
+- Release policy: `docs/release.md`
+- Requirements (relevant sections):
+  - `docs/requirements/requirements.md` -> Packaging Rules / Update Rules / Runtime Rules / Architecture / Platform
+  - `AGENTS.md` -> Runtime Directory Rules / Responsibility Separation
+
 ### v1.0 - First Usable OBS Plugin Release
 
 - Roadmap: `docs/roadmap.md` -> **v1.0 - First Usable OBS Plugin Release**
 - Version tracking issue: `#401` - `[v1.0] First Usable OBS Plugin Release tracking`
 - Release policy: `docs/release.md`
-- Previous version gate: `#396` - `[v0.12] Release Packaging Automation release tracking`
+- Previous version gate: `#404` - `[v0.13] Practical Distribution Readiness release tracking`
 - Required evidence:
   - v0.11 OBS plugin real-load smoke accepted
   - v0.12 packaging automation accepted
+  - v0.13 practical distribution readiness accepted
   - install/update verification
   - runtime data preservation verification
   - tag naming decision

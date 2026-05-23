@@ -8,7 +8,7 @@ This roadmap uses one version sequence based on user-visible usability.
 - Existing `v1.x` and `v2.x` tags are legacy non-product tags from before this rule.
 - The `v0.11` gate completed built OBS Plugin DLL, real OBS load smoke evidence, Dock visibility, Worker heartbeat, and basic recording control evidence.
 - The `v0.12` gate completed packaging workflow, release asset automation path, SHA256 checksum generation, and package layout validation.
-- A user-ready `v1.0` release still requires install/update verification, runtime data preservation verification, and a recorded tag naming decision because legacy `v1.0.0` already exists.
+- A user-ready `v1.0` release still requires Worker EXE bundled distribution, clean install verification, runtime data preservation verification, release publication, and a recorded tag naming decision because legacy `v1.0.0` already exists.
 
 ---
 
@@ -101,16 +101,44 @@ Create a reproducible GitHub Actions based release packaging flow.
 
 ---
 
+## v0.13 - Practical Distribution Readiness
+
+### Goals
+
+Make the release ZIP practical for normal Windows users without requiring them
+to set up Python, pip, or a virtual environment manually.
+
+### Planned
+
+- Worker EXE build and bundling path
+- release ZIP layout update for the bundled Worker executable
+- `update.bat` bundled-Worker-first behavior
+- Plugin Worker launch contract review for bundled Worker execution
+- clean Windows + OBS Studio x64 install smoke
+- download-to-first-run smoke covering Dock, Worker heartbeat, and basic recording
+- user-facing install, checksum, and recovery documentation
+
+### Deliverables
+
+- version tracking coordinated through #404
+- Worker EXE package artifact included in release ZIP
+- updated packaging/update documentation
+- clean install smoke evidence
+- v1.0 handoff evidence
+
+---
+
 ## v1.0 - First Usable OBS Plugin Release
 
 ### Goals
 
-Publish the first user-ready release after OBS plugin smoke and packaging gates pass.
+Publish the first user-ready release after OBS plugin smoke, packaging, and practical distribution gates pass.
 
 ### Planned
 
 - v0.11 real OBS plugin smoke evidence accepted
 - v0.12 packaging automation evidence accepted
+- v0.13 practical distribution readiness evidence accepted
 - user-facing install/update documentation verified
 - runtime data preservation rules verified
 - release naming/tagging decision recorded without moving legacy tags

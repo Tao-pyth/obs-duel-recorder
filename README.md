@@ -18,7 +18,7 @@ The project is designed around an OBS Plugin + Python Worker architecture.
 
 Important versioning note:
 - Project versions are assigned only by user-visible usability.
-- The project is still **pre-v1.0** because install/update verification and release publication are not complete yet.
+- The project is still **pre-v1.0** because Worker EXE bundled distribution, clean install verification, and release publication are not complete yet.
 - The OBS Plugin DLL build, real OBS load smoke, packaging workflow, and checksum gates are complete.
 - Existing `v1.x` and `v2.x` tags are legacy non-product tags from before this rule. They are not part of the active version sequence and are not proof of a usable OBS plugin release.
 
@@ -33,11 +33,11 @@ Latest release status:
 - Latest completed version gate: `v0.12` - Release Packaging Automation
 
 Current development target:
-- `v1.0` - First Usable OBS Plugin Release
-- Tracking issue: [#401](https://github.com/Tao-pyth/obs-duel-recorder/issues/401)
+- `v0.13` - Practical Distribution Readiness
+- Tracking issue: [#404](https://github.com/Tao-pyth/obs-duel-recorder/issues/404)
 
 Next roadmap target:
-- Install/update verification and release publication
+- `v1.0` - First Usable OBS Plugin Release after v0.13 distribution readiness is accepted
 
 ---
 
@@ -73,7 +73,8 @@ Completed foundation:
 - OBS Plugin DLL build and real OBS load smoke evidence
 
 Planned roadmap capabilities:
-- Install/update verification and release publication (`v1.0`)
+- Worker EXE bundled distribution and clean install verification (`v0.13`)
+- Release publication and final tag naming (`v1.0`)
 
 ---
 
@@ -123,9 +124,10 @@ obs-duel-recorder/
 ### Latest Release
 
 - Released user-ready version: none yet
-- Status: pre-v1.0; OBS Plugin DLL build/load smoke and packaging automation are complete, install/update verification is not complete
+- Status: pre-v1.0; OBS Plugin DLL build/load smoke and packaging automation are complete, Worker EXE bundled distribution and clean install verification are not complete
 - Latest completed version gate: [#396](https://github.com/Tao-pyth/obs-duel-recorder/issues/396)
-- Current version tracking issue: [#401](https://github.com/Tao-pyth/obs-duel-recorder/issues/401)
+- Current version tracking issue: [#404](https://github.com/Tao-pyth/obs-duel-recorder/issues/404)
+- Next release publication gate: [#401](https://github.com/Tao-pyth/obs-duel-recorder/issues/401)
 - Release record: [docs/release-history.md](docs/release-history.md)
 
 ### Completed Legacy Implementation Work
@@ -141,7 +143,8 @@ obs-duel-recorder/
 
 - `v0.11` - OBS Plugin Real Load Smoke
 - `v0.12` - Release Packaging Automation
-- `v1.0` - First Usable OBS Plugin Release (current)
+- `v0.13` - Practical Distribution Readiness (current)
+- `v1.0` - First Usable OBS Plugin Release
 
 ---
 

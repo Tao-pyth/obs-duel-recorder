@@ -120,6 +120,9 @@ The system separates responsibilities into:
 
 - Release packaging should be produced as a GitHub Actions ZIP artifact.
 - The ZIP layout must include the Plugin DLL, Worker package, `update.bat`, and minimal user/developer docs needed for install/update.
+- A user-ready release ZIP must include a Worker executable path that normal users can run without manually installing Python, pip, or a virtual environment.
+- Source-based Worker execution may remain available as a developer fallback, but user-facing install/update flows must prefer the bundled Worker executable when present.
+- `update.bat` and Plugin Worker launch behavior must prefer the bundled Worker executable for packaged releases.
 - `user_data/`, logs, databases, screenshots, videos, OAuth files, and generated runtime exports must never be included in release ZIPs.
 - Release assets should include a SHA256 checksum.
 - GitHub Actions may generate release assets automatically, but final release attachment/publishing should remain manually approved unless a later release defines a fully automated policy.

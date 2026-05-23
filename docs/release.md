@@ -36,6 +36,8 @@ evidence that:
 - Worker heartbeat and compatibility checks pass (completed by #387 / v0.11),
 - basic manual recording start/stop behavior is smoke-tested (completed by #387 / v0.11),
 - release ZIP packaging and checksum assets are reproducible (completed by #396 / v0.12),
+- the release ZIP includes a bundled Worker executable path for normal users,
+- clean install and download-to-first-run evidence is accepted,
 - packaging/update instructions are usable for a normal user.
 
 Existing `v1.x` and `v2.x` tags created before this rule are legacy non-product
@@ -127,6 +129,7 @@ Use a version-scoped readiness checklist before tagging:
 - v0.4: `docs/release/v0.4-release-readiness.md`
 - v0.11: `docs/release/v0.11-release-readiness.md`
 - v0.12: `docs/release/v0.12-release-readiness.md`
+- v0.13: `docs/release/v0.13-release-readiness.md`
 
 The v0.11 readiness checklist is a version gate, not a packaged release
 approval by itself. It was completed together with the OBS real-load smoke
@@ -135,6 +138,10 @@ evidence tracked by #387 and coordinated through #393.
 The v0.12 readiness checklist is a completed version gate for release packaging
 automation, release asset automation, SHA256 checksum publication, and v1.0
 handoff documentation.
+
+The v0.13 readiness checklist is the active pre-v1.0 gate for practical
+distribution readiness. It must prove that normal Windows users can use the
+release ZIP without manually setting up Python, pip, or a virtual environment.
 
 Do not retroactively create a `v0.1.0` tag unless explicitly approved.
 
