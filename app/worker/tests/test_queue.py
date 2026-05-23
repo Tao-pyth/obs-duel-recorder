@@ -112,6 +112,23 @@ class QueueRecoveryApiTests(unittest.TestCase):
         self.assertEqual(listed.status_code, 200)
         self.assertEqual(len(listed.json()["items"]), 1)
 
+    def test_queue_runtime_queries_use_counts_and_single_ready_item(self) -> None:
+        from odr_worker.queue import QueueStore
+
+        client, runtime_dirs = self._client()
+        first = client.post("/queue/items", json={"video_path": "first.mp4"}).json()
+        second = client.post("/queue/items", json={"video_path": "second.mp4"}).json()
+        client.post(f"/queue/items/{second['id']}/command", json={"action": "start_upload"})
+
+        store = QueueStore(runtime_dirs.db_dir / "odr.sqlite3")
+        counts = store.count_by_state()
+        ready = store.next_ready_item()
+
+        self.assertEqual(counts["ready_upload"], 1)
+        self.assertEqual(counts["uploading"], 1)
+        self.assertEqual(ready.id, first["id"])
+        self.assertEqual(ready.video_path, "first.mp4")
+
     def test_startup_recovery_moves_interrupted_upload_to_manual_review(self) -> None:
         client, runtime_dirs = self._client()
         item = client.post("/queue/items", json={"video_path": "duel.mp4"}).json()
@@ -122,6 +139,9 @@ class QueueRecoveryApiTests(unittest.TestCase):
         recovery = second_client.get("/queue/recovery")
         recovered = recovery.json()["recovered"]
 
+        self.assertEqual(recovery.json()["scanned_count"], 1)
+        self.assertEqual(recovery.json()["recovered_count"], 1)
+        self.assertGreaterEqual(recovery.json()["duration_ms"], 0)
         self.assertEqual(recovered[0]["id"], item["id"])
         self.assertEqual(recovered[0]["to"], "need_manual_review")
 
