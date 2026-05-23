@@ -26,11 +26,11 @@ Latest released version:
 - `v2.3.0` - Runtime Optimization
 
 Current development target:
-- Post-v2.3 roadmap planning
+- `v2.4` - Release Packaging Automation
 - Tracking issue: none yet
 
 Next roadmap target:
-- Later v2.x roadmap work after v2.3 is tracked in GitHub issues.
+- Later v2.x roadmap work after v2.4 is tracked in GitHub issues.
 
 ---
 
@@ -65,7 +65,7 @@ Current released foundation:
 - Runtime queue/upload optimization, DB indexes, and recovery diagnostics
 
 Planned roadmap capabilities:
-- GitHub Actions based packaging and SHA256 checksum assets (`v2.0+`)
+- GitHub Actions based packaging and SHA256 checksum assets (`v2.4`)
 
 ---
 
@@ -132,7 +132,8 @@ obs-duel-recorder/
 
 ### Planned After v2.3
 
-- Later roadmap items include packaging automation and release asset hardening.
+- `v2.4` - Release Packaging Automation
+- Later roadmap items include release asset hardening after packaging automation is verified.
 
 ---
 

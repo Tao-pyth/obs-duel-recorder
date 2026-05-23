@@ -446,6 +446,29 @@ Improve long-term runtime stability.
 
 ---
 
+## v2.4 - Release Packaging Automation
+
+### Goals
+
+Create a reproducible GitHub Actions based release packaging flow.
+
+### Planned
+
+- packaging ZIP workflow
+- release asset automation
+- SHA256 checksum publication
+- release artifact layout validation
+- update.bat-compatible package contents
+
+### Deliverables
+
+- GitHub Actions generated release ZIP
+- release asset upload procedure
+- published checksum evidence
+- documented package layout
+
+---
+
 # Future Considerations
 
 Potential future features:
