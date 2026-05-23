@@ -14,6 +14,8 @@ FIELD_LIMITS = {
     "deck_name": 120,
     "opponent_deck": 120,
     "result": 40,
+    "rank": 80,
+    "dp": 40,
     "memo": 4000,
     "started_at": 64,
     "ended_at": 64,
@@ -36,6 +38,8 @@ class MatchMetadataRecord:
     deck_name: str
     opponent_deck: str
     result: str
+    rank: str
+    dp: str
     memo: str
     started_at: str
     ended_at: str
@@ -49,6 +53,8 @@ class MatchMetadataRecord:
             "deck_name": self.deck_name,
             "opponent_deck": self.opponent_deck,
             "result": self.result,
+            "rank": self.rank,
+            "dp": self.dp,
             "memo": self.memo,
             "started_at": self.started_at,
             "ended_at": self.ended_at,
@@ -132,6 +138,8 @@ class MatchMetadataStore:
             "deck_name": record.deck_name or "Unknown Deck",
             "opponent_deck": record.opponent_deck or "Unknown Opponent",
             "result": record.result or "unknown",
+            "rank": record.rank or "unknown",
+            "dp": record.dp or "unknown",
             "started_at": record.started_at or record.created_at,
             "ended_at": record.ended_at or "unknown",
             "created_at": record.created_at,
@@ -189,6 +197,8 @@ def _record_from_row(row: sqlite3.Row) -> MatchMetadataRecord:
         deck_name=str(row["deck_name"]),
         opponent_deck=str(row["opponent_deck"]),
         result=str(row["result"]),
+        rank=str(row["rank"]),
+        dp=str(row["dp"]),
         memo=str(row["memo"]),
         started_at=str(row["started_at"]),
         ended_at=str(row["ended_at"]),
@@ -204,6 +214,8 @@ def _description(record: MatchMetadataRecord, values: dict[str, str]) -> str:
         f"Deck: {values['deck_name']}",
         f"Opponent: {values['opponent_deck']}",
         f"Result: {values['result']}",
+        f"Rank: {values['rank']}",
+        f"DP: {values['dp']}",
         f"Started: {values['started_at']}",
         f"Ended: {values['ended_at']}",
     ]

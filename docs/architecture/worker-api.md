@@ -503,3 +503,67 @@ Error behavior:
 The v1.4 update API is defined by:
 - `docs/architecture/update-system.md`
 - `docs/requirements/v1.4-update-system-acceptance.md`
+
+---
+
+## v2.0 Image Recognition Endpoints
+
+v2.0 adds recognition-assisted metadata extraction while preserving prior API compatibility.
+
+### `POST /recognition/analyze`
+
+Purpose:
+- Evaluate deterministic fixture input through the Worker-owned recognition provider boundary.
+- Return result, rank, and DP candidates with evidence and confidence.
+- Avoid mutating match metadata automatically.
+- Provide the manual correction endpoint and patch body when a `match_id` is supplied.
+
+Request fields:
+- `provider`: optional; `fixture` is the only v2.0 provider.
+- `match_id`: optional integer; validates that the target match exists.
+- `content_text`: UTF-8 fixture text containing lines such as `result: win`, `rank: Diamond I`, and `dp: 12000`, or
+- `fixture`: object containing optional `result`, `rank`, `dp`, and `confidence` values.
+
+Response fields:
+- `provider`: `fixture`.
+- `status`: `candidates_available` or `manual_review_required`.
+- `minimum_confidence`: required confidence for `metadata_patch`.
+- `candidates`: list of `{field, value, confidence, evidence}`.
+- `metadata_patch`: values safe to apply through `PUT /matches/{match_id}/metadata`.
+- `manual_correction`: correction method, endpoint, and body when `match_id` is provided.
+- `mutated`: always `false` for v2.0 analysis.
+- `candidate_records`: persisted audit records when SQLite is available.
+
+Error behavior:
+- Unsupported providers return HTTP 400 with `code=recognition_provider_unsupported`.
+- Invalid recognition payloads return HTTP 400 with `code=recognition_payload_invalid`.
+- Missing target matches return HTTP 404 with `code=match_not_found`.
+
+### `GET /recognition/candidates`
+
+Purpose:
+- List persisted recognition candidates for audit and manual review.
+
+Query:
+- `match_id`: optional integer filter.
+- `status`: optional filter: `candidate`, `confirmed`, `corrected`, or `rejected`.
+
+### `POST /recognition/candidates/{candidate_id}/command`
+
+Purpose:
+- Resolve a candidate through explicit manual action.
+- Preserve an audit trail while allowing confirmed or corrected values to update match metadata.
+
+Actions:
+- `confirm`: apply the candidate value to the linked match metadata.
+- `correct`: apply the provided `value` to the linked match metadata and store the corrected value.
+- `reject`: mark the candidate rejected without changing match metadata.
+
+Error behavior:
+- Invalid commands return HTTP 400 with `code=recognition_command_invalid`.
+- Missing candidates return HTTP 404 with `code=recognition_candidate_not_found`.
+- Already resolved candidates return HTTP 400 with `code=recognition_candidate_already_resolved`.
+
+The v2.0 image recognition API is defined by:
+- `docs/architecture/image-recognition.md`
+- `docs/requirements/v2.0-ocr-integration-acceptance.md`

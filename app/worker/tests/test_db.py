@@ -27,7 +27,14 @@ class SqliteFoundationTests(unittest.TestCase):
             self.assertGreaterEqual(db_info.schema_version, 5)
             self.assertEqual(
                 db_info.applied_migrations,
-                ("0001_init", "0002_tables", "0003_queue_recovery", "0004_screenshots", "0005_match_metadata"),
+                (
+                    "0001_init",
+                    "0002_tables",
+                    "0003_queue_recovery",
+                    "0004_screenshots",
+                    "0005_match_metadata",
+                    "0006_image_recognition_metadata",
+                ),
             )
 
             conn = sqlite3.connect(db_info.db_path)
@@ -39,6 +46,7 @@ class SqliteFoundationTests(unittest.TestCase):
                 self.assertIn("matches", tables)
                 self.assertIn("upload_queue", tables)
                 self.assertIn("screenshots", tables)
+                self.assertIn("recognition_candidates", tables)
 
                 conn.execute("INSERT INTO matches DEFAULT VALUES;")
                 match_id = conn.execute("SELECT id FROM matches ORDER BY id DESC LIMIT 1;").fetchone()[0]
@@ -57,12 +65,14 @@ class SqliteFoundationTests(unittest.TestCase):
                 self.assertEqual(row[2], "{}")
 
                 metadata = conn.execute(
-                    "SELECT opponent_deck, memo, title_template FROM matches WHERE id = ?;",
+                    "SELECT opponent_deck, memo, title_template, rank, dp FROM matches WHERE id = ?;",
                     (match_id,),
                 ).fetchone()
                 self.assertEqual(metadata[0], "")
                 self.assertEqual(metadata[1], "")
                 self.assertEqual(metadata[2], "")
+                self.assertEqual(metadata[3], "")
+                self.assertEqual(metadata[4], "")
             finally:
                 conn.close()
 
