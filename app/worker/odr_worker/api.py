@@ -27,6 +27,7 @@ from .recording import (
 from .runtime_dirs import RuntimeDirs
 from .screenshots import ScreenshotError, ScreenshotStore
 from .setup_wizard import SetupWizardError, SetupWizardStore
+from .statistics import StatisticsError, StatisticsStore, filters_from_query
 from .update_system import UpdateError, UpdateManager
 from .upload import UploadCommandError, UploadStore, build_upload_settings
 from .version import __version__
@@ -44,6 +45,39 @@ def _error_response(*, status_code: int, code: str, message: str, details: objec
         status_code=status_code,
         content=_error_payload(code=code, message=message, details=details),
     )
+
+
+def _statistics_group_response(
+    app: FastAPI,
+    group: str,
+    *,
+    from_date: str | None,
+    to_date: str | None,
+    deck: str | None,
+    opponent_deck: str | None,
+    result: str | None,
+    limit: int,
+):
+    if app.state.statistics_store is None:
+        return _error_response(status_code=503, code="statistics_unavailable", message="Statistics are unavailable")
+    try:
+        filters = filters_from_query(
+            from_date=from_date,
+            to_date=to_date,
+            deck=deck,
+            opponent_deck=opponent_deck,
+            result=result,
+        )
+        if group == "decks":
+            return app.state.statistics_store.decks(filters, limit=limit)
+        return app.state.statistics_store.opponents(filters, limit=limit)
+    except StatisticsError as exc:
+        return _error_response(
+            status_code=400,
+            code=exc.code,
+            message="Statistics request is invalid",
+            details=exc.details,
+        )
 
 
 def create_app(*, runtime_dirs: RuntimeDirs, loaded_config: LoadedWorkerConfig, db_info: DbInfo | None = None) -> FastAPI:
@@ -87,6 +121,7 @@ def create_app(*, runtime_dirs: RuntimeDirs, loaded_config: LoadedWorkerConfig, 
     app.state.upload_store = None
     app.state.metadata_store = None
     app.state.recognition_store = None
+    app.state.statistics_store = None
     app.state.export_store = None
     app.state.setup_store = SetupWizardStore(runtime_dirs=runtime_dirs)
     app.state.update_manager = UpdateManager(runtime_dirs=runtime_dirs)
@@ -104,6 +139,7 @@ def create_app(*, runtime_dirs: RuntimeDirs, loaded_config: LoadedWorkerConfig, 
         )
         app.state.metadata_store = MatchMetadataStore(db_info.db_path)
         app.state.recognition_store = RecognitionCandidateStore(db_info.db_path)
+        app.state.statistics_store = StatisticsStore(db_info.db_path)
         app.state.upload_store = UploadStore(
             queue_store=app.state.queue_store,
             videos_dir=runtime_dirs.videos_dir,
@@ -626,6 +662,101 @@ def create_app(*, runtime_dirs: RuntimeDirs, loaded_config: LoadedWorkerConfig, 
                 status_code=400,
                 code="recognition_command_invalid",
                 message="Recognition command must be JSON object",
+            )
+
+    @app.get("/statistics/summary")
+    def get_statistics_summary(
+        from_date: str | None = None,
+        to_date: str | None = None,
+        deck: str | None = None,
+        opponent_deck: str | None = None,
+        result: str | None = None,
+    ):
+        if app.state.statistics_store is None:
+            return _error_response(status_code=503, code="statistics_unavailable", message="Statistics are unavailable")
+        filters = filters_from_query(
+            from_date=from_date,
+            to_date=to_date,
+            deck=deck,
+            opponent_deck=opponent_deck,
+            result=result,
+        )
+        return app.state.statistics_store.summary(filters)
+
+    @app.get("/statistics/decks")
+    def get_statistics_decks(
+        from_date: str | None = None,
+        to_date: str | None = None,
+        deck: str | None = None,
+        opponent_deck: str | None = None,
+        result: str | None = None,
+        limit: int = 50,
+    ):
+        return _statistics_group_response(
+            app,
+            "decks",
+            from_date=from_date,
+            to_date=to_date,
+            deck=deck,
+            opponent_deck=opponent_deck,
+            result=result,
+            limit=limit,
+        )
+
+    @app.get("/statistics/opponents")
+    def get_statistics_opponents(
+        from_date: str | None = None,
+        to_date: str | None = None,
+        deck: str | None = None,
+        opponent_deck: str | None = None,
+        result: str | None = None,
+        limit: int = 50,
+    ):
+        return _statistics_group_response(
+            app,
+            "opponents",
+            from_date=from_date,
+            to_date=to_date,
+            deck=deck,
+            opponent_deck=opponent_deck,
+            result=result,
+            limit=limit,
+        )
+
+    @app.get("/statistics/uploads")
+    def get_statistics_uploads(from_date: str | None = None, to_date: str | None = None):
+        if app.state.statistics_store is None:
+            return _error_response(status_code=503, code="statistics_unavailable", message="Statistics are unavailable")
+        filters = filters_from_query(from_date=from_date, to_date=to_date)
+        return app.state.statistics_store.uploads(filters)
+
+    @app.get("/statistics/memos")
+    def get_statistics_memos(
+        query: str,
+        from_date: str | None = None,
+        to_date: str | None = None,
+        deck: str | None = None,
+        opponent_deck: str | None = None,
+        result: str | None = None,
+        limit: int = 50,
+    ):
+        if app.state.statistics_store is None:
+            return _error_response(status_code=503, code="statistics_unavailable", message="Statistics are unavailable")
+        try:
+            filters = filters_from_query(
+                from_date=from_date,
+                to_date=to_date,
+                deck=deck,
+                opponent_deck=opponent_deck,
+                result=result,
+            )
+            return app.state.statistics_store.memos(filters, query=query, limit=limit)
+        except StatisticsError as exc:
+            return _error_response(
+                status_code=400,
+                code=exc.code,
+                message="Statistics request is invalid",
+                details=exc.details,
             )
 
     @app.get("/screenshots")

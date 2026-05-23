@@ -35,6 +35,20 @@ Dock UI から次の操作ができる想定です。
 - [キュー / 履歴](queue.md)
 - [トラブルシューティング](troubleshooting.md)
 
+## Statistics
+
+v2.1 では Worker の読み取り専用統計 API を追加します。
+
+- `/statistics/summary`
+- `/statistics/decks`
+- `/statistics/opponents`
+- `/statistics/uploads`
+- `/statistics/memos?query=...`
+
+統計はローカル SQLite の match metadata と upload queue state から計算されます。match record は書き換えず、OAuth secrets や local media path は返しません。
+
+Result は `win` / `loss` / `draw` / `unknown` に分類します。Win rate は known results のみを分母にします。Memo search は local case-insensitive partial search です。
+
 ## TODO
 
 - TODO: 具体的な画面/操作フロー（将来のUI確定後）

@@ -34,6 +34,7 @@ class SqliteFoundationTests(unittest.TestCase):
                     "0004_screenshots",
                     "0005_match_metadata",
                     "0006_image_recognition_metadata",
+                    "0007_statistics_indexes",
                 ),
             )
 
