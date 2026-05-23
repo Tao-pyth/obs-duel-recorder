@@ -115,7 +115,7 @@ obs-duel-recorder/
 - Version: `v2.0.0`
 - Scope: OCR Integration
 - Status: released
-- Tag target: to be finalized after release commit merge
+- Tag target: `ad16666fcc4d12a0c8adc0d4a71f123e2b346a0a`
 - Tracking issue: [#324](https://github.com/Tao-pyth/obs-duel-recorder/issues/324)
 - Release record: [docs/release-history.md](docs/release-history.md)
 
