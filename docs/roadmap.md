@@ -69,6 +69,7 @@ Prove that the plugin can be built and loaded in a real OBS runtime.
 
 ### Deliverables
 
+- version tracking coordinated through #393
 - real OBS smoke evidence linked from #387
 - confirmed plugin DLL path and build command
 - redaction-checked smoke report
