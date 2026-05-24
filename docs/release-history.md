@@ -12,8 +12,8 @@ usability.
 - #387 records completed OBS Plugin DLL build and real OBS load smoke evidence for the v0.11 version gate.
 - #396 records completed release packaging automation for the v0.12 version gate.
 - #404 records completed Worker EXE bundled distribution and local download-to-first-run smoke for the v0.13 version gate.
-- The project remains pre-v1.0 until release publication and tag-naming gates are completed.
-- The planned active v1.0 publication tag is `v1.0.1` because `v1.0.0` already exists as a legacy non-product tag.
+- The project reached its first user-ready OBS Plugin release at `v1.0.1`.
+- The active v1.0 publication tag is `v1.0.1` because `v1.0.0` already exists as a legacy non-product tag.
 - Existing `v1.x` and `v2.x` tags created before this policy are legacy non-product tags. They are preserved for auditability, but they are not part of the active product version sequence.
 - Older `Status: released` entries before this policy note mean "legacy implementation record completed" unless a record explicitly says it is a user-ready product release.
 
@@ -220,19 +220,24 @@ The version tracking issue may contain the working release summary, but finalize
 - Next version tracking issue: #401
 - Status: version gate complete; v1.0 publication is still pending
 
-### Active v1.0.1 - First Usable OBS Plugin Release
+### v1.0.1 - First Usable OBS Plugin Release
 
 - Version tracking issue: #401
 - Acceptance checklist: `docs/requirements/v1.0-first-usable-release-acceptance.md`
 - Release readiness checklist: `docs/release/v1.0-first-usable-release-readiness.md`
 - Release summary: `docs/release/v1.0-first-usable-release-summary.md`
-- Tag: `v1.0.1` planned
-- Tag target: pending final v1.0 release merge
-- Release finalized at: pending final publication
+- Tag: `v1.0.1`
+- Tag target: `14cbfe256a20e6263537d28b4d6df0156e2452a3`
+- Tag finalized at: `2026-05-24T04:03:31+09:00`
+- Release finalized at: `2026-05-24T04:06:42+09:00`
+- GitHub Release: `https://github.com/Tao-pyth/obs-duel-recorder/releases/tag/v1.0.1`
 - Prior gates: #393 / v0.11, #396 / v0.12, #404 / v0.13
-- Required final evidence: release ZIP, `SHA256SUMS.txt`, package validation, install/update verification, `user_data/` preservation verification, GitHub Release asset publication
+- Assets: `obs-duel-recorder-v1.0.1.zip`, `SHA256SUMS.txt`
+- ZIP SHA256: `28CF71B3C68736412B95495CDACEFDA7546EB1A11B4077426D7C9F79159CBBA3`
+- Verification: final package validation passed; packaged `update.bat validate --from-version v0.13.0` passed; packaged `update.bat apply --from-version v0.13.0` passed twice; `user_data/` sentinel files were preserved; SQLite backup was created under `user_data/data/db/backups/`
 - Legacy conflict: existing `v1.0.0` is preserved and must not be moved, deleted, or overwritten
-- Status: publication gate pending; not yet a user-ready released version
+- Next version tracking issue: pending maintainer planning
+- Status: released user-ready OBS Plugin package
 
 ### Legacy tag v1.0.0 - YouTube Upload MVP
 
