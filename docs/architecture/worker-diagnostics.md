@@ -134,6 +134,11 @@ This evidence is expected to be present across:
 - Worker logs under `user_data/logs/` (primary for internal exceptions),
 - v0.4 smoke notes (summary-level confirmation; see `docs/architecture/v0.4-smoke.md`).
 
+For the v1.1 Dock UI, the status-first diagnostic rows should expose selectable
+text for the current state, endpoint, `user_data_dir`, expected Worker path,
+ownership, latest detail/error, and recommended action. Manual Start/Stop
+controls remain enabled only when the diagnostic state is `running`.
+
 ---
 
 ## Notes

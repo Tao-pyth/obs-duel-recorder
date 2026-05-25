@@ -135,6 +135,7 @@ void PluginUiController::register_ui()
 	state_value_ = add_row(form, "State");
 	endpoint_value_ = add_row(form, "Endpoint");
 	user_data_value_ = add_row(form, "User data");
+	worker_path_value_ = add_row(form, "Worker path");
 	logs_value_ = add_row(form, "Logs");
 	ownership_value_ = add_row(form, "Ownership");
 	detail_value_ = add_row(form, "Detail");
@@ -192,10 +193,14 @@ void PluginUiController::refresh()
 	const std::string endpoint = to_utf8(snapshot.endpoint.host) + ":" + std::to_string(snapshot.endpoint.port);
 	const std::string logs = snapshot.user_data_dir.empty() ? std::string{} :
 				 to_utf8(snapshot.user_data_dir) + "/logs/";
+	const std::wstring worker_path = snapshot.expected_worker_path.empty() ?
+						 snapshot.worker_command :
+						 snapshot.expected_worker_path;
 
 	state_value_->setText(QString::fromUtf8(state_name(snapshot.state)));
 	endpoint_value_->setText(qstr_utf8(endpoint));
 	user_data_value_->setText(snapshot.user_data_dir.empty() ? QString::fromUtf8("not configured") : qstr_wide(snapshot.user_data_dir));
+	worker_path_value_->setText(worker_path.empty() ? QString::fromUtf8("not available") : qstr_wide(worker_path));
 	logs_value_->setText(logs.empty() ? QString::fromUtf8("not available") : qstr_utf8(logs));
 	ownership_value_->setText(QString::fromUtf8(ownership_name(snapshot.ownership)));
 	detail_value_->setText(qstr_utf8(snapshot.error.empty() ? snapshot.last_probe_summary : snapshot.error));

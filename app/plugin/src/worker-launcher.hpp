@@ -47,6 +47,9 @@ struct WorkerStatusSnapshot {
 	WorkerEndpoint endpoint;
 	OverlayStatePayload overlay_state;
 	std::wstring user_data_dir;
+	std::wstring worker_command;
+	std::wstring expected_worker_path;
+	std::wstring wrong_nested_worker_path;
 	std::string last_probe_summary;
 	std::string error;
 	std::string overlay_error;

@@ -7,9 +7,10 @@
 ## Worker が起動しない
 
 1. OBS Duel Recorder Dock の状態を確認します。
-2. `user_data_dir` が正しいか確認します。
-3. OBS の `obs-plugins\worker\odr-worker\odr-worker.exe` が存在するか確認します。
-4. Worker の `/health` を確認します。
+2. Dock の `Endpoint`、`User data`、`Worker path`、`Detail` 行をコピーして確認します。
+3. `user_data_dir` が正しいか確認します。
+4. OBS の `obs-plugins\worker\odr-worker\odr-worker.exe` が存在するか確認します。
+5. Worker の `/health` を確認します。
 
 ```powershell
 Invoke-WebRequest http://127.0.0.1:8787/health | Select-Object -ExpandProperty Content

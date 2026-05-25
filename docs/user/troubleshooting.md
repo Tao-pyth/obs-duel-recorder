@@ -38,8 +38,9 @@ Restart OBS after correcting the layout.
 ## Worker Does Not Start
 
 1. Confirm that the `OBS Duel Recorder` Dock is visible.
-2. Run `verify-install.bat` against the OBS root.
-3. Confirm that the Worker bundle contains `odr-worker.exe` and bundled dependency files, not only the executable.
-4. Check the OBS log for Worker launch errors.
+2. Copy the Dock `Endpoint`, `User data`, `Worker path`, and `Detail` rows for diagnosis.
+3. Run `verify-install.bat` against the OBS root.
+4. Confirm that the Worker bundle contains `odr-worker.exe` and bundled dependency files, not only the executable.
+5. Check the OBS log for Worker launch errors.
 
 If the verifier reports a missing package source path, run it from the extracted release ZIP root.

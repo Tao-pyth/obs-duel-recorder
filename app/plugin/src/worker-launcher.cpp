@@ -433,6 +433,9 @@ void WorkerProcessManager::update_status(WorkerDiagnosticState state, const Work
 	status_.ownership = ownership;
 	status_.endpoint = config.endpoint;
 	status_.user_data_dir = config.user_data_dir;
+	status_.worker_command = config.command;
+	status_.expected_worker_path = config.expected_worker_path;
+	status_.wrong_nested_worker_path = config.wrong_nested_worker_path;
 	status_.error = error;
 	status_.consecutive_failures = consecutive_failures;
 	if (probe) {

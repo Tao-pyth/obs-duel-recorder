@@ -32,6 +32,7 @@ private:
 	QLabel *state_value_ = nullptr;
 	QLabel *endpoint_value_ = nullptr;
 	QLabel *user_data_value_ = nullptr;
+	QLabel *worker_path_value_ = nullptr;
 	QLabel *logs_value_ = nullptr;
 	QLabel *ownership_value_ = nullptr;
 	QLabel *detail_value_ = nullptr;
