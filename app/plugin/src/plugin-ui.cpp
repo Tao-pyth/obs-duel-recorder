@@ -126,6 +126,21 @@ std::string recording_summary(const WorkerStatusSnapshot &snapshot)
 	return out.str();
 }
 
+std::string recording_output_summary(const WorkerStatusSnapshot &snapshot)
+{
+	if (!snapshot.recording_output_path.empty()) {
+		std::string summary = "path=" + snapshot.recording_output_path;
+		if (!snapshot.recording_output_evidence.empty()) {
+			summary += " evidence=" + snapshot.recording_output_evidence;
+		}
+		return summary;
+	}
+	if (!snapshot.recording_output_evidence.empty()) {
+		return snapshot.recording_output_evidence;
+	}
+	return "not available";
+}
+
 QLabel *add_row(QFormLayout *layout, const char *name)
 {
 	auto *value = new QLabel;
@@ -165,6 +180,7 @@ void PluginUiController::register_ui()
 	form->setFieldGrowthPolicy(QFormLayout::AllNonFixedFieldsGrow);
 	state_value_ = add_row(form, "State");
 	recording_value_ = add_row(form, "Recording");
+	output_value_ = add_row(form, "Output");
 	endpoint_value_ = add_row(form, "Endpoint");
 	user_data_value_ = add_row(form, "User data");
 	worker_path_value_ = add_row(form, "Worker path");
@@ -231,6 +247,7 @@ void PluginUiController::refresh()
 
 	state_value_->setText(QString::fromUtf8(state_name(snapshot.state)));
 	recording_value_->setText(qstr_utf8(recording_summary(snapshot)));
+	output_value_->setText(qstr_utf8(recording_output_summary(snapshot)));
 	endpoint_value_->setText(qstr_utf8(endpoint));
 	user_data_value_->setText(snapshot.user_data_dir.empty() ? QString::fromUtf8("not configured") : qstr_wide(snapshot.user_data_dir));
 	worker_path_value_->setText(worker_path.empty() ? QString::fromUtf8("not available") : qstr_wide(worker_path));

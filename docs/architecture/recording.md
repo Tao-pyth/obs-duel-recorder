@@ -76,6 +76,18 @@ The Worker exposes the authoritative state through localhost API routes:
 
 The Plugin should use this boundary for manual controls and OBS event synchronization. The v0.5 overlay `recording_state` display may mirror this state, but overlay display remains a consumer and not the owner.
 
+For v1.1 recording output evidence, the Plugin should use OBS Frontend API
+recording path helpers instead of parsing OBS logs:
+
+- `obs_frontend_get_current_record_output_path()` when recording starts, as
+  best available in-progress output evidence.
+- `obs_frontend_get_last_recording()` when OBS reports recording fully stopped,
+  as the completed output path.
+
+If OBS does not return a completed path, the Dock should keep the best prior
+output evidence and explicitly tell the user to check OBS Output settings and
+OBS logs.
+
 ## Recovery Rules
 
 On startup, in-progress states are treated as interrupted:

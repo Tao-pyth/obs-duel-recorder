@@ -6,6 +6,7 @@
 #include "plugin-ui.hpp"
 #include "worker-launcher.hpp"
 
+#include <string>
 #include <utility>
 
 OBS_DECLARE_MODULE()
@@ -38,6 +39,42 @@ void log_recording_command_result(const char *action, const odr::plugin::Recordi
 	     kLogPrefix, action, static_cast<int>(result.status), result.http_status, result.error.c_str());
 }
 
+std::string take_frontend_path(char *path)
+{
+	std::string result;
+	if (path && path[0] != '\0') {
+		result = path;
+	}
+	if (path) {
+		bfree(path);
+	}
+	return result;
+}
+
+void record_current_output_path()
+{
+	const std::string path = take_frontend_path(obs_frontend_get_current_record_output_path());
+	if (path.empty()) {
+		return;
+	}
+	worker_manager.record_recording_output_path(path, "OBS current recording output path");
+	blog(LOG_INFO, "%s recording output_path_current=%s", kLogPrefix, path.c_str());
+}
+
+void record_last_output_path()
+{
+	const std::string path = take_frontend_path(obs_frontend_get_last_recording());
+	if (!path.empty()) {
+		worker_manager.record_recording_output_path(path, "OBS last recording path");
+		blog(LOG_INFO, "%s recording output_path_last=%s", kLogPrefix, path.c_str());
+		return;
+	}
+
+	worker_manager.record_recording_output_evidence(
+		"OBS did not return a last recording path; check OBS Output settings and OBS logs.");
+	blog(LOG_WARNING, "%s recording output_path_last unavailable", kLogPrefix);
+}
+
 void frontend_event(enum obs_frontend_event event, void *)
 {
 	switch (event) {
@@ -51,11 +88,13 @@ void frontend_event(enum obs_frontend_event event, void *)
 		worker_manager.stop();
 		break;
 	case OBS_FRONTEND_EVENT_RECORDING_STARTED:
+		record_current_output_path();
 		log_recording_command_result(
 			"confirm_started",
 			worker_manager.send_recording_command("confirm_started", "manual"));
 		break;
 	case OBS_FRONTEND_EVENT_RECORDING_STOPPED:
+		record_last_output_path();
 		log_recording_command_result(
 			"confirm_stopped",
 			worker_manager.send_recording_command("confirm_stopped", "manual"));

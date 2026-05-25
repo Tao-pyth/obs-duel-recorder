@@ -528,6 +528,19 @@ WorkerStatusSnapshot WorkerProcessManager::status_snapshot() const
 	return status_;
 }
 
+void WorkerProcessManager::record_recording_output_path(std::string output_path, std::string evidence)
+{
+	std::lock_guard<std::mutex> lock(mutex_);
+	status_.recording_output_path = std::move(output_path);
+	status_.recording_output_evidence = std::move(evidence);
+}
+
+void WorkerProcessManager::record_recording_output_evidence(std::string evidence)
+{
+	std::lock_guard<std::mutex> lock(mutex_);
+	status_.recording_output_evidence = std::move(evidence);
+}
+
 RecordingCommandResult WorkerProcessManager::send_recording_command(const std::string &action, const std::string &source)
 {
 	WorkerEndpoint endpoint;

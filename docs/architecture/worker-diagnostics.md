@@ -142,6 +142,10 @@ controls remain enabled only when the diagnostic state is `running`. The Dock
 should also show the last manual recording command result, including recording
 state, `session_id`, source, last action, reason, and update time when
 available; failed commands should leave a compact diagnostic reason visible.
+The same Dock surface should include the last OBS recording output path or,
+when OBS does not return one, explicit fallback evidence from the current output
+path captured at recording start plus a note to check OBS Output settings and
+OBS logs.
 
 ---
 

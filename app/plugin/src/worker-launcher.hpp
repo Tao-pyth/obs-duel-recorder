@@ -54,6 +54,8 @@ struct WorkerStatusSnapshot {
 	std::string last_probe_summary;
 	std::string error;
 	std::string recording_error;
+	std::string recording_output_path;
+	std::string recording_output_evidence;
 	std::string overlay_error;
 	std::string api_version;
 	std::string version;
@@ -75,6 +77,8 @@ public:
 	void start_async(WorkerLaunchConfig config);
 	void stop();
 	WorkerStatusSnapshot status_snapshot() const;
+	void record_recording_output_path(std::string output_path, std::string evidence);
+	void record_recording_output_evidence(std::string evidence);
 	RecordingCommandResult send_recording_command(const std::string &action, const std::string &source);
 
 private:

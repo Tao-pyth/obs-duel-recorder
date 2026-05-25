@@ -31,6 +31,7 @@ private:
 	QTimer *refresh_timer_ = nullptr;
 	QLabel *state_value_ = nullptr;
 	QLabel *recording_value_ = nullptr;
+	QLabel *output_value_ = nullptr;
 	QLabel *endpoint_value_ = nullptr;
 	QLabel *user_data_value_ = nullptr;
 	QLabel *worker_path_value_ = nullptr;
