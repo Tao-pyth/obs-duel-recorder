@@ -6,6 +6,7 @@
 #include <obs-frontend-api.h>
 #include <obs-module.h>
 
+#include <QByteArray>
 #include <QDialog>
 #include <QDialogButtonBox>
 #include <QFormLayout>
@@ -15,6 +16,7 @@
 #include <QLineEdit>
 #include <QMessageBox>
 #include <QPushButton>
+#include <QTextEdit>
 #include <QSpinBox>
 #include <QTimer>
 #include <QVBoxLayout>
@@ -37,6 +39,12 @@ QString qstr_utf8(const std::string &value)
 QString qstr_wide(const std::wstring &value)
 {
 	return QString::fromStdWString(value);
+}
+
+std::string utf8_string(const QString &value)
+{
+	const QByteArray bytes = value.toUtf8();
+	return std::string(bytes.constData(), static_cast<size_t>(bytes.size()));
 }
 
 const char *state_name(WorkerDiagnosticState state)
@@ -287,6 +295,10 @@ void PluginUiController::register_ui()
 	upload_controls->addWidget(discard_upload_button_);
 	upload_controls->addWidget(mark_uploaded_button_);
 	root->addLayout(upload_controls);
+
+	edit_metadata_button_ = new QPushButton("Edit Metadata");
+	QObject::connect(edit_metadata_button_, &QPushButton::clicked, [this]() { request_edit_metadata(); });
+	root->addWidget(edit_metadata_button_);
 	root->addStretch(1);
 
 	if (!obs_frontend_add_dock_by_id(kDockId, "OBS Duel Recorder", dock_widget_)) {
@@ -360,6 +372,9 @@ void PluginUiController::refresh()
 	if (mark_uploaded_button_) {
 		mark_uploaded_button_->setEnabled(queue_action_available &&
 						  snapshot.queue_action_item.item.state == "need_manual_review");
+	}
+	if (edit_metadata_button_) {
+		edit_metadata_button_->setEnabled(worker_running);
 	}
 
 	handle_automatic_recording(snapshot);
@@ -551,6 +566,70 @@ void PluginUiController::request_upload_mark_uploaded()
 		"mark_uploaded",
 		video_id.trimmed().toStdString());
 	log_queue_command_result("mark_uploaded", result);
+	refresh();
+}
+
+void PluginUiController::request_edit_metadata()
+{
+	const MatchFetchResult fetched = worker_manager_.fetch_latest_match();
+	if (!fetched.reachable()) {
+		const QString message = fetched.status == MatchFetchStatus::not_found ?
+						QString::fromUtf8("No completed match metadata is available yet.") :
+						qstr_utf8(fetched.error.empty() ? "Worker metadata API is unavailable." : fetched.error);
+		QMessageBox::warning(dock_widget_, "Edit metadata", message);
+		return;
+	}
+
+	QDialog dialog(dock_widget_);
+	dialog.setWindowTitle(QString::fromUtf8("Edit Match Metadata"));
+
+	auto *layout = new QVBoxLayout(&dialog);
+	auto *form = new QFormLayout;
+	auto *deck_input = new QLineEdit(qstr_utf8(fetched.match.deck_name));
+	auto *opponent_input = new QLineEdit(qstr_utf8(fetched.match.opponent_deck));
+	auto *result_input = new QLineEdit(qstr_utf8(fetched.match.result));
+	auto *rank_input = new QLineEdit(qstr_utf8(fetched.match.rank));
+	auto *dp_input = new QLineEdit(qstr_utf8(fetched.match.dp));
+	auto *memo_input = new QTextEdit(qstr_utf8(fetched.match.memo));
+	memo_input->setAcceptRichText(false);
+
+	form->addRow("Deck", deck_input);
+	form->addRow("Opponent deck", opponent_input);
+	form->addRow("Result", result_input);
+	form->addRow("Rank", rank_input);
+	form->addRow("DP", dp_input);
+	form->addRow("Memo", memo_input);
+	layout->addLayout(form);
+
+	auto *buttons = new QDialogButtonBox(QDialogButtonBox::Save | QDialogButtonBox::Cancel);
+	QObject::connect(buttons, &QDialogButtonBox::accepted, &dialog, &QDialog::accept);
+	QObject::connect(buttons, &QDialogButtonBox::rejected, &dialog, &QDialog::reject);
+	layout->addWidget(buttons);
+
+	if (dialog.exec() != QDialog::Accepted) {
+		return;
+	}
+
+	MatchMetadataPayload updated = fetched.match;
+	updated.deck_name = utf8_string(deck_input->text().trimmed());
+	updated.opponent_deck = utf8_string(opponent_input->text().trimmed());
+	updated.result = utf8_string(result_input->text().trimmed());
+	updated.rank = utf8_string(rank_input->text().trimmed());
+	updated.dp = utf8_string(dp_input->text().trimmed());
+	updated.memo = utf8_string(memo_input->toPlainText().trimmed());
+
+	const MetadataUpdateResult result = worker_manager_.update_match_metadata(updated);
+	if (!result.accepted()) {
+		QMessageBox::warning(
+			dock_widget_,
+			"Edit metadata",
+			qstr_utf8(result.error.empty() ? "Metadata was rejected by the Worker." : result.error));
+		blog(LOG_WARNING, "%s metadata update failed status=%d http=%lu id=%d error=%s",
+		     kLogPrefix, static_cast<int>(result.status), result.http_status, updated.id, result.error.c_str());
+		return;
+	}
+
+	blog(LOG_INFO, "%s metadata update accepted id=%d", kLogPrefix, result.match.id);
 	refresh();
 }
 

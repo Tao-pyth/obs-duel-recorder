@@ -442,12 +442,23 @@ Request fields:
 Purpose:
 - Return one match metadata record.
 
+### `GET /matches/latest`
+
+Purpose:
+- Return the newest match metadata record for the OBS Dock editor.
+- Return HTTP 404 with `code=match_not_found` when no match rows exist.
+- Avoid mutating metadata or recognition candidates.
+
 ### `PUT /matches/{match_id}/metadata`
 
 Purpose:
 - Update editable match metadata fields.
 - Reject invalid values without changing the existing record.
 - Allow post-upload edits for future generated metadata without rewriting an already uploaded YouTube record automatically.
+
+Editable fields include `deck_name`, `opponent_deck`, `result`, `rank`, `dp`,
+and `memo`. Recognition candidates are suggestions only and must not overwrite
+these fields automatically.
 
 ### `GET /matches/{match_id}/upload-metadata`
 

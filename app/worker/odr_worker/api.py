@@ -582,6 +582,24 @@ def create_app(*, runtime_dirs: RuntimeDirs, loaded_config: LoadedWorkerConfig, 
         records = app.state.metadata_store.list_matches(query=query)
         return {"items": [record.as_payload() for record in records]}
 
+    @app.get("/matches/latest")
+    def get_latest_match():
+        if app.state.metadata_store is None:
+            return _error_response(
+                status_code=503,
+                code="metadata_unavailable",
+                message="Match metadata storage is unavailable",
+            )
+        try:
+            return app.state.metadata_store.latest_match().as_payload()
+        except MetadataError as exc:
+            return _error_response(
+                status_code=404 if exc.code == "match_not_found" else 400,
+                code=exc.code,
+                message="Match metadata request is invalid",
+                details=exc.details,
+            )
+
     @app.post("/matches")
     async def post_match(request: Request):
         if app.state.metadata_store is None:

@@ -164,6 +164,16 @@ class MatchMetadataStore:
         finally:
             conn.close()
 
+    def latest_match(self) -> MatchMetadataRecord:
+        conn = self._connect()
+        try:
+            row = conn.execute("SELECT * FROM matches ORDER BY id DESC LIMIT 1;").fetchone()
+            if row is None:
+                raise MetadataError("match_not_found", {"latest": "none"})
+            return _record_from_row(row)
+        finally:
+            conn.close()
+
     def update_match(self, match_id: int, payload: dict[str, Any]) -> MatchMetadataRecord:
         values = _metadata_values(payload, partial=True)
         if not values:

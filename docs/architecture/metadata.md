@@ -6,6 +6,7 @@ The metadata boundary supports:
 
 - opponent deck input
 - match memo input
+- rank and DP input
 - result and timestamp editing
 - deterministic title generation
 - deterministic description and notes generation
@@ -22,6 +23,8 @@ Editable fields:
 - `deck_name`
 - `opponent_deck`
 - `result`
+- `rank`
+- `dp`
 - `memo`
 - `started_at`
 - `ended_at`
@@ -44,6 +47,8 @@ Length limits:
 - `deck_name`: 120
 - `opponent_deck`: 120
 - `result`: 40
+- `rank`: 80
+- `dp`: 40
 - `memo`: 4000
 - `started_at`: 64
 - `ended_at`: 64
@@ -61,6 +66,11 @@ Length limits:
 - `result`
 
 Search is intended as a lightweight local lookup boundary. Statistics and advanced search remain later work.
+
+`GET /matches/latest` returns the newest match row for the OBS Dock metadata
+editor. The Dock uses this only as a convenience entry point; all saved edits
+still go through `PUT /matches/{match_id}/metadata`, so Worker validation
+remains the single write boundary.
 
 ---
 
@@ -116,4 +126,17 @@ queue creation pending instead of inventing a media path.
 Repeated `confirm_stopped` calls for the same recording session return the same
 `match_id` and queue item, and must not create duplicate match or queue rows.
 Interrupted or failed recordings do not create completed match rows.
+
+---
+
+## Dock Editing
+
+The OBS Dock provides an `Edit Metadata` action for the latest completed match
+record. Users can edit deck name, opponent deck, result, rank, DP, and memo
+without calling localhost APIs manually.
+
+The Dock displays Worker validation failures and leaves the existing metadata
+record unchanged when a value is rejected. OCR and image-recognition candidates
+remain suggestions; they are never applied by opening or saving the Dock editor
+unless the user explicitly submits metadata through the Worker update API.
 

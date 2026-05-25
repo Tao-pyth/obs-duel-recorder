@@ -113,6 +113,18 @@ void populate_queue_item(QueueActionItemPayload &item, const std::string &body)
 	item.last_error_code = extract_json_string(body, "last_error_code");
 }
 
+void populate_match_metadata(MatchMetadataPayload &match, const std::string &body)
+{
+	const std::string id = extract_json_number(body, "id");
+	match.id = id.empty() ? 0 : std::stoi(id);
+	match.deck_name = extract_json_string(body, "deck_name");
+	match.opponent_deck = extract_json_string(body, "opponent_deck");
+	match.result = extract_json_string(body, "result");
+	match.rank = extract_json_string(body, "rank");
+	match.dp = extract_json_string(body, "dp");
+	match.memo = extract_json_string(body, "memo");
+}
+
 #ifdef _WIN32
 
 struct HttpResponse {
@@ -133,6 +145,11 @@ HttpResponse http_get(const WorkerEndpoint &endpoint, const wchar_t *path)
 HttpResponse http_post_json(const WorkerEndpoint &endpoint, const wchar_t *path, const std::string &body)
 {
 	return http_request(endpoint, L"POST", path, body);
+}
+
+HttpResponse http_put_json(const WorkerEndpoint &endpoint, const wchar_t *path, const std::string &body)
+{
+	return http_request(endpoint, L"PUT", path, body);
 }
 
 HttpResponse http_request(const WorkerEndpoint &endpoint, const wchar_t *method, const wchar_t *path,
@@ -580,6 +597,107 @@ QueueCommandResult LocalhostApiClient::send_queue_command(const WorkerEndpoint &
 #else
 	result.status = QueueCommandStatus::unavailable;
 	result.error = "Queue commands are only implemented on Windows";
+	return result;
+#endif
+}
+
+MatchFetchResult LocalhostApiClient::fetch_latest_match(const WorkerEndpoint &endpoint) const
+{
+	MatchFetchResult result;
+
+#ifdef _WIN32
+	const HttpResponse response = http_get(endpoint, L"/matches/latest");
+	result.http_status = response.status;
+	result.body = response.body;
+
+	if (!response.ok) {
+		result.status = MatchFetchStatus::unavailable;
+		result.error = response.error;
+		return result;
+	}
+	if (response.status == 404) {
+		result.status = MatchFetchStatus::not_found;
+		result.error = extract_json_string(response.body, "message");
+		if (result.error.empty()) {
+			result.error = "No match metadata is available";
+		}
+		return result;
+	}
+	if (response.status != 200) {
+		result.status = MatchFetchStatus::invalid_response;
+		result.error = "GET /matches/latest returned non-200 status";
+		return result;
+	}
+
+	populate_match_metadata(result.match, response.body);
+	if (result.match.id <= 0) {
+		result.status = MatchFetchStatus::invalid_response;
+		result.error = "GET /matches/latest response is missing match id";
+		return result;
+	}
+
+	result.status = MatchFetchStatus::reachable;
+	return result;
+#else
+	result.status = MatchFetchStatus::unavailable;
+	result.error = "Match metadata fetching is only implemented on Windows";
+	return result;
+#endif
+}
+
+MetadataUpdateResult LocalhostApiClient::update_match_metadata(const WorkerEndpoint &endpoint,
+							      const MatchMetadataPayload &metadata) const
+{
+	MetadataUpdateResult result;
+
+#ifdef _WIN32
+	if (metadata.id <= 0) {
+		result.status = MetadataUpdateStatus::rejected;
+		result.error = "Match id is required";
+		return result;
+	}
+
+	std::string body = "{\"deck_name\":\"" + json_escape(metadata.deck_name) +
+			   "\",\"opponent_deck\":\"" + json_escape(metadata.opponent_deck) +
+			   "\",\"result\":\"" + json_escape(metadata.result) +
+			   "\",\"rank\":\"" + json_escape(metadata.rank) +
+			   "\",\"dp\":\"" + json_escape(metadata.dp) +
+			   "\",\"memo\":\"" + json_escape(metadata.memo) + "\"}";
+	const std::wstring path = L"/matches/" + std::to_wstring(metadata.id) + L"/metadata";
+	const HttpResponse response = http_put_json(endpoint, path.c_str(), body);
+	result.http_status = response.status;
+	result.body = response.body;
+
+	if (!response.ok) {
+		result.status = MetadataUpdateStatus::unavailable;
+		result.error = response.error;
+		return result;
+	}
+	if (response.status == 400 || response.status == 404) {
+		result.status = MetadataUpdateStatus::rejected;
+		result.error = extract_json_string(response.body, "message");
+		if (result.error.empty()) {
+			result.error = "PUT /matches/{id}/metadata rejected metadata";
+		}
+		return result;
+	}
+	if (response.status != 200) {
+		result.status = MetadataUpdateStatus::invalid_response;
+		result.error = "PUT /matches/{id}/metadata returned non-200 status";
+		return result;
+	}
+
+	populate_match_metadata(result.match, response.body);
+	if (result.match.id <= 0) {
+		result.status = MetadataUpdateStatus::invalid_response;
+		result.error = "PUT /matches/{id}/metadata response is missing match id";
+		return result;
+	}
+	result.status = MetadataUpdateStatus::accepted;
+	return result;
+#else
+	result.status = MetadataUpdateStatus::unavailable;
+	result.error = "Match metadata updates are only implemented on Windows";
 	return result;
 #endif
 }

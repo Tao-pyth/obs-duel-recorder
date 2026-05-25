@@ -22,6 +22,7 @@ start or stop recording.
 The Dock UI supports:
 - manual start
 - manual stop
+- metadata editing for the latest completed recording
 - upload retry
 - upload discard
 - mark uploaded after confirming the YouTube video id
@@ -37,6 +38,10 @@ YouTube.
 ## Match Memo
 
 Users can:
+- edit deck name, opponent deck, result, rank, DP, and memo from the Dock
 - input opponent deck
 - add notes
 - upload with metadata
+
+Invalid metadata values are rejected by the Worker without replacing the saved
+match record.

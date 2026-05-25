@@ -87,6 +87,8 @@ public:
 						      const std::string &video_path = {});
 	QueueCommandResult send_queue_command(int item_id, const std::string &action,
 					      const std::string &youtube_video_id = {});
+	MatchFetchResult fetch_latest_match();
+	MetadataUpdateResult update_match_metadata(const MatchMetadataPayload &metadata);
 
 private:
 	void start(WorkerLaunchConfig config);

@@ -109,6 +109,20 @@ enum class QueueCommandStatus {
 	invalid_response,
 };
 
+enum class MatchFetchStatus {
+	reachable,
+	unavailable,
+	not_found,
+	invalid_response,
+};
+
+enum class MetadataUpdateStatus {
+	accepted,
+	unavailable,
+	rejected,
+	invalid_response,
+};
+
 struct RecordingStatePayload {
 	std::string state;
 	std::string session_id;
@@ -178,6 +192,42 @@ struct QueueCommandResult {
 	}
 };
 
+struct MatchMetadataPayload {
+	int id = 0;
+	std::string deck_name;
+	std::string opponent_deck;
+	std::string result;
+	std::string rank;
+	std::string dp;
+	std::string memo;
+};
+
+struct MatchFetchResult {
+	MatchFetchStatus status = MatchFetchStatus::unavailable;
+	unsigned long http_status = 0;
+	MatchMetadataPayload match;
+	std::string error;
+	std::string body;
+
+	bool reachable() const
+	{
+		return status == MatchFetchStatus::reachable;
+	}
+};
+
+struct MetadataUpdateResult {
+	MetadataUpdateStatus status = MetadataUpdateStatus::unavailable;
+	unsigned long http_status = 0;
+	MatchMetadataPayload match;
+	std::string error;
+	std::string body;
+
+	bool accepted() const
+	{
+		return status == MetadataUpdateStatus::accepted;
+	}
+};
+
 class LocalhostApiClient {
 public:
 	explicit LocalhostApiClient(std::string expected_api_version, std::string expected_worker_version);
@@ -192,6 +242,9 @@ public:
 						      const std::string &video_path = {}) const;
 	QueueCommandResult send_queue_command(const WorkerEndpoint &endpoint, int item_id, const std::string &action,
 					      const std::string &youtube_video_id = {}) const;
+	MatchFetchResult fetch_latest_match(const WorkerEndpoint &endpoint) const;
+	MetadataUpdateResult update_match_metadata(const WorkerEndpoint &endpoint,
+						   const MatchMetadataPayload &metadata) const;
 
 private:
 	std::string expected_api_version_;

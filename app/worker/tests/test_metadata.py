@@ -129,6 +129,25 @@ class MatchMetadataApiTests(unittest.TestCase):
         self.assertEqual(fetched.json()["opponent_deck"], "Runick")
         self.assertEqual(fetched.json()["memo"], "Keep this.")
 
+    def test_latest_match_returns_most_recent_for_ui(self) -> None:
+        client, _ = self._client()
+        client.post("/matches", json={"deck_name": "First"})
+        second = client.post("/matches", json={"deck_name": "Second"}).json()
+
+        latest = client.get("/matches/latest")
+
+        self.assertEqual(latest.status_code, 200)
+        self.assertEqual(latest.json()["id"], second["id"])
+        self.assertEqual(latest.json()["deck_name"], "Second")
+
+    def test_latest_match_reports_missing_metadata_for_ui(self) -> None:
+        client, _ = self._client()
+
+        latest = client.get("/matches/latest")
+
+        self.assertEqual(latest.status_code, 404)
+        self.assertEqual(latest.json()["code"], "match_not_found")
+
     def test_migration_preserves_v1_upload_records(self) -> None:
         from odr_worker.db import init_db
         from odr_worker.runtime_dirs import ensure_runtime_dirs

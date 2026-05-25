@@ -704,6 +704,38 @@ QueueCommandResult WorkerProcessManager::send_queue_command(int item_id, const s
 	return result;
 }
 
+MatchFetchResult WorkerProcessManager::fetch_latest_match()
+{
+	WorkerEndpoint endpoint;
+	{
+		std::lock_guard<std::mutex> lock(mutex_);
+		endpoint = status_.endpoint;
+		if (status_.state != WorkerDiagnosticState::running) {
+			MatchFetchResult result;
+			result.status = MatchFetchStatus::unavailable;
+			result.error = "Worker is not running";
+			return result;
+		}
+	}
+	return api_client_.fetch_latest_match(endpoint);
+}
+
+MetadataUpdateResult WorkerProcessManager::update_match_metadata(const MatchMetadataPayload &metadata)
+{
+	WorkerEndpoint endpoint;
+	{
+		std::lock_guard<std::mutex> lock(mutex_);
+		endpoint = status_.endpoint;
+		if (status_.state != WorkerDiagnosticState::running) {
+			MetadataUpdateResult result;
+			result.status = MetadataUpdateStatus::unavailable;
+			result.error = "Worker is not running";
+			return result;
+		}
+	}
+	return api_client_.update_match_metadata(endpoint, metadata);
+}
+
 void WorkerProcessManager::stop()
 {
 	stop_requested_ = true;
