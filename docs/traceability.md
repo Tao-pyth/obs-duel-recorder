@@ -7,122 +7,12 @@ Goals:
 - Keep `docs/roadmap.md` as the canonical feature plan.
 - Keep `docs/requirements/requirements.md` as stable, cross-version requirements.
 - Use acceptance checklists to define "done" for a specific roadmap minor version.
-- Use version tracking issues to coordinate child issues, PRs, release readiness, and next-version handoff.
+- Use version tracking issues to coordinate active child issues, related PRs, readiness, release records, and next-version handoff.
 - Preserve completed release point information in release history docs.
 
 ---
 
-## v0.x
-
-### v0.1 - Repository Foundation
-
-- Roadmap: `docs/roadmap.md` -> **v0.1 - Repository Foundation**
-- Acceptance checklist: `docs/requirements/v0.1-acceptance.md`
-- Requirements (relevant sections):
-  - `docs/requirements/requirements.md` -> Architecture / Platform / Runtime Rules
-
-### v0.2 - Worker Core API
-
-- Roadmap: `docs/roadmap.md` -> **v0.2 - Worker Core API**
-- Version tracking issue: `#72` - `[v0.2] Worker Core API release tracking`
-- Milestone: `v0.2`
-- Acceptance checklist: `docs/requirements/v0.2-worker-core-api-acceptance.md`
-- Release readiness checklist: `docs/release/v0.2-release-readiness.md`
-- Release record: `docs/release-history.md`; use `docs/release/v0.2-release-summary.md` if a detailed release summary is needed.
-- Requirements (relevant sections):
-  - `docs/requirements/requirements.md` -> Architecture / Platform / Runtime Rules
-  - `AGENTS.md` -> Logging Rules / Runtime Directory Rules / Responsibility Separation
-
-### v0.3 - SQLite Foundation
-
-- Roadmap: `docs/roadmap.md` -> **v0.3 - SQLite Foundation**
-- Version tracking issue: `#88` - `[v0.3] SQLite Foundation release tracking`
-- Acceptance checklist: `docs/requirements/v0.3-sqlite-foundation-acceptance.md`
-- Release readiness checklist: `docs/release/v0.3-release-readiness.md`
-- Release record: `docs/release-history.md`; detailed summary: `docs/release/v0.3-release-summary.md`
-- Requirements (relevant sections):
-  - `docs/requirements/requirements.md` -> Architecture / Platform / Runtime Rules
-  - `AGENTS.md` -> Runtime Directory Rules / Responsibility Separation
-
-### v0.4 - OBS Plugin Skeleton
-
-- Roadmap: `docs/roadmap.md` -> **v0.4 - OBS Plugin Skeleton**
-- Version tracking issue: `#110` - `[v0.4] OBS Plugin Skeleton release tracking`
-- Acceptance checklist: `docs/requirements/v0.4-obs-plugin-skeleton-acceptance.md`
-- Release readiness checklist: `docs/release/v0.4-release-readiness.md`
-- Release record: `docs/release-history.md`; detailed summary: `docs/release/v0.4-release-summary.md`
-- Plugin scaffold/build notes: `app/plugin/README.md`
-- Smoke evidence gate: `#285`
-- Requirements (relevant sections):
-  - `docs/requirements/requirements.md` -> Architecture / Platform / Runtime Rules
-  - `AGENTS.md` -> Runtime Directory Rules / Responsibility Separation
-
-### v0.5 - Overlay Integration
-
-- Roadmap: `docs/roadmap.md` -> **v0.5 - Overlay Integration**
-- Version tracking issue: `#288` - `[v0.5] Overlay Integration release tracking`
-- Acceptance checklist: `docs/requirements/v0.5-overlay-integration-acceptance.md`
-- Release readiness checklist: `docs/release/v0.5-release-readiness.md`
-- Overlay architecture contract: `docs/architecture/overlay.md`
-- Smoke procedure: `docs/architecture/v0.5-overlay-smoke.md`
-- Smoke evidence gate: `#296`
-- Requirements (relevant sections):
-  - `docs/requirements/requirements.md` -> Overlay Rules / Architecture / Platform / Runtime Rules
-  - `AGENTS.md` -> Runtime Directory Rules / Responsibility Separation
-
-### v0.6 - Recording State Management
-
-- Roadmap: `docs/roadmap.md` -> **v0.6 - Recording State Management**
-- Version tracking issue: `#247` - `[v0.6] Recording State Management release tracking`
-- Acceptance checklist: `docs/requirements/v0.6-recording-state-management-acceptance.md`
-- Release readiness checklist: `docs/release/v0.6-release-readiness.md`
-- Recording architecture contract: `docs/architecture/recording.md`
-- Smoke procedure: `docs/architecture/v0.6-recording-state-smoke.md`
-- Smoke evidence gate: `#310`
-- Release record: `docs/release-history.md`; detailed summary: `docs/release/v0.6-release-summary.md`
-- Requirements (relevant sections):
-  - `docs/requirements/requirements.md` -> Architecture / Platform / Runtime Rules
-  - `AGENTS.md` -> Runtime Directory Rules / Responsibility Separation
-
-### v0.7 - Queue Recovery System
-
-- Roadmap: `docs/roadmap.md` -> **v0.7 - Queue Recovery System**
-- Version tracking issue: `#248` - `[v0.7] Queue Recovery System release tracking`
-- Acceptance checklist: `docs/requirements/v0.7-queue-recovery-system-acceptance.md`
-- Release readiness checklist: `docs/release/v0.7-release-readiness.md`
-- Queue architecture contract: `docs/architecture/queue.md`
-- Worker API contract: `docs/architecture/worker-api.md`
-- Release record: `docs/release-history.md`; detailed summary: `docs/release/v0.7-release-summary.md`
-- Requirements (relevant sections):
-  - `docs/requirements/requirements.md` -> Match Data / Queue / Architecture / Platform / Runtime Rules
-  - `AGENTS.md` -> Runtime Directory Rules / Responsibility Separation
-
-### v0.8 - Template Matching MVP
-
-- Roadmap: `docs/roadmap.md` -> **v0.8 - Template Matching MVP**
-- Version tracking issue: `#249` - `[v0.8] Template Matching MVP release tracking`
-- Acceptance checklist: `docs/requirements/v0.8-template-matching-mvp-acceptance.md`
-- Release readiness checklist: `docs/release/v0.8-release-readiness.md`
-- Detection architecture contract: `docs/architecture/detection.md`
-- Worker API contract: `docs/architecture/worker-api.md`
-- Release record: `docs/release-history.md`; detailed summary: `docs/release/v0.8-release-summary.md`
-- Requirements (relevant sections):
-  - `docs/requirements/requirements.md` -> Detection Rules / Architecture / Platform / Runtime Rules
-  - `AGENTS.md` -> Runtime Directory Rules / Responsibility Separation
-
-### v0.9 - Screenshot System
-
-- Roadmap: `docs/roadmap.md` -> **v0.9 - Screenshot System**
-- Version tracking issue: `#250` - `[v0.9] Screenshot System release tracking`
-- Acceptance checklist: `docs/requirements/v0.9-screenshot-system-acceptance.md`
-- Release readiness checklist: `docs/release/v0.9-release-readiness.md`
-- Screenshot architecture contract: `docs/architecture/screenshots.md`
-- Database contract: `docs/architecture/db.md`
-- Worker API contract: `docs/architecture/worker-api.md`
-- Release record: `docs/release-history.md`; detailed summary: `docs/release/v0.9-release-summary.md`
-- Requirements (relevant sections):
-  - `docs/requirements/requirements.md` -> Match Data / Queue / Architecture / Platform / Runtime Rules
-  - `AGENTS.md` -> Runtime Directory Rules / Responsibility Separation
+## Active Product Version Sequence
 
 ### v0.10 - Roadmap And Versioning Realignment
 
@@ -130,10 +20,6 @@ Goals:
 - Version tracking issue: `#389`
 - Release policy: `docs/release.md` -> Usability-Based Versioning Policy
 - Release record: `docs/release-history.md` -> Usability Versioning Note
-- README status: `README.md` -> Current Development / Current Status
-- Requirements (relevant sections):
-  - `docs/requirements/requirements.md` -> Architecture / Platform / Runtime Rules
-  - `AGENTS.md` -> Responsibility Separation
 
 ### v0.11 - OBS Plugin Real Load Smoke
 
@@ -144,11 +30,6 @@ Goals:
 - Release readiness checklist: `docs/release/v0.11-release-readiness.md`
 - Release record: `docs/release-history.md`; detailed summary: `docs/release/v0.11-release-summary.md`
 - Smoke procedure: `docs/architecture/v0.11-obs-plugin-smoke.md`
-- Plugin scaffold/build notes: `app/plugin/README.md`
-- Worker API contract: `docs/architecture/worker-api.md`
-- Requirements (relevant sections):
-  - `docs/requirements/requirements.md` -> Architecture / Platform / Runtime Rules
-  - `AGENTS.md` -> Logging Rules / Runtime Directory Rules / Responsibility Separation
 
 ### v0.12 - Release Packaging Automation
 
@@ -160,10 +41,6 @@ Goals:
 - Packaging architecture contract: `docs/architecture/packaging.md`
 - Packaging scripts: `scripts/build_release_package.ps1`, `scripts/validate_release_package.ps1`
 - GitHub Actions workflow: `.github/workflows/release-package.yml`
-- Release policy: `docs/release.md`
-- Requirements (relevant sections):
-  - `docs/requirements/requirements.md` -> Packaging Rules / Runtime Rules / Architecture / Platform
-  - `AGENTS.md` -> Runtime Directory Rules / Responsibility Separation
 
 ### v0.13 - Practical Distribution Readiness
 
@@ -172,14 +49,9 @@ Goals:
 - Acceptance checklist: `docs/requirements/v0.13-practical-distribution-readiness-acceptance.md`
 - Release readiness checklist: `docs/release/v0.13-release-readiness.md`
 - Download-to-first-run smoke: `docs/release/v0.13-download-to-first-run-smoke.md`
-- Previous version gate: `#396` - `[v0.12] Release Packaging Automation release tracking`
 - Packaging architecture contract: `docs/architecture/packaging.md`
 - Update system architecture contract: `docs/architecture/update-system.md`
 - Plugin Worker launch contract: `docs/architecture/plugin-worker.md`
-- Release policy: `docs/release.md`
-- Requirements (relevant sections):
-  - `docs/requirements/requirements.md` -> Packaging Rules / Update Rules / Runtime Rules / Architecture / Platform
-  - `AGENTS.md` -> Runtime Directory Rules / Responsibility Separation
 
 ### v1.0 - First Usable OBS Plugin Release
 
@@ -193,143 +65,65 @@ Goals:
 - Previous version gate: `#404` - `[v0.13] Practical Distribution Readiness release tracking`
 - Active publication tag: `v1.0.1`
 - Legacy conflicting tag: `v1.0.0` - preserved; not part of the active usability-based sequence
-- Required evidence:
-  - v0.11 OBS plugin real-load smoke accepted
-  - v0.12 packaging automation accepted
-  - v0.13 practical distribution readiness accepted
-  - tag naming decision
-  - public release asset publication
-  - ZIP / SHA256 verification
-  - install/update verification
-  - `user_data/` preservation verification
 - Release URL: `https://github.com/Tao-pyth/obs-duel-recorder/releases/tag/v1.0.1`
 
-### Legacy record: v1.0 - YouTube Upload MVP
+### v1.1 - First Trial Usability Hardening
 
-- Roadmap: `docs/roadmap.md` -> **Legacy record: v1.0 - YouTube Upload MVP**
-- Version tracking issue: `#318` - `[v1.0] YouTube Upload MVP release tracking`
-- Acceptance checklist: `docs/requirements/v1.0-youtube-upload-mvp-acceptance.md`
-- Release readiness checklist: `docs/release/v1.0-release-readiness.md`
-- Upload architecture contract: `docs/architecture/upload.md`
-- Worker API contract: `docs/architecture/worker-api.md`
-- Release record: `docs/release-history.md`; detailed summary: `docs/release/v1.0-release-summary.md`
+- Roadmap: `docs/roadmap.md` -> **v1.1 - First Trial Usability Hardening**
+- Version tracking issue: `#415` - `[v1.1] First Trial Usability Hardening release tracking`
+- Acceptance checklist: `docs/requirements/v1.1-first-trial-usability-hardening-acceptance.md`
+- Release readiness checklist: `docs/release/v1.1-first-trial-usability-hardening-readiness.md`
+- Release policy: `docs/release.md`
+- Previous released user-ready version: `v1.0.1`
+- Target version: `v1.1.0`
+- Legacy conflicting tag: `v1.1.0` - preserved; final publication tag decision required before release
+- Required child issues:
+  - Installation guidance and safety: `#416`, `#417`
+  - Worker launch diagnostics: `#418`, `#419`, `#420`
+  - Recording result visibility: `#421`, `#422`
+  - First-run setup: `#423`, `#424`
+  - Recording handoff: `#425`, `#426`, `#427`
+  - Automatic recording: `#428`, `#429`, `#430`
+  - YouTube upload: `#431`, `#432`, `#433`
+  - Metadata UI: `#434`, `#435`
+  - Distribution: `#436`, `#437`
+  - Documentation/release records: `#438`
 - Requirements (relevant sections):
-  - `docs/requirements/requirements.md` -> Upload Rules / Queue States / Architecture / Platform / Runtime Rules
-  - `AGENTS.md` -> Runtime Directory Rules / Responsibility Separation
-
-### Legacy record: v1.1 - Match Metadata
-
-- Roadmap: `docs/roadmap.md` -> **Legacy record: v1.1 - Match Metadata**
-- Version tracking issue: `#320` - `[v1.1] Match Metadata release tracking`
-- Acceptance checklist: `docs/requirements/v1.1-match-metadata-acceptance.md`
-- Release readiness checklist: `docs/release/v1.1-release-readiness.md`
-- Metadata architecture contract: `docs/architecture/metadata.md`
-- Database contract: `docs/architecture/db.md`
-- Worker API contract: `docs/architecture/worker-api.md`
-- Release record: `docs/release-history.md`; detailed summary: `docs/release/v1.1-release-summary.md`
-- Requirements (relevant sections):
-  - `docs/requirements/requirements.md` -> Match Data / Upload Rules / Architecture / Platform / Runtime Rules
-  - `AGENTS.md` -> Runtime Directory Rules / Responsibility Separation
-
-### Legacy record: v1.2 - Export System
-
-- Roadmap: `docs/roadmap.md` -> **Legacy record: v1.2 - Export System**
-- Version tracking issue: `#321` - `[v1.2] Export System release tracking`
-- Acceptance checklist: `docs/requirements/v1.2-export-system-acceptance.md`
-- Release readiness checklist: `docs/release/v1.2-release-readiness.md`
-- Export architecture contract: `docs/architecture/export.md`
-- Worker API contract: `docs/architecture/worker-api.md`
-- Release record: `docs/release-history.md`; detailed summary: `docs/release/v1.2-release-summary.md`
-- Requirements (relevant sections):
-  - `docs/requirements/requirements.md` -> Export Rules / Match Data / Queue / Screenshot Rules / Architecture / Platform / Runtime Rules
-  - `AGENTS.md` -> Runtime Directory Rules / Responsibility Separation
-
-### Legacy record: v1.3 - Setup Wizard
-
-- Roadmap: `docs/roadmap.md` -> **Legacy record: v1.3 - Setup Wizard**
-- Version tracking issue: `#322` - `[v1.3] Setup Wizard release tracking`
-- Acceptance checklist: `docs/requirements/v1.3-setup-wizard-acceptance.md`
-- Release readiness checklist: `docs/release/v1.3-release-readiness.md`
-- Setup wizard architecture contract: `docs/architecture/setup-wizard.md`
-- Worker API contract: `docs/architecture/worker-api.md`
-- Release record: `docs/release-history.md`; detailed summary: `docs/release/v1.3-release-summary.md`
-- Requirements (relevant sections):
-  - `docs/requirements/requirements.md` -> Setup Rules / Architecture / Platform / Runtime Rules
-  - `AGENTS.md` -> Runtime Directory Rules / Responsibility Separation
-
-### Legacy record: v1.4 - Update System
-
-- Roadmap: `docs/roadmap.md` -> **Legacy record: v1.4 - Update System**
-- Version tracking issue: `#323` - `[v1.4] Update System release tracking`
-- Acceptance checklist: `docs/requirements/v1.4-update-system-acceptance.md`
-- Release readiness checklist: `docs/release/v1.4-release-readiness.md`
-- Update system architecture contract: `docs/architecture/update-system.md`
-- Worker API contract: `docs/architecture/worker-api.md`
-- Release record: `docs/release-history.md`; detailed summary: `docs/release/v1.4-release-summary.md`
-- Requirements (relevant sections):
-  - `docs/requirements/requirements.md` -> Update Rules / Runtime Rules / Architecture / Platform
+  - `docs/requirements/requirements.md` -> Upload Rules / Match Data / Setup Rules / Packaging Rules / Detection Rules / Runtime Rules
   - `AGENTS.md` -> Runtime Directory Rules / Responsibility Separation
 
 ---
 
-## Legacy v2 Records
+## Legacy Implementation Records
 
-### Legacy record: v2.0 - OCR Integration
+The following records preserve earlier implementation planning. They are legacy non-product records unless explicitly listed above in the Active Product Version Sequence.
 
-- Roadmap: `docs/roadmap.md` -> **Legacy record: v2.0 - OCR Integration**
-- Version tracking issue: `#324` - `[v2.0] OCR Integration release tracking`
-- Acceptance checklist: `docs/requirements/v2.0-ocr-integration-acceptance.md`
-- Release readiness checklist: `docs/release/v2.0-release-readiness.md`
-- Image recognition architecture contract: `docs/architecture/image-recognition.md`
-- Packaging architecture contract: `docs/architecture/packaging.md`
-- Upload provider architecture contract: `docs/architecture/upload-provider.md`
-- Worker API contract: `docs/architecture/worker-api.md`
-- Release record: `docs/release/v2.0-release-summary.md`
-- Scope note: packaging and upload-provider documents record v2.x preparation contracts; v2.0 implementation remains image-recognition-first unless child issues explicitly expand scope.
-- Requirements (relevant sections):
-  - `docs/requirements/requirements.md` -> Image Recognition Rules / Upload Rules / Packaging Rules / Detection Rules / Match Data / Runtime Rules
-  - `AGENTS.md` -> Runtime Directory Rules / Responsibility Separation
+### v0.x Legacy Foundation Records
 
-### Legacy record: v2.1 - Statistics System
+- v0.1 Repository Foundation: `docs/requirements/v0.1-acceptance.md`
+- v0.2 Worker Core API: `#72`, `docs/requirements/v0.2-worker-core-api-acceptance.md`, `docs/release/v0.2-release-readiness.md`
+- v0.3 SQLite Foundation: `#88`, `docs/requirements/v0.3-sqlite-foundation-acceptance.md`, `docs/release/v0.3-release-readiness.md`
+- v0.4 OBS Plugin Skeleton: `#110`, `docs/requirements/v0.4-obs-plugin-skeleton-acceptance.md`, `docs/release/v0.4-release-readiness.md`
+- v0.5 Overlay Integration: `#288`, `docs/requirements/v0.5-overlay-integration-acceptance.md`, `docs/release/v0.5-release-readiness.md`
+- v0.6 Recording State Management: `#247`, `docs/requirements/v0.6-recording-state-management-acceptance.md`, `docs/release/v0.6-release-readiness.md`
+- v0.7 Queue Recovery System: `#248`, `docs/requirements/v0.7-queue-recovery-system-acceptance.md`, `docs/release/v0.7-release-readiness.md`
+- v0.8 Template Matching MVP: `#249`, `docs/requirements/v0.8-template-matching-mvp-acceptance.md`, `docs/release/v0.8-release-readiness.md`
+- v0.9 Screenshot System: `#250`, `docs/requirements/v0.9-screenshot-system-acceptance.md`, `docs/release/v0.9-release-readiness.md`
 
-- Roadmap: `docs/roadmap.md` -> **Legacy record: v2.1 - Statistics System**
-- Version tracking issue: `#325` - `[v2.1] Statistics System release tracking`
-- Acceptance checklist: `docs/requirements/v2.1-statistics-system-acceptance.md`
-- Release readiness checklist: `docs/release/v2.1-release-readiness.md`
-- Statistics architecture contract: `docs/architecture/statistics.md`
-- Worker API contract: `docs/architecture/worker-api.md`
-- Release record: `docs/release/v2.1-release-summary.md`
-- Requirements (relevant sections):
-  - `docs/requirements/requirements.md` -> Statistics Rules / Match Data / Upload Rules / Runtime Rules / Architecture / Platform
-  - `AGENTS.md` -> Runtime Directory Rules / Responsibility Separation
+### Legacy v1 Records
 
-### Legacy record: v2.2 - GitHub Pages Documentation
+- Legacy record: v1.0 YouTube Upload MVP: `#318`, `docs/requirements/v1.0-youtube-upload-mvp-acceptance.md`, `docs/release/v1.0-release-readiness.md`, `docs/release/v1.0-release-summary.md`
+- Legacy record: v1.1 Match Metadata: `#320`, `docs/requirements/v1.1-match-metadata-acceptance.md`, `docs/release/v1.1-release-readiness.md`, `docs/release/v1.1-release-summary.md`
+- Legacy record: v1.2 Export System: `#321`, `docs/requirements/v1.2-export-system-acceptance.md`, `docs/release/v1.2-release-readiness.md`, `docs/release/v1.2-release-summary.md`
+- Legacy record: v1.3 Setup Wizard: `#322`, `docs/requirements/v1.3-setup-wizard-acceptance.md`, `docs/release/v1.3-release-readiness.md`, `docs/release/v1.3-release-summary.md`
+- Legacy record: v1.4 Update System: `#323`, `docs/requirements/v1.4-update-system-acceptance.md`, `docs/release/v1.4-release-readiness.md`, `docs/release/v1.4-release-summary.md`
 
-- Roadmap: `docs/roadmap.md` -> **Legacy record: v2.2 - GitHub Pages Documentation**
-- Version tracking issue: `#326` - `[v2.2] GitHub Pages Documentation release tracking`
-- Acceptance checklist: `docs/requirements/v2.2-github-pages-documentation-acceptance.md`
-- Release readiness checklist: `docs/release/v2.2-release-readiness.md`
-- Documentation validation policy: `docs/validation.md`
-- Packaging architecture contract: `docs/architecture/packaging.md`
-- Release record: `docs/release/v2.2-release-summary.md`
-- Requirements (relevant sections):
-  - `docs/requirements/requirements.md` -> Packaging Rules / Runtime Rules / Architecture / Platform
-  - `docs/README.md` -> Documentation Rules / Validation
-  - `AGENTS.md` -> Runtime Directory Rules / Responsibility Separation
+### Legacy v2 Records
 
-### Legacy record: v2.3 - Runtime Optimization
-
-- Roadmap: `docs/roadmap.md` -> **Legacy record: v2.3 - Runtime Optimization**
-- Version tracking issue: `#327` - `[v2.3] Runtime Optimization release tracking`
-- Acceptance checklist: `docs/requirements/v2.3-runtime-optimization-acceptance.md`
-- Release readiness checklist: `docs/release/v2.3-release-readiness.md`
-- Runtime optimization architecture contract: `docs/architecture/runtime-optimization.md`
-- Plugin architecture contract: `docs/architecture/plugin-worker.md`
-- Worker API contract: `docs/architecture/worker-api.md`
-- Release record: `docs/release/v2.3-release-summary.md`
-- Requirements (relevant sections):
-  - `docs/requirements/requirements.md` -> Update Rules / Runtime Rules / Upload Rules / Queue States / Architecture / Platform
-  - `AGENTS.md` -> Runtime Directory Rules / Responsibility Separation
+- Legacy record: v2.0 OCR Integration: `#324`, `docs/requirements/v2.0-ocr-integration-acceptance.md`, `docs/release/v2.0-release-readiness.md`, `docs/release/v2.0-release-summary.md`
+- Legacy record: v2.1 Statistics System: `#325`, `docs/requirements/v2.1-statistics-system-acceptance.md`, `docs/release/v2.1-release-readiness.md`, `docs/release/v2.1-release-summary.md`
+- Legacy record: v2.2 GitHub Pages Documentation: `#326`, `docs/requirements/v2.2-github-pages-documentation-acceptance.md`, `docs/release/v2.2-release-readiness.md`, `docs/release/v2.2-release-summary.md`
+- Legacy record: v2.3 Runtime Optimization: `#327`, `docs/requirements/v2.3-runtime-optimization-acceptance.md`, `docs/release/v2.3-release-readiness.md`, `docs/release/v2.3-release-summary.md`
 
 ---
 
@@ -345,11 +139,11 @@ Goals:
 
 ### When to update `docs/requirements/requirements.md`
 
-Update requirements when the rule is expected to remain true across versions (e.g., responsibility separation, runtime-data persistence, "no assets distributed", logging location rules).
+Update requirements when the rule is expected to remain true across versions, such as responsibility separation, runtime-data persistence, no assets distributed, and logging location rules.
 
 ### When to add or update an acceptance checklist
 
-Add (or extend) an acceptance checklist when you need version-scoped "definition of done" criteria to guide implementation and review for a specific roadmap minor version (e.g., v0.2 Worker Core API).
+Add or extend an acceptance checklist when version-scoped definition-of-done criteria are needed to guide implementation and review for a roadmap minor version.
 
 ### When to create a child issue
 
@@ -370,14 +164,12 @@ The version tracking issue itself is not an implementation work item.
 - Refs #72
 - Refs #88
 - Refs #110
-- Refs #288
-- Refs #291
-- Refs #296
 - Refs #247
 - Refs #248
-- Refs #310
 - Refs #249
 - Refs #250
+- Refs #288
+- Refs #310
 - Refs #318
 - Refs #320
 - Refs #321
@@ -387,3 +179,9 @@ The version tracking issue itself is not an implementation work item.
 - Refs #325
 - Refs #326
 - Refs #327
+- Refs #389
+- Refs #393
+- Refs #396
+- Refs #401
+- Refs #404
+- Refs #415
