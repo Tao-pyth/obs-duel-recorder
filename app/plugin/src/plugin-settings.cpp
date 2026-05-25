@@ -89,20 +89,28 @@ std::wstring current_module_path()
 #endif
 }
 
-std::wstring default_worker_command()
+struct WorkerPathDefaults {
+	std::wstring command = L"odr-worker";
+	std::wstring expected_worker_path;
+	std::wstring wrong_nested_worker_path;
+};
+
+WorkerPathDefaults default_worker_paths()
 {
+	WorkerPathDefaults defaults;
 	const std::wstring plugin_dir = parent_directory(current_module_path());
 	if (plugin_dir.empty()) {
-		return L"odr-worker";
+		return defaults;
 	}
 
 	const std::wstring app_dir = parent_directory(plugin_dir);
-	const std::wstring packaged_worker = app_dir + L"\\worker\\odr-worker\\odr-worker.exe";
-	if (file_exists(packaged_worker)) {
-		return packaged_worker;
+	defaults.expected_worker_path = app_dir + L"\\worker\\odr-worker\\odr-worker.exe";
+	defaults.wrong_nested_worker_path = plugin_dir + L"\\worker\\odr-worker\\odr-worker.exe";
+	if (file_exists(defaults.expected_worker_path)) {
+		defaults.command = defaults.expected_worker_path;
 	}
 
-	return L"odr-worker";
+	return defaults;
 }
 
 std::wstring default_user_data_dir()
@@ -348,7 +356,10 @@ WorkerLaunchConfig make_launch_config(const PluginSettings &settings)
 	WorkerLaunchConfig config;
 	config.endpoint = settings.endpoint;
 	config.user_data_dir = settings.user_data_dir;
-	config.command = default_worker_command();
+	const WorkerPathDefaults worker_paths = default_worker_paths();
+	config.command = worker_paths.command;
+	config.expected_worker_path = worker_paths.expected_worker_path;
+	config.wrong_nested_worker_path = worker_paths.wrong_nested_worker_path;
 	return config;
 }
 

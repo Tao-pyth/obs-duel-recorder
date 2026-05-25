@@ -127,6 +127,7 @@ Recommended minimum evidence items (per transition):
 - **Who**: `instance_id` (if available), `api_version`, and Worker version string.
 - **What**: last probe results (success/failure of `/version` and `/health`, plus status code / error kind).
 - **If crashed**: last known exit code (if available) and a note pointing to the Worker log directory.
+- **If launch failed before health was reachable**: checked command, expected packaged Worker path, whether that path exists, whether the known wrong nested path exists, and a stable launch category such as `missing`, `not_executable_or_access_denied`, `not_executable_or_wrong_architecture`, or `failed_to_start`.
 
 This evidence is expected to be present across:
 - OBS Plugin logs (primary for transitions and probe outcomes),

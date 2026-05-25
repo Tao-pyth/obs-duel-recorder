@@ -4,6 +4,7 @@
 
 #include <chrono>
 #include <cwchar>
+#include <sstream>
 #include <utility>
 #include <vector>
 
@@ -51,6 +52,74 @@ std::string summarize_probe(const WorkerProbeResult &probe)
 }
 
 #ifdef _WIN32
+
+bool file_exists(const std::wstring &path)
+{
+	if (path.empty()) {
+		return false;
+	}
+	const DWORD attributes = GetFileAttributesW(path.c_str());
+	return attributes != INVALID_FILE_ATTRIBUTES && (attributes & FILE_ATTRIBUTE_DIRECTORY) == 0;
+}
+
+bool directory_exists(const std::wstring &path)
+{
+	if (path.empty()) {
+		return false;
+	}
+	const DWORD attributes = GetFileAttributesW(path.c_str());
+	return attributes != INVALID_FILE_ATTRIBUTES && (attributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
+}
+
+std::wstring parent_directory(const std::wstring &path)
+{
+	const size_t pos = path.find_last_of(L"\\/");
+	if (pos == std::wstring::npos) {
+		return {};
+	}
+	return path.substr(0, pos);
+}
+
+std::string worker_discovery_summary(const WorkerLaunchConfig &config)
+{
+	std::ostringstream out;
+	out << "command=" << to_utf8(config.command);
+	if (!config.expected_worker_path.empty()) {
+		out << " expected_worker=" << to_utf8(config.expected_worker_path);
+		const bool expected_exists = file_exists(config.expected_worker_path);
+		out << " expected_exists=" << (expected_exists ? "true" : "false");
+		if (!expected_exists) {
+			out << " action=copy_full_odr-worker_directory_to_"
+			    << to_utf8(parent_directory(config.expected_worker_path));
+		}
+	}
+	if (!config.wrong_nested_worker_path.empty()) {
+		const bool wrong_exe_exists = file_exists(config.wrong_nested_worker_path);
+		const bool wrong_dir_exists = directory_exists(parent_directory(parent_directory(config.wrong_nested_worker_path)));
+		out << " wrong_nested_worker=" << to_utf8(config.wrong_nested_worker_path)
+		    << " wrong_nested_exists=" << (wrong_exe_exists ? "true" : "false")
+		    << " wrong_nested_dir_exists=" << (wrong_dir_exists ? "true" : "false");
+		if (wrong_exe_exists || wrong_dir_exists) {
+			out << " wrong_path_action=move_worker_out_of_obs-plugins_64bit_to_obs-plugins_worker";
+		}
+	}
+	return out.str();
+}
+
+const char *launch_error_category(DWORD error)
+{
+	switch (error) {
+	case ERROR_FILE_NOT_FOUND:
+	case ERROR_PATH_NOT_FOUND:
+		return "missing";
+	case ERROR_ACCESS_DENIED:
+		return "not_executable_or_access_denied";
+	case ERROR_BAD_EXE_FORMAT:
+		return "not_executable_or_wrong_architecture";
+	default:
+		return "failed_to_start";
+	}
+}
 
 std::vector<wchar_t> build_environment_block(const std::wstring &user_data_dir)
 {
@@ -165,8 +234,10 @@ void WorkerProcessManager::start(WorkerLaunchConfig config)
 		return;
 	}
 
-	if (!spawn_worker(config)) {
-		update_status(WorkerDiagnosticState::config_error, config, WorkerOwnership::none, "Worker launch failed");
+	std::string launch_error;
+	if (!spawn_worker(config, launch_error)) {
+		update_status(WorkerDiagnosticState::config_error, config, WorkerOwnership::none, launch_error);
+		blog(LOG_WARNING, "%s worker config_error: %s", kLogPrefix, launch_error.c_str());
 		return;
 	}
 	update_status(WorkerDiagnosticState::starting, config, WorkerOwnership::spawned_by_plugin, "waiting for Worker readiness");
@@ -192,9 +263,19 @@ void WorkerProcessManager::start(WorkerLaunchConfig config)
 	monitor_heartbeat(config, ready_probe);
 }
 
-bool WorkerProcessManager::spawn_worker(const WorkerLaunchConfig &config)
+bool WorkerProcessManager::spawn_worker(const WorkerLaunchConfig &config, std::string &launch_error)
 {
 #ifdef _WIN32
+	const std::string discovery = worker_discovery_summary(config);
+	if (!config.expected_worker_path.empty() && !file_exists(config.expected_worker_path)) {
+		blog(LOG_WARNING, "%s worker discovery packaged_worker_missing %s", kLogPrefix, discovery.c_str());
+	}
+	if (!config.wrong_nested_worker_path.empty() &&
+	    (file_exists(config.wrong_nested_worker_path) ||
+	     directory_exists(parent_directory(parent_directory(config.wrong_nested_worker_path))))) {
+		blog(LOG_WARNING, "%s worker discovery wrong_nested_worker_detected %s", kLogPrefix, discovery.c_str());
+	}
+
 	std::wstring command_line = L"\"" + config.command + L"\" --host " + config.endpoint.host +
 				    L" --port " + to_wstring(config.endpoint.port);
 	std::vector<wchar_t> mutable_command(command_line.begin(), command_line.end());
@@ -209,9 +290,11 @@ bool WorkerProcessManager::spawn_worker(const WorkerLaunchConfig &config)
 			    CREATE_UNICODE_ENVIRONMENT | CREATE_NO_WINDOW,
 			    environment.empty() ? nullptr : environment.data(), nullptr,
 			    &startup_info, &process_info)) {
-		blog(LOG_WARNING, "%s worker launch failed command=%s user_data_dir=%s error=%lu",
-		     kLogPrefix, to_utf8(config.command).c_str(),
-		     to_utf8(config.user_data_dir).c_str(), GetLastError());
+		const DWORD error = GetLastError();
+		launch_error = "Worker launch failed category=" + std::string(launch_error_category(error)) +
+			       " windows_error=" + std::to_string(error) + " " + discovery;
+		blog(LOG_WARNING, "%s worker launch failed user_data_dir=%s %s",
+		     kLogPrefix, to_utf8(config.user_data_dir).c_str(), launch_error.c_str());
 		return false;
 	}
 
@@ -223,6 +306,7 @@ bool WorkerProcessManager::spawn_worker(const WorkerLaunchConfig &config)
 	return true;
 #else
 	(void)config;
+	launch_error = "Worker launch is only implemented on Windows";
 	blog(LOG_WARNING, "%s worker launch is only implemented on Windows", kLogPrefix);
 	return false;
 #endif

@@ -84,7 +84,7 @@ const char *recommended_action(WorkerDiagnosticState state)
 	case WorkerDiagnosticState::unhealthy:
 		return "Check Worker logs and restart through settings if needed.";
 	case WorkerDiagnosticState::config_error:
-		return "Open settings and choose a valid user_data_dir.";
+		return "Check user_data_dir and Worker install layout.";
 	case WorkerDiagnosticState::runtime_dir_error:
 		return "Fix user_data_dir or stop the wrong-root Worker.";
 	case WorkerDiagnosticState::api_incompatible:

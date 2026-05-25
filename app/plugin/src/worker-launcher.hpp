@@ -34,6 +34,8 @@ struct WorkerLaunchConfig {
 	WorkerEndpoint endpoint;
 	std::wstring user_data_dir;
 	std::wstring command = L"odr-worker";
+	std::wstring expected_worker_path;
+	std::wstring wrong_nested_worker_path;
 	unsigned int startup_timeout_ms = 10000;
 	unsigned int heartbeat_interval_ms = 2000;
 	unsigned int heartbeat_failure_threshold = 3;
@@ -71,7 +73,7 @@ public:
 
 private:
 	void start(WorkerLaunchConfig config);
-	bool spawn_worker(const WorkerLaunchConfig &config);
+	bool spawn_worker(const WorkerLaunchConfig &config, std::string &launch_error);
 	bool wait_until_ready(const WorkerLaunchConfig &config, WorkerProbeResult &ready_probe);
 	void monitor_heartbeat(const WorkerLaunchConfig &config, const WorkerProbeResult &baseline);
 	WorkerOwnership current_ownership() const;

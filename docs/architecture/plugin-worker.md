@@ -233,6 +233,17 @@ The plugin should surface at least:
 - the Worker log directory (`<ODR_USER_DATA_DIR>/logs/`)
 - the API target (`host:port`) used for health checks
 - observed `instance_id` when available
+- the expected packaged Worker path:
+  `<OBS>/obs-plugins/worker/odr-worker/odr-worker.exe`
+- whether the known wrong nested path exists:
+  `<OBS>/obs-plugins/64bit/worker/odr-worker/odr-worker.exe`
+
+For v1.1 launch failures, the Dock detail and OBS log should share the same
+failure category (`missing`, `not_executable_or_access_denied`,
+`not_executable_or_wrong_architecture`, or `failed_to_start`) and should include
+the checked command plus the expected packaged Worker path. These diagnostics
+must not include OAuth tokens, client secrets, bearer strings, or environment
+dumps.
 
 ---
 
