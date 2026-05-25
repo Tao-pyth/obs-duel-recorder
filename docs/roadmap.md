@@ -5,11 +5,13 @@
 This roadmap uses one version sequence based on user-visible usability.
 
 - The project reached its first user-ready OBS Plugin release at `v1.0.1`.
+- The current active development target is `v1.1` - First Trial Usability Hardening, coordinated through #415.
 - Existing `v1.x` and `v2.x` tags are legacy non-product tags from before this rule.
 - The `v0.11` gate completed built OBS Plugin DLL, real OBS load smoke evidence, Dock visibility, Worker heartbeat, and basic recording control evidence.
 - The `v0.12` gate completed packaging workflow, release asset automation path, SHA256 checksum generation, and package layout validation.
 - The `v0.13` gate completed Worker EXE bundled distribution and local download-to-first-run smoke evidence.
 - The user-ready `v1.0` release was published as `v1.0.1` because legacy `v1.0.0` already exists.
+- The active `v1.1.0` target conflicts with an existing legacy `v1.1.0` tag, so the final publication tag decision must be recorded before release without moving or overwriting the legacy tag.
 
 ---
 
@@ -151,6 +153,59 @@ Publish the first user-ready release after OBS plugin smoke, packaging, and prac
 - user-ready release notes
 - release publication evidence
 - active release tag `v1.0.1`
+
+---
+
+## v1.1 - First Trial Usability Hardening
+
+### Goals
+
+Turn the first real OBS trial findings from `v1.0.1` into a complete normal-user usability hardening release.
+
+Tracking issue: #415
+
+### Planned
+
+- installation guidance and install layout verification
+- Worker launch failure diagnostics in the Plugin, Dock, and OBS logs
+- recording completion and output evidence in the Dock
+- first-run/setup validation UI
+- recording-to-match and recording-to-queue handoff
+- practical automatic recording setup with template registration, testing, and Start/Stop bridge
+- production YouTube upload provider, OAuth setup, and manual-review controls
+- match metadata editing UI and upload metadata preview
+- install/update assistant for packaged ZIP users and installer/MSI decision
+- active v1.1 acceptance, readiness, README, Roadmap, traceability, and release-policy records
+
+### Required Child Issues
+
+- Installation guidance and safety: #416, #417
+- Worker launch diagnostics: #418, #419, #420
+- Recording result visibility: #421, #422
+- First-run setup: #423, #424
+- Recording handoff: #425, #426, #427
+- Automatic recording: #428, #429, #430
+- YouTube upload: #431, #432, #433
+- Metadata UI: #434, #435
+- Distribution: #436, #437
+- Documentation/release records: #438
+
+### Deliverables
+
+- v1.1 normal-user install path with layout verification
+- actionable Dock and log diagnostics for Worker launch failures
+- visible manual recording completion and output evidence
+- GUI path for first-run validation
+- durable match and queue handoff for completed recordings
+- practical template-based automatic recording workflow
+- production YouTube upload path with OAuth and manual review
+- graphical metadata editing and upload metadata preview
+- ZIP install/update assistant and recorded installer/MSI decision
+- active v1.1 release readiness evidence
+
+### Release Note
+
+The target version is `v1.1.0`, but an existing legacy `v1.1.0` tag is preserved for auditability. The final publication tag decision must be recorded before release and must not move, delete, or overwrite the legacy tag.
 
 ---
 
