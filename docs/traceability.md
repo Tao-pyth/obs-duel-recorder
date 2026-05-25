@@ -106,7 +106,7 @@ Goals:
 - Previous hardening target: `#415` / `v1.1.0` - First Trial Usability Hardening
 - Target version: `v1.1.1`
 - Completion rule: #440 closes only after all required child issues are complete, release records are durable, and the final publication decision or publication-blocker handoff is recorded.
-- Publication follow-up: `#452` - rebuild and publish final v1.1.1 assets on a configured workstation
+- Publication follow-up: `#452` - final asset rebuild and publication from this configured terminal
 - Required child issues:
   - Planning and verification prerequisites: `#441`, `#442`
   - User documentation and UI imagery: `#443`, `#444`, `#447`

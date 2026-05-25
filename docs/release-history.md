@@ -259,16 +259,16 @@ The version tracking issue may contain the working release summary, but finalize
 - Verification matrix: `docs/release/v1.1.1-verification-matrix.md`
 - Validation report: `docs/release/v1.1.1-validation-report.md`
 - Release summary: `docs/release/v1.1.1-release-summary.md`
-- Intended tag: `v1.1.1`
-- Validated source commit: `cd00ec7db47be4edf831772033ad5c03724e9296`
+- Tag: `v1.1.1`
+- Tag target: pending final release commit
 - Release decision recorded at: `2026-05-26`
 - Major child issues: #441, #442, #443, #444, #445, #446, #447, #448, #449, #450, #451
 - Follow-up publication issue: #452
 - Validation ZIP evidence: `obs-duel-recorder-v1.1.1.zip`
-- Validation ZIP SHA256: `4660DD36DDE2AB243F1086B20501D76ED110999BBA825F95BBEEE125296E2E42`
-- Publication decision: final GitHub Release assets are not published from this workstation because CMake is unavailable on PATH and the Plugin DLL cannot be rebuilt from the final v1.1.1 source here.
-- Maintainer handoff: #452 must rebuild the Plugin DLL, rebuild the ZIP, validate the package, record final SHA256 evidence, and publish or explicitly reject final GitHub Release assets.
-- Status: v1.1.1 issue set complete with documented publication blocker and maintainer handoff; not a published final ZIP release from this workstation
+- Final ZIP SHA256: `95D5C5336F544AB68F68B7D24117544D1912542BE08EDDA73A0FB734A3BE4A9A`
+- Rebuilt Plugin DLL SHA256: `5E24C7B3740E9D714AE885E1DFC93123C0699DB066A17912AFF9E00F9CC790EF`
+- Publication decision: publish final GitHub Release assets from this terminal after establishing the CMake, Visual Studio Build Tools, Qt, and OBS build environment.
+- Status: released user-ready OBS Plugin package
 
 ### Legacy tag v1.0.0 - YouTube Upload MVP
 

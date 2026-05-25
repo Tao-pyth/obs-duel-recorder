@@ -19,7 +19,7 @@ The project is designed around an OBS Plugin + Python Worker architecture.
 Important versioning note:
 - Project versions are assigned only by user-visible usability.
 - The first user-ready OBS Plugin release is `v1.0.1`.
-- The `v1.1.1` target is Usability UI and Documentation Hardening, coordinated through #440 and completed with a documented publication handoff.
+- The `v1.1.1` target is Usability UI and Documentation Hardening, coordinated through #440 and completed after local final asset rebuild.
 - Existing `v1.x` and `v2.x` tags are legacy non-product tags from before this rule. They are not part of the active version sequence and are not proof of a usable OBS plugin release.
 - Existing legacy tags must not be moved or overwritten. Because a legacy `v1.1.0` tag exists, v1.1.x publication decisions must be recorded before release.
 
@@ -35,7 +35,6 @@ Latest release status:
 
 Current development target:
 - pending planning after `v1.1.1`
-- Publication follow-up: [#452](https://github.com/Tao-pyth/obs-duel-recorder/issues/452)
 
 Next roadmap target:
 - pending planning after `v1.1.1`
@@ -149,7 +148,6 @@ obs-duel-recorder/
 - Latest completed version gate: [#401](https://github.com/Tao-pyth/obs-duel-recorder/issues/401)
 - Latest completed hardening issue set: [#440](https://github.com/Tao-pyth/obs-duel-recorder/issues/440)
 - Current development target: pending planning after `v1.1.1`
-- Publication follow-up: [#452](https://github.com/Tao-pyth/obs-duel-recorder/issues/452)
 - Release record: [docs/release-history.md](docs/release-history.md)
 
 ### Completed Legacy Implementation Work
