@@ -174,7 +174,8 @@ Tracking issue: #415
 - practical automatic recording setup with template registration, testing, and Start/Stop bridge
 - production YouTube upload provider, OAuth setup, and manual-review controls
 - match metadata editing UI and upload metadata preview
-- install/update assistant for packaged ZIP users and installer/MSI decision
+- install/update assistant for packaged ZIP users and installer/MSI deferral
+  decision, with signed installer planning moved to #439
 - active v1.1 acceptance, readiness, README, Roadmap, traceability, and release-policy records
 
 ### Required Child Issues
@@ -200,7 +201,7 @@ Tracking issue: #415
 - practical template-based automatic recording workflow
 - production YouTube upload path with OAuth and manual review
 - graphical metadata editing and upload metadata preview
-- ZIP install/update assistant and recorded installer/MSI decision
+- ZIP install/update assistant and recorded installer/MSI deferral decision
 - active v1.1 release readiness evidence
 
 ### Release Note

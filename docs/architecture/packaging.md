@@ -57,6 +57,37 @@ Release ZIPs must not include:
 - Release publication or attaching final assets should require maintainer approval unless a later policy explicitly enables full automation.
 - A SHA256 checksum must be generated for each release ZIP.
 
+## Installer/MSI Decision For v1.1.0
+
+Decision:
+- v1.1.0 ships with GitHub Release ZIP plus `install.bat` as the supported
+  normal-user install/update path.
+- MSI, MSIX, Inno Setup, NSIS, or another signed installer is deferred to #439.
+
+Reasons:
+- The v1.1.0 trial blocker was incorrect manual folder placement, which the ZIP
+  install assistant addresses without introducing a new installer toolchain.
+- OBS installations may be normal or portable, and installer elevation behavior
+  needs a separate design before it can be trusted.
+- A real installer should have a code-signing and release asset signing policy;
+  v1.1.0 does not yet have signing infrastructure.
+- Installer uninstall/update behavior must preserve `user_data/` and must not
+  remove user recordings, logs, databases, screenshots, OAuth files, templates,
+  or other runtime state.
+- Adding installer technology now would add maintenance and CI smoke scope after
+  the ZIP path already has validation coverage.
+
+Deferred comparison scope:
+- WiX/MSI
+- MSIX
+- Inno Setup
+- NSIS
+- continued ZIP-only distribution
+
+The deferral does not block v1.1.0 because #436 provides a supported ZIP
+install/update assistant that validates the OBS root, copies the Plugin and
+Worker bundle, and runs the layout verifier.
+
 ## Automation
 
 Packaging is implemented by:

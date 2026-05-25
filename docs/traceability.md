@@ -77,6 +77,7 @@ Goals:
 - Previous released user-ready version: `v1.0.1`
 - Target version: `v1.1.0`
 - Legacy conflicting tag: `v1.1.0` - preserved; final publication tag decision required before release
+- Installer/MSI follow-up: `#439` - `[future] Plan signed installer/MSI distribution path`
 - Required child issues:
   - Installation guidance and safety: `#416`, `#417`
   - Worker launch diagnostics: `#418`, `#419`, `#420`
