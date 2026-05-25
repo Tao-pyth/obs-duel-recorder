@@ -102,6 +102,20 @@ class TemplateDetectionApiTests(unittest.TestCase):
         self.assertIn("duel_ended", second_end.json()["events"])
         self.assertEqual(second_end.json()["recording_state"]["state"], "stopping")
 
+    def test_detection_reports_recording_transition_rejection(self) -> None:
+        client, _ = self._configured_client()
+        client.post("/recording/command", json={"action": "start", "source": "manual"})
+        client.post("/recording/command", json={"action": "confirm_started", "source": "manual"})
+
+        client.post("/detection/frame", json={"frame_text": "DUEL_START_MARKER"})
+        result = client.post("/detection/frame", json={"frame_text": "DUEL_START_MARKER"})
+
+        self.assertEqual(result.status_code, 200)
+        self.assertIn("duel_started", result.json()["events"])
+        self.assertIn("recording_start_skipped:active_or_unrecoverable_session_exists", result.json()["events"])
+        self.assertEqual(result.json()["recording_state"]["state"], "recording")
+        self.assertEqual(result.json()["recording_state"]["command_source"], "manual")
+
     def test_detection_payload_validation_is_stable(self) -> None:
         client, _ = self._configured_client()
 

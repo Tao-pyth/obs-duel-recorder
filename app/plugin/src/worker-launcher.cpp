@@ -538,7 +538,8 @@ void WorkerProcessManager::monitor_heartbeat(const WorkerLaunchConfig &config, c
 			timeout_reported = false;
 			OverlayFetchResult overlay = api_client_.fetch_overlay_state(config.endpoint);
 			UploadStatusResult upload = api_client_.fetch_upload_status(config.endpoint);
-			update_status(WorkerDiagnosticState::running, config, current_ownership(), {}, &probe, 0, &overlay, &upload);
+			RecordingStateFetchResult recording = api_client_.fetch_recording_state(config.endpoint);
+			update_status(WorkerDiagnosticState::running, config, current_ownership(), {}, &probe, 0, &overlay, &upload, &recording);
 
 			if (!replacement_reported && identity_changed(baseline, probe)) {
 				replacement_reported = true;
@@ -578,7 +579,8 @@ WorkerOwnership WorkerProcessManager::current_ownership() const
 void WorkerProcessManager::update_status(WorkerDiagnosticState state, const WorkerLaunchConfig &config,
 					 WorkerOwnership ownership, const std::string &error,
 					 const WorkerProbeResult *probe, unsigned int consecutive_failures,
-					 const OverlayFetchResult *overlay, const UploadStatusResult *upload)
+					 const OverlayFetchResult *overlay, const UploadStatusResult *upload,
+					 const RecordingStateFetchResult *recording)
 {
 	std::lock_guard<std::mutex> lock(mutex_);
 	status_.state = state;
@@ -610,6 +612,13 @@ void WorkerProcessManager::update_status(WorkerDiagnosticState state, const Work
 	if (upload) {
 		status_.upload_status = *upload;
 		status_.upload_status_available = upload->status == UploadStatusFetchStatus::reachable;
+	}
+	if (recording) {
+		status_.recording_state_available = recording->reachable();
+		status_.recording_error = recording->reachable() ? std::string{} : recording->error;
+		if (recording->reachable()) {
+			status_.recording_state = recording->state;
+		}
 	}
 }
 

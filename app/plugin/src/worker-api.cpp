@@ -87,6 +87,16 @@ std::string json_escape(const std::string &value)
 	return out.str();
 }
 
+void populate_recording_state(RecordingStatePayload &state, const std::string &body)
+{
+	state.state = extract_json_string(body, "state");
+	state.session_id = extract_json_string(body, "session_id");
+	state.command_source = extract_json_string(body, "command_source");
+	state.last_action = extract_json_string(body, "last_action");
+	state.reason = extract_json_string(body, "reason");
+	state.updated_at = extract_json_string(body, "updated_at");
+}
+
 #ifdef _WIN32
 
 struct HttpResponse {
@@ -370,6 +380,42 @@ UploadStatusResult LocalhostApiClient::fetch_upload_status(const WorkerEndpoint 
 #endif
 }
 
+RecordingStateFetchResult LocalhostApiClient::fetch_recording_state(const WorkerEndpoint &endpoint) const
+{
+	RecordingStateFetchResult result;
+
+#ifdef _WIN32
+	const HttpResponse response = http_get(endpoint, L"/recording/state");
+	result.http_status = response.status;
+	result.body = response.body;
+
+	if (!response.ok) {
+		result.status = RecordingStateFetchStatus::unavailable;
+		result.error = response.error;
+		return result;
+	}
+	if (response.status != 200) {
+		result.status = RecordingStateFetchStatus::invalid_response;
+		result.error = "GET /recording/state returned non-200 status";
+		return result;
+	}
+
+	populate_recording_state(result.state, response.body);
+	if (result.state.state.empty() || result.state.updated_at.empty()) {
+		result.status = RecordingStateFetchStatus::invalid_response;
+		result.error = "GET /recording/state response is missing required fields";
+		return result;
+	}
+
+	result.status = RecordingStateFetchStatus::reachable;
+	return result;
+#else
+	result.status = RecordingStateFetchStatus::unavailable;
+	result.error = "Recording state probing is only implemented on Windows";
+	return result;
+#endif
+}
+
 RecordingCommandResult LocalhostApiClient::send_recording_command(const WorkerEndpoint &endpoint,
 								  const std::string &action,
 								  const std::string &source,
@@ -408,12 +454,7 @@ RecordingCommandResult LocalhostApiClient::send_recording_command(const WorkerEn
 		return result;
 	}
 
-	result.state.state = extract_json_string(response.body, "state");
-	result.state.session_id = extract_json_string(response.body, "session_id");
-	result.state.command_source = extract_json_string(response.body, "command_source");
-	result.state.last_action = extract_json_string(response.body, "last_action");
-	result.state.reason = extract_json_string(response.body, "reason");
-	result.state.updated_at = extract_json_string(response.body, "updated_at");
+	populate_recording_state(result.state, response.body);
 
 	if (result.state.state.empty() || result.state.updated_at.empty()) {
 		result.status = RecordingCommandStatus::invalid_response;

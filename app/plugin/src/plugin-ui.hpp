@@ -3,6 +3,8 @@
 #include "plugin-settings.hpp"
 #include "worker-launcher.hpp"
 
+#include <string>
+
 class QLabel;
 class QPushButton;
 class QTimer;
@@ -24,6 +26,7 @@ private:
 	void save_settings_and_restart(const PluginSettings &settings);
 	void request_manual_start();
 	void request_manual_stop();
+	void handle_automatic_recording(const WorkerStatusSnapshot &snapshot);
 	void log_recording_command_result(const char *action, const RecordingCommandResult &result);
 
 	WorkerProcessManager &worker_manager_;
@@ -44,6 +47,7 @@ private:
 	QPushButton *start_button_ = nullptr;
 	QPushButton *stop_button_ = nullptr;
 	OverlayStatePayload last_applied_overlay_state_;
+	std::string automatic_recording_request_key_;
 	bool overlay_state_applied_ = false;
 	bool tools_menu_registered_ = false;
 };

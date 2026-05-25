@@ -90,6 +90,12 @@ enum class RecordingCommandStatus {
 	invalid_response,
 };
 
+enum class RecordingStateFetchStatus {
+	reachable,
+	unavailable,
+	invalid_response,
+};
+
 struct RecordingStatePayload {
 	std::string state;
 	std::string session_id;
@@ -112,6 +118,19 @@ struct RecordingCommandResult {
 	}
 };
 
+struct RecordingStateFetchResult {
+	RecordingStateFetchStatus status = RecordingStateFetchStatus::unavailable;
+	unsigned long http_status = 0;
+	RecordingStatePayload state;
+	std::string error;
+	std::string body;
+
+	bool reachable() const
+	{
+		return status == RecordingStateFetchStatus::reachable;
+	}
+};
+
 class LocalhostApiClient {
 public:
 	explicit LocalhostApiClient(std::string expected_api_version, std::string expected_worker_version);
@@ -119,6 +138,7 @@ public:
 	WorkerProbeResult probe_health(const WorkerEndpoint &endpoint, const std::wstring &expected_user_data_dir) const;
 	OverlayFetchResult fetch_overlay_state(const WorkerEndpoint &endpoint) const;
 	UploadStatusResult fetch_upload_status(const WorkerEndpoint &endpoint) const;
+	RecordingStateFetchResult fetch_recording_state(const WorkerEndpoint &endpoint) const;
 	RecordingCommandResult send_recording_command(const WorkerEndpoint &endpoint, const std::string &action,
 						      const std::string &source,
 						      const std::string &video_path = {}) const;

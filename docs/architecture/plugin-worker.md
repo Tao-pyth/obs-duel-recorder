@@ -253,6 +253,26 @@ strings, or other unrelated runtime secrets.
 
 ---
 
+## Automatic Recording Bridge
+
+The Worker remains the owner of detection and recording state. The OBS Plugin
+does not run template matching itself.
+
+During heartbeat, the Plugin polls `/recording/state`:
+
+- `state=starting` and `command_source=automatic` requests
+  `obs_frontend_recording_start()` from the Dock/UI thread.
+- `state=stopping` and `command_source=automatic` requests
+  `obs_frontend_recording_stop()` from the Dock/UI thread.
+- OBS frontend recording started/stopped events confirm the Worker with the
+  pending command source, so automatic and manual recordings remain
+  distinguishable in diagnostics.
+
+If Worker state rejects an automatic start/stop request, `/detection/frame`
+returns a skipped recording event instead of hiding the failure.
+
+---
+
 ## Communication
 
 Plugin and Worker communicate using localhost HTTP APIs.

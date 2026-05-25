@@ -94,7 +94,8 @@ private:
 			   WorkerOwnership ownership, const std::string &error,
 			   const WorkerProbeResult *probe = nullptr, unsigned int consecutive_failures = 0,
 			   const OverlayFetchResult *overlay = nullptr,
-			   const UploadStatusResult *upload = nullptr);
+			   const UploadStatusResult *upload = nullptr,
+			   const RecordingStateFetchResult *recording = nullptr);
 	void close_process_handles();
 
 	LocalhostApiClient api_client_;

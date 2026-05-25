@@ -76,6 +76,17 @@ std::string record_last_output_path()
 	return {};
 }
 
+std::string recording_event_source(const char *pending_state)
+{
+	const odr::plugin::WorkerStatusSnapshot snapshot = worker_manager.status_snapshot();
+	if (snapshot.recording_state_available &&
+	    snapshot.recording_state.state == pending_state &&
+	    !snapshot.recording_state.command_source.empty()) {
+		return snapshot.recording_state.command_source;
+	}
+	return "manual";
+}
+
 void frontend_event(enum obs_frontend_event event, void *)
 {
 	switch (event) {
@@ -89,17 +100,21 @@ void frontend_event(enum obs_frontend_event event, void *)
 		worker_manager.stop();
 		break;
 	case OBS_FRONTEND_EVENT_RECORDING_STARTED:
+	{
+		const std::string source = recording_event_source("starting");
 		record_current_output_path();
 		log_recording_command_result(
 			"confirm_started",
-			worker_manager.send_recording_command("confirm_started", "manual"));
+			worker_manager.send_recording_command("confirm_started", source));
 		break;
+	}
 	case OBS_FRONTEND_EVENT_RECORDING_STOPPED:
 	{
+		const std::string source = recording_event_source("stopping");
 		const std::string output_path = record_last_output_path();
 		log_recording_command_result(
 			"confirm_stopped",
-			worker_manager.send_recording_command("confirm_stopped", "manual", output_path));
+			worker_manager.send_recording_command("confirm_stopped", source, output_path));
 		break;
 	}
 	default:

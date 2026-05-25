@@ -106,10 +106,41 @@ Start detection:
 - repeated `duel_start` matches increment `start_count`
 - once `start_confirmations` is reached, lifecycle becomes `active_duel`
 - Worker sends recording command `start` with source `automatic`
+- OBS Plugin heartbeat reads `/recording/state`; when it sees
+  `state=starting` and `command_source=automatic`, the Dock/UI thread requests
+  OBS recording start and confirms the Worker when OBS reports recording started
 
 End detection:
 - while active, repeated `duel_end` matches increment `end_count`
 - once `end_confirmations` is reached, lifecycle becomes `ended_duel`
 - Worker sends recording command `stop` with source `automatic`
+- OBS Plugin heartbeat reads `/recording/state`; when it sees
+  `state=stopping` and `command_source=automatic`, the Dock/UI thread requests
+  OBS recording stop and confirms the Worker when OBS reports recording stopped
 
 Skipped recording commands are returned as events, not raised as detection failures, so detection remains diagnosable even when recording state is not ready for a transition.
+
+OCR and image-recognition candidate APIs are not recording triggers. They may
+suggest metadata after or around a match, but start/stop ownership remains with
+template detection and the recording state boundary.
+
+---
+
+## Manual Smoke
+
+Use only local user-provided template/sample data.
+
+1. Start OBS with the Plugin loaded and Worker `running`.
+2. Register local start/end templates through `POST /setup/templates/register`.
+3. Verify samples through `POST /detection/test`; do not continue until the
+   intended start and end samples return `matched=true`.
+4. Submit repeated start frames to `POST /detection/frame` until
+   `duel_started` is returned. OBS should start recording and
+   `/recording/state` should move through `starting` to `recording` after the
+   OBS frontend started event confirms the Worker.
+5. Submit repeated end frames to `POST /detection/frame` until `duel_ended` is
+   returned. OBS should stop recording and `/recording/state` should move
+   through `stopping` to `completed` after the OBS frontend stopped event
+   confirms the Worker.
+6. If the Worker rejects a start/stop transition, inspect the returned
+   `recording_*_skipped:*` event, the Dock `Recording` row, and OBS logs.

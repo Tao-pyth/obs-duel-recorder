@@ -196,6 +196,8 @@ Purpose:
 - Evaluate one frame fixture against configured local templates.
 - Update duel lifecycle state.
 - Trigger automatic recording commands through the v0.6 recording boundary when start/end is confirmed.
+- Return skipped recording-command events when Worker state rejects the
+  transition, so automatic recording failures are diagnosable.
 
 Request fields:
 - `frame_text`: UTF-8 fixture text, or
@@ -206,6 +208,14 @@ Response fields:
 - `events`: lifecycle and recording integration events
 - `matches`: template match details
 - `recording_state`: current Worker recording state after detection integration
+
+OBS bridge:
+- The Worker owns the recording state request.
+- The OBS Plugin polls `/recording/state`; `state=starting` with
+  `command_source=automatic` requests OBS recording start.
+- `state=stopping` with `command_source=automatic` requests OBS recording stop.
+- OBS frontend start/stop events confirm the Worker using the pending command
+  source.
 
 ### `POST /detection/test`
 

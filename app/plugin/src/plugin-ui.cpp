@@ -315,6 +315,8 @@ void PluginUiController::refresh()
 		stop_button_->setEnabled(worker_running);
 	}
 
+	handle_automatic_recording(snapshot);
+
 	if (snapshot.overlay_state_available &&
 	    (!overlay_state_applied_ ||
 	     snapshot.overlay_state.deck_name != last_applied_overlay_state_.deck_name ||
@@ -435,6 +437,54 @@ void PluginUiController::request_manual_stop()
 		log_recording_command_result("confirm_stopped", confirm);
 	}
 	refresh();
+}
+
+void PluginUiController::handle_automatic_recording(const WorkerStatusSnapshot &snapshot)
+{
+	if (!snapshot.recording_state_available ||
+	    snapshot.recording_state.command_source != "automatic") {
+		return;
+	}
+
+	const RecordingStatePayload &state = snapshot.recording_state;
+	const std::string request_key = state.session_id + ":" + state.state + ":" + state.last_action;
+	if (state.state == "starting") {
+		if (obs_frontend_recording_active()) {
+			RecordingCommandResult confirm = worker_manager_.send_recording_command("confirm_started", "automatic");
+			log_recording_command_result("confirm_started", confirm);
+			automatic_recording_request_key_.clear();
+			return;
+		}
+		if (automatic_recording_request_key_ == request_key) {
+			return;
+		}
+		automatic_recording_request_key_ = request_key;
+		obs_frontend_recording_start();
+		blog(LOG_INFO, "%s recording automatic_start requested_obs_start session_id=%s",
+		     kLogPrefix, state.session_id.c_str());
+		return;
+	}
+
+	if (state.state == "stopping") {
+		if (obs_frontend_recording_active()) {
+			if (automatic_recording_request_key_ == request_key) {
+				return;
+			}
+			automatic_recording_request_key_ = request_key;
+			obs_frontend_recording_stop();
+			blog(LOG_INFO, "%s recording automatic_stop requested_obs_stop session_id=%s",
+			     kLogPrefix, state.session_id.c_str());
+			return;
+		}
+		RecordingCommandResult confirm = worker_manager_.send_recording_command("confirm_stopped", "automatic");
+		log_recording_command_result("confirm_stopped", confirm);
+		automatic_recording_request_key_.clear();
+		return;
+	}
+
+	if (state.state == "recording" || state.state == "completed" || state.state == "idle") {
+		automatic_recording_request_key_.clear();
+	}
 }
 
 void PluginUiController::log_recording_command_result(const char *action, const RecordingCommandResult &result)
