@@ -16,6 +16,7 @@ Current helpers:
 - `build_release_package.ps1`
 - `build_worker_exe.ps1`
 - `validate_release_package.ps1`
+- `verify_obs_install_layout.ps1`
 
 `build_docs_site.py` creates the GitHub Pages artifact under `build/docs-site/` without copying runtime data, secrets, screenshots, videos, databases, local template images, or game assets.
 
@@ -29,6 +30,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build_worker_exe.ps1
 Use `-PythonExe <path-to-python.exe>` when building from an isolated virtual environment.
 
 `build_release_package.ps1` creates the release ZIP under `build/release/` from an existing `obs-duel-recorder.dll`, the bundled Worker executable, Worker source fallback files, `update.bat`, and the minimum documentation set. It writes `SHA256SUMS.txt` beside the ZIP and calls `validate_release_package.ps1` to reject runtime data, secrets, logs, databases, screenshots, videos, and local game assets.
+
+`verify_obs_install_layout.ps1` validates a packaged install against an OBS root directory. Packaged users normally run `verify-install.bat "<OBS install>"` from the ZIP root; the batch wrapper requires only Windows PowerShell and does not require Python or development tools.
 
 Scripts must not store:
 - runtime data

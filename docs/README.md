@@ -106,6 +106,7 @@ User-facing setup and usage documents live under `docs/user/`.
 - [Installation](user/install.md)
 - [First setup](user/setup.md)
 - [Usage](user/usage.md)
+- [Troubleshooting](user/troubleshooting.md)
 
 ## Validation
 

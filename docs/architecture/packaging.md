@@ -19,7 +19,10 @@ obs-duel-recorder-vX.Y.Z/
 |       `-- <worker package files>
 |-- docs/
 |   `-- <minimal install/update/user docs>
+|-- scripts/
+|   `-- verify_obs_install_layout.ps1
 |-- update.bat
+|-- verify-install.bat
 |-- README.md
 |-- LICENSE
 `-- RELEASE-MANIFEST.json
@@ -58,6 +61,7 @@ Packaging is implemented by:
 
 - `scripts/build_release_package.ps1`
 - `scripts/validate_release_package.ps1`
+- `scripts/verify_obs_install_layout.ps1`
 - `.github/workflows/release-package.yml`
 
 The packaging script expects an existing `obs-duel-recorder.dll` from the v0.11
@@ -69,6 +73,19 @@ normally created by `scripts/build_worker_exe.ps1` under
 `build/worker/odr-worker/`. The bundled executable is the normal user path for
 packaged releases; source-based Worker execution is kept as a developer
 fallback.
+
+The release ZIP includes `verify-install.bat` and
+`scripts/verify_obs_install_layout.ps1` so packaged users can validate the OBS
+install layout without Python or development tools:
+
+```powershell
+.\verify-install.bat "C:\Program Files\obs-studio"
+```
+
+The verifier checks that `obs-duel-recorder.dll` is under
+`obs-plugins\64bit\`, that the full Worker bundle is under
+`obs-plugins\worker\odr-worker\`, and that the known wrong
+`obs-plugins\64bit\worker\` placement is absent.
 
 ## Worker Executable Bundle Decision
 

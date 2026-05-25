@@ -63,6 +63,18 @@ OBS 側の正しい配置先は次の通りです。
 
 Portable OBS の場合も同じ考え方で、portable OBS フォルダ直下の `obs-plugins` に配置します。
 
+## 配置確認コマンド
+
+コピー後、ZIP 展開先のルートで次を実行します。
+
+```powershell
+.\verify-install.bat "C:\Program Files\obs-studio"
+```
+
+引数には OBS のインストール先ルートを指定します。Portable OBS の場合は portable OBS フォルダを指定します。
+
+このコマンドは、確認した package 側の配置元と OBS 側の配置先を表示します。Plugin DLL がない場合、Worker bundle が不完全な場合、または既知の誤配置 `obs-plugins\64bit\worker\` がある場合は失敗として表示します。
+
 ## よくある誤配置
 
 Worker を `obs-plugins\64bit\worker` 配下に置かないでください。
@@ -104,10 +116,11 @@ Worker を `64bit` の下へ入れてしまうと、OBS Duel Recorder Dock は�
 
 ## Start / Stop がグレーアウトしている場合
 
-1. Worker bundle が `<OBSインストール先>\obs-plugins\worker\odr-worker\odr-worker.exe` にあるか確認します。
-2. `<OBSインストール先>\obs-plugins\64bit\worker\` 配下に誤って置いていないか確認します。
-3. 配置を直した後、OBS を再起動します。
-4. Dock の Worker 状態と OBS ログの Worker launch error を確認します。
+1. ZIP 展開先のルートで `.\verify-install.bat "<OBSインストール先>"` を実行します。
+2. Worker bundle が `<OBSインストール先>\obs-plugins\worker\odr-worker\odr-worker.exe` にあるか確認します。
+3. `<OBSインストール先>\obs-plugins\64bit\worker\` 配下に誤って置いていないか確認します。
+4. 配置を直した後、OBS を再起動します。
+5. Dock の Worker 状態と OBS ログの Worker launch error を確認します。
 
 ## 次にやること
 

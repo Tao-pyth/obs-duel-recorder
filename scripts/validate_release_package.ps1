@@ -39,7 +39,9 @@ $expectedEntries = @(
     "docs/user/ja/index.md",
     "docs/architecture/packaging.md",
     "docs/architecture/update-system.md",
+    "scripts/verify_obs_install_layout.ps1",
     "update.bat",
+    "verify-install.bat",
     "README.md",
     "LICENSE",
     "RELEASE-MANIFEST.json"

@@ -69,6 +69,20 @@ Portable OBS uses the same layout under the portable OBS folder.
 
 ---
 
+## Verify Installed Layout
+
+After copying files, run the verifier from the extracted release ZIP root:
+
+```powershell
+.\verify-install.bat "C:\Program Files\obs-studio"
+```
+
+Use the root folder of your OBS installation. For Portable OBS, pass the portable OBS folder.
+
+The verifier prints the package source paths and OBS target paths it checked. It returns a failure if the Plugin DLL is missing, the Worker bundle is incomplete, or the Worker was placed under the known wrong `obs-plugins\64bit\worker\` path.
+
+---
+
 ## Common Wrong Layout
 
 Do not place the Worker under `obs-plugins\64bit\worker`.
@@ -116,10 +130,11 @@ Keep runtime data separate from the OBS plugin installation folder. The runtime 
 
 If Settings opens but Start and Stop are disabled:
 
-1. Check that the Worker bundle exists at `<OBS install>\obs-plugins\worker\odr-worker\odr-worker.exe`.
-2. Check that it is not incorrectly placed under `<OBS install>\obs-plugins\64bit\worker\`.
-3. Restart OBS after correcting the layout.
-4. Check the Dock Worker status and OBS log for Worker launch errors.
+1. Run `.\verify-install.bat "<OBS install>"` from the extracted release ZIP root.
+2. Check that the Worker bundle exists at `<OBS install>\obs-plugins\worker\odr-worker\odr-worker.exe`.
+3. Check that it is not incorrectly placed under `<OBS install>\obs-plugins\64bit\worker\`.
+4. Restart OBS after correcting the layout.
+5. Check the Dock Worker status and OBS log for Worker launch errors.
 
 Next steps:
 
