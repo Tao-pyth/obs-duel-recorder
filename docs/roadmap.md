@@ -5,14 +5,14 @@
 This roadmap uses one version sequence based on user-visible usability.
 
 - The project reached its first user-ready OBS Plugin release at `v1.0.1`.
-- The current active development target is `v1.1.1` - Usability UI And Documentation Hardening, coordinated through #440.
+- The current active development target is pending planning after `v1.1.1`.
 - Existing `v1.x` and `v2.x` tags are legacy non-product tags from before this rule.
 - The `v0.11` gate completed built OBS Plugin DLL, real OBS load smoke evidence, Dock visibility, Worker heartbeat, and basic recording control evidence.
 - The `v0.12` gate completed packaging workflow, release asset automation path, SHA256 checksum generation, and package layout validation.
 - The `v0.13` gate completed Worker EXE bundled distribution and local download-to-first-run smoke evidence.
 - The user-ready `v1.0` release was published as `v1.0.1` because legacy `v1.0.0` already exists.
 - The completed `v1.1.0` issue set was coordinated through #415 and remains the previous hardening scope.
-- The active `v1.1.1` target follows #415 and must complete UI, documentation, verification, packaging, and release-record work through #440 before publication.
+- The `v1.1.1` target followed #415 and completed UI, documentation, verification, packaging validation, and release-record handoff through #440.
 - Existing legacy tags must not be moved or overwritten. Because a legacy `v1.1.0` tag exists, v1.1.x publication decisions must be recorded before release.
 
 ---
@@ -246,7 +246,7 @@ Previous hardening scope: #415 / `v1.1.0`
 
 ### Deliverables
 
-- active v1.1.1 acceptance, readiness, README, Roadmap, traceability, and release-policy records
+- v1.1.1 acceptance, readiness, README, Roadmap, traceability, and release-policy records
 - operation flow and system overview documentation for normal users
 - redaction-safe UI images linked from user documentation
 - user-focused Dock UI with selectable color themes and built-in Help
@@ -257,7 +257,7 @@ Previous hardening scope: #415 / `v1.1.0`
 
 ### Release Note
 
-The completed version is `v1.1.1`. #440 must remain open until #441 through #451 are complete, release assets or approved publication blockers are recorded, and the final tag/publication decision is documented without moving or overwriting legacy tags.
+The completed version is `v1.1.1`. #440 closes after #441 through #451 are complete, release assets or approved publication blockers are recorded, and the final tag/publication decision is documented without moving or overwriting legacy tags. Final public asset publication is handed off to #452 because this workstation cannot rebuild the Plugin DLL.
 
 ---
 

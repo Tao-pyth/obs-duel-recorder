@@ -19,7 +19,7 @@ The project is designed around an OBS Plugin + Python Worker architecture.
 Important versioning note:
 - Project versions are assigned only by user-visible usability.
 - The first user-ready OBS Plugin release is `v1.0.1`.
-- The active `v1.1.1` target is Usability UI and Documentation Hardening, coordinated through #440.
+- The `v1.1.1` target is Usability UI and Documentation Hardening, coordinated through #440 and completed with a documented publication handoff.
 - Existing `v1.x` and `v2.x` tags are legacy non-product tags from before this rule. They are not part of the active version sequence and are not proof of a usable OBS plugin release.
 - Existing legacy tags must not be moved or overwritten. Because a legacy `v1.1.0` tag exists, v1.1.x publication decisions must be recorded before release.
 
@@ -34,9 +34,8 @@ Latest release status:
 - Latest completed version gate: `v1.0` - First Usable OBS Plugin Release
 
 Current development target:
-- `v1.1.1` - Usability UI and Documentation Hardening
-- Tracking issue: [#440](https://github.com/Tao-pyth/obs-duel-recorder/issues/440)
-- Target version: `v1.1.1`
+- pending planning after `v1.1.1`
+- Publication follow-up: [#452](https://github.com/Tao-pyth/obs-duel-recorder/issues/452)
 
 Next roadmap target:
 - pending planning after `v1.1.1`
@@ -87,7 +86,7 @@ Completed v1.1.0 issue set:
 - match metadata editing and upload metadata preview UI
 - ZIP install/update assistant and installer/MSI deferral decision
 
-Planned roadmap capabilities for `v1.1.1`:
+Completed v1.1.1 issue set:
 - full release verification matrix and final validation
 - user operation flow and system overview documentation with diagrams
 - UI images in user documentation
@@ -96,7 +95,7 @@ Planned roadmap capabilities for `v1.1.1`:
 - detailed OBS source documentation
 - simple Help message from the Dock
 - smoother automatic recording setup information registration
-- v1.1.1 release packaging, publication, and release records
+- v1.1.1 release records and publication handoff
 
 ---
 
@@ -148,8 +147,9 @@ obs-duel-recorder/
 - Released user-ready version: [`v1.0.1`](https://github.com/Tao-pyth/obs-duel-recorder/releases/tag/v1.0.1)
 - Status: first usable OBS Plugin release published with ZIP and SHA256 assets
 - Latest completed version gate: [#401](https://github.com/Tao-pyth/obs-duel-recorder/issues/401)
-- Current version tracking issue: [#440](https://github.com/Tao-pyth/obs-duel-recorder/issues/440)
-- Current development target: `v1.1.1` - Usability UI and Documentation Hardening
+- Latest completed hardening issue set: [#440](https://github.com/Tao-pyth/obs-duel-recorder/issues/440)
+- Current development target: pending planning after `v1.1.1`
+- Publication follow-up: [#452](https://github.com/Tao-pyth/obs-duel-recorder/issues/452)
 - Release record: [docs/release-history.md](docs/release-history.md)
 
 ### Completed Legacy Implementation Work
@@ -182,8 +182,8 @@ Key documents:
 - [Release and tag policy](docs/release.md)
 - [v1.1.0 acceptance checklist](docs/requirements/v1.1-first-trial-usability-hardening-acceptance.md)
 - [v1.1.0 release readiness checklist](docs/release/v1.1-first-trial-usability-hardening-readiness.md)
-- [active v1.1.1 acceptance checklist](docs/requirements/v1.1.1-usability-ui-documentation-hardening-acceptance.md)
-- [active v1.1.1 release readiness checklist](docs/release/v1.1.1-usability-ui-documentation-hardening-readiness.md)
+- [v1.1.1 acceptance checklist](docs/requirements/v1.1.1-usability-ui-documentation-hardening-acceptance.md)
+- [v1.1.1 release readiness checklist](docs/release/v1.1.1-usability-ui-documentation-hardening-readiness.md)
 - [Architecture docs](docs/architecture/)
 - [User docs (language selector / 日本語)](docs/user/index.md)
 - [Japanese user docs](docs/user/ja/index.md)

@@ -15,7 +15,7 @@ usability.
 - The project reached its first user-ready OBS Plugin release at `v1.0.1`.
 - The active v1.0 publication tag is `v1.0.1` because `v1.0.0` already exists as a legacy non-product tag.
 - #415 records the completed v1.1.0 post-trial usability hardening issue set.
-- #440 tracks the active `v1.1.1` usability UI and documentation hardening release; final release records remain pending #451.
+- #440 records the completed `v1.1.1` usability UI and documentation hardening handoff; final public asset publication is blocked locally and tracked by #452.
 - Existing `v1.x` and `v2.x` tags created before this policy are legacy non-product tags. They are preserved for auditability, but they are not part of the active product version sequence.
 - Older `Status: released` entries before this policy note mean "legacy implementation record completed" unless a record explicitly says it is a user-ready product release.
 
@@ -250,6 +250,25 @@ The version tracking issue may contain the working release summary, but finalize
   source docs, Help UI, automatic recording setup-flow improvements,
   comprehensive validation, release assets, and release records.
 - Status: released user-ready OBS Plugin package
+
+### v1.1.1 - Usability UI And Documentation Hardening
+
+- Version tracking issue: #440
+- Acceptance checklist: `docs/requirements/v1.1.1-usability-ui-documentation-hardening-acceptance.md`
+- Release readiness checklist: `docs/release/v1.1.1-usability-ui-documentation-hardening-readiness.md`
+- Verification matrix: `docs/release/v1.1.1-verification-matrix.md`
+- Validation report: `docs/release/v1.1.1-validation-report.md`
+- Release summary: `docs/release/v1.1.1-release-summary.md`
+- Intended tag: `v1.1.1`
+- Validated source commit: `cd00ec7db47be4edf831772033ad5c03724e9296`
+- Release decision recorded at: `2026-05-26`
+- Major child issues: #441, #442, #443, #444, #445, #446, #447, #448, #449, #450, #451
+- Follow-up publication issue: #452
+- Validation ZIP evidence: `obs-duel-recorder-v1.1.1.zip`
+- Validation ZIP SHA256: `4660DD36DDE2AB243F1086B20501D76ED110999BBA825F95BBEEE125296E2E42`
+- Publication decision: final GitHub Release assets are not published from this workstation because CMake is unavailable on PATH and the Plugin DLL cannot be rebuilt from the final v1.1.1 source here.
+- Maintainer handoff: #452 must rebuild the Plugin DLL, rebuild the ZIP, validate the package, record final SHA256 evidence, and publish or explicitly reject final GitHub Release assets.
+- Status: v1.1.1 issue set complete with documented publication blocker and maintainer handoff; not a published final ZIP release from this workstation
 
 ### Legacy tag v1.0.0 - YouTube Upload MVP
 

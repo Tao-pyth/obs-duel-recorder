@@ -22,7 +22,7 @@ Examples:
 - `v0.12.0`
 - `v1.0.1`
 - `v1.1.0` as a completed hardening target, subject to the legacy tag conflict rule below
-- `v1.1.1` as the active usability UI and documentation hardening target
+- `v1.1.1` as the completed usability UI and documentation hardening target with publication handoff
 
 ## Usability-Based Versioning Policy
 
@@ -50,11 +50,11 @@ coordinated through #415. It is complete only when the required child issues
 #416 through #438 are closed or explicitly deferred with maintainer approval,
 and the v1.1 acceptance and release readiness records are complete.
 
-The active `v1.1.1` target is Usability UI And Documentation Hardening,
+The completed `v1.1.1` target is Usability UI And Documentation Hardening,
 coordinated through #440. It is complete only when required child issues #441
 through #451 are closed or explicitly deferred with maintainer approval, the
 v1.1.1 acceptance and release readiness records are complete, and the final
-release asset/publication decision is recorded.
+release asset/publication decision or publication-blocker handoff is recorded.
 
 Existing `v1.x` and `v2.x` tags created before this rule are legacy non-product
 tags. They must not be interpreted as active release versions. Do not move or
@@ -163,7 +163,7 @@ Use a version-scoped readiness checklist before tagging:
 - v0.13: `docs/release/v0.13-release-readiness.md`
 - active v1.0: `docs/release/v1.0-first-usable-release-readiness.md`
 - v1.1.0: `docs/release/v1.1-first-trial-usability-hardening-readiness.md`
-- active v1.1.1: `docs/release/v1.1.1-usability-ui-documentation-hardening-readiness.md`
+- v1.1.1: `docs/release/v1.1.1-usability-ui-documentation-hardening-readiness.md`
 
 The v0.11 readiness checklist is a version gate, not a packaged release
 approval by itself. It was completed together with the OBS real-load smoke
@@ -190,11 +190,12 @@ areas from the first real OBS trial are resolved through #415 and its required
 child issues, and that the legacy `v1.1.0` tag conflict has a documented
 non-overwrite publication decision.
 
-The active v1.1.1 readiness checklist is the publication gate for the UI and
+The v1.1.1 readiness checklist is the publication gate for the UI and
 documentation hardening release. It must prove that #441 through #451 are
 complete, including documentation flow/diagram/images, Dock UI/theme/Help work,
 automatic recording setup-flow improvements, comprehensive validation, package
-validation, release assets, checksum records, and the final publication decision.
+validation, release assets or a documented publication blocker, checksum
+records or maintainer handoff, and the final publication decision.
 
 Do not retroactively create a `v0.1.0` tag unless explicitly approved.
 

@@ -100,10 +100,13 @@ Goals:
 - Acceptance checklist: `docs/requirements/v1.1.1-usability-ui-documentation-hardening-acceptance.md`
 - Release readiness checklist: `docs/release/v1.1.1-usability-ui-documentation-hardening-readiness.md`
 - Verification matrix: `docs/release/v1.1.1-verification-matrix.md`
+- Validation report: `docs/release/v1.1.1-validation-report.md`
+- Release summary: `docs/release/v1.1.1-release-summary.md`
 - Release policy: `docs/release.md`
 - Previous hardening target: `#415` / `v1.1.0` - First Trial Usability Hardening
 - Target version: `v1.1.1`
-- Completion rule: #440 closes only after all required child issues are complete, release records are durable, and the final publication decision is recorded.
+- Completion rule: #440 closes only after all required child issues are complete, release records are durable, and the final publication decision or publication-blocker handoff is recorded.
+- Publication follow-up: `#452` - rebuild and publish final v1.1.1 assets on a configured workstation
 - Required child issues:
   - Planning and verification prerequisites: `#441`, `#442`
   - User documentation and UI imagery: `#443`, `#444`, `#447`
