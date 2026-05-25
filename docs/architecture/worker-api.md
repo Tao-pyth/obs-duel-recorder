@@ -61,6 +61,9 @@ Response fields:
 - `last_action`: last accepted lifecycle command
 - `reason`: optional diagnostic reason
 - `updated_at`: UTC ISO 8601 timestamp
+- `match_id`: present when a completed manual recording has been linked to a
+  durable pending match row
+- `match_state`: `pending_metadata` when `match_id` was created or reused
 
 ### `POST /recording/command`
 
@@ -79,6 +82,13 @@ Error behavior:
 - Invalid payloads return HTTP 400 with `code=recording_command_invalid`.
 - Invalid transitions return HTTP 409 with `code=recording_transition_invalid`.
 - Error details include at least the current state and requested action when transition validation fails.
+
+Manual completion handoff:
+- `confirm_stopped` from `stopping` to `completed` creates or reuses one match
+  row keyed by `recording_session_id`.
+- Repeated `confirm_stopped` for the same completed recording returns the same
+  `match_id`.
+- Interrupted or failed recordings do not create match rows.
 
 The v0.6 recording API is defined by:
 - `docs/architecture/recording.md`

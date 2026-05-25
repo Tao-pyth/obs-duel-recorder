@@ -35,6 +35,7 @@ class MatchMetadataRecord:
     id: int
     created_at: str
     updated_at: str
+    recording_session_id: str
     deck_name: str
     opponent_deck: str
     result: str
@@ -50,6 +51,7 @@ class MatchMetadataRecord:
             "id": self.id,
             "created_at": self.created_at,
             "updated_at": self.updated_at,
+            "recording_session_id": self.recording_session_id,
             "deck_name": self.deck_name,
             "opponent_deck": self.opponent_deck,
             "result": self.result,
@@ -86,6 +88,53 @@ class MatchMetadataStore:
             )
             conn.commit()
             return self._get(conn, int(cursor.lastrowid))
+        finally:
+            conn.close()
+
+    def get_or_create_recording_match(
+        self,
+        *,
+        recording_session_id: str,
+        source: str,
+        ended_at: str,
+    ) -> MatchMetadataRecord:
+        session_id = recording_session_id.strip()
+        if not session_id:
+            raise MetadataError("recording_session_missing", {"recording_session_id": "required"})
+
+        conn = self._connect()
+        try:
+            existing = conn.execute(
+                "SELECT * FROM matches WHERE recording_session_id = ?;",
+                (session_id,),
+            ).fetchone()
+            if existing is not None:
+                return _record_from_row(existing)
+
+            now = _utc_now_iso()
+            try:
+                cursor = conn.execute(
+                    """
+                    INSERT INTO matches(recording_session_id, ended_at, memo, updated_at)
+                    VALUES(?, ?, ?, ?);
+                    """,
+                    (
+                        session_id,
+                        ended_at,
+                        f"Pending metadata for {source} recording.",
+                        now,
+                    ),
+                )
+                conn.commit()
+                return self._get(conn, int(cursor.lastrowid))
+            except sqlite3.IntegrityError:
+                existing = conn.execute(
+                    "SELECT * FROM matches WHERE recording_session_id = ?;",
+                    (session_id,),
+                ).fetchone()
+                if existing is not None:
+                    return _record_from_row(existing)
+                raise
         finally:
             conn.close()
 
@@ -194,6 +243,7 @@ def _record_from_row(row: sqlite3.Row) -> MatchMetadataRecord:
         id=int(row["id"]),
         created_at=str(row["created_at"]),
         updated_at=str(row["updated_at"]),
+        recording_session_id=str(row["recording_session_id"]),
         deck_name=str(row["deck_name"]),
         opponent_deck=str(row["opponent_deck"]),
         result=str(row["result"]),

@@ -10,6 +10,8 @@ The metadata boundary supports:
 - deterministic title generation
 - deterministic description and notes generation
 - upload metadata handoff to the v1.0 upload flow
+- durable linkage from a completed manual recording session to a pending match
+  metadata row
 
 ---
 
@@ -24,6 +26,10 @@ Editable fields:
 - `started_at`
 - `ended_at`
 - `title_template`
+
+System-managed fields:
+
+- `recording_session_id`
 
 Rules:
 
@@ -92,4 +98,17 @@ Title length is capped at 100 characters. Description length is capped at 5000 c
 ## Upload Integration
 
 When a queue item has `match_id`, `POST /upload/process-next` includes generated `upload_metadata` in the response. The v1.0 mocked upload boundary does not perform real YouTube metadata writes, but v1.1 makes the title and description handoff explicit for the future real upload client.
+
+---
+
+## Recording Completion Handoff
+
+When a manual recording reaches `completed`, the Worker creates or reuses one
+match metadata row for that recording `session_id`. The row is intentionally
+pending: unknown deck, result, and opponent fields remain blank until later
+metadata editing or recognition assistance fills them.
+
+Repeated `confirm_stopped` calls for the same recording session return the same
+`match_id` and must not create duplicate match rows. Interrupted or failed
+recordings do not create completed match rows.
 

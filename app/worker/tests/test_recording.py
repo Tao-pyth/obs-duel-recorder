@@ -17,6 +17,7 @@ class RecordingStateApiTests(unittest.TestCase):
 
         from odr_worker.api import create_app
         from odr_worker.config import LoadedWorkerConfig, WorkerConfig
+        from odr_worker.db import init_db
         from odr_worker.runtime_dirs import ensure_runtime_dirs
 
         tmp = tempfile.TemporaryDirectory()
@@ -28,7 +29,8 @@ class RecordingStateApiTests(unittest.TestCase):
             config_path=runtime_dirs.config_dir / "worker.toml",
             config_loaded=False,
         )
-        return TestClient(create_app(runtime_dirs=runtime_dirs, loaded_config=loaded_config)), runtime_dirs
+        db_info = init_db(runtime_dirs=runtime_dirs)
+        return TestClient(create_app(runtime_dirs=runtime_dirs, loaded_config=loaded_config, db_info=db_info)), runtime_dirs
 
     def test_recording_state_defaults_to_idle(self) -> None:
         client, _ = self._client()
@@ -70,6 +72,19 @@ class RecordingStateApiTests(unittest.TestCase):
         self.assertEqual(completed.status_code, 200)
         self.assertEqual(completed.json()["state"], "completed")
         self.assertEqual(completed.json()["session_id"], start_body["session_id"])
+        self.assertEqual(completed.json()["match_state"], "pending_metadata")
+        match_id = completed.json()["match_id"]
+
+        match = client.get(f"/matches/{match_id}")
+        self.assertEqual(match.status_code, 200)
+        self.assertEqual(match.json()["recording_session_id"], start_body["session_id"])
+        self.assertEqual(match.json()["ended_at"], completed.json()["updated_at"])
+
+        repeated = client.post("/recording/command", json={"action": "confirm_stopped", "source": "manual"})
+        self.assertEqual(repeated.status_code, 200)
+        self.assertEqual(repeated.json()["match_id"], match_id)
+        matches = client.get("/matches")
+        self.assertEqual([item["id"] for item in matches.json()["items"]], [match_id])
 
         overlay_completed = client.get("/overlay/state")
         self.assertEqual(overlay_completed.json()["recording_state"], "idle")
@@ -84,6 +99,8 @@ class RecordingStateApiTests(unittest.TestCase):
         self.assertEqual(body["code"], "recording_transition_invalid")
         self.assertEqual(body["details"]["state"], "idle")
         self.assertEqual(body["details"]["action"], "stop")
+        matches = client.get("/matches")
+        self.assertEqual(matches.json()["items"], [])
 
     def test_payload_validation_returns_stable_diagnostics(self) -> None:
         client, _ = self._client()
@@ -127,6 +144,8 @@ class RecordingStateApiTests(unittest.TestCase):
         self.assertEqual(body["command_source"], "recovery")
         self.assertEqual(body["last_action"], "startup_recovery")
         self.assertEqual(body["session_id"], started.json()["session_id"])
+        matches = second_client.get("/matches")
+        self.assertEqual(matches.json()["items"], [])
 
         overlay = second_client.get("/overlay/state")
         self.assertEqual(overlay.json()["recording_state"], "unknown")
@@ -163,13 +182,15 @@ class RecordingStateApiTests(unittest.TestCase):
 
         from odr_worker.api import create_app
         from odr_worker.config import LoadedWorkerConfig, WorkerConfig
+        from odr_worker.db import init_db
 
         loaded_config = LoadedWorkerConfig(
             config=WorkerConfig(),
             config_path=runtime_dirs.config_dir / "worker.toml",
             config_loaded=False,
         )
-        return TestClient(create_app(runtime_dirs=runtime_dirs, loaded_config=loaded_config)), runtime_dirs
+        db_info = init_db(runtime_dirs=runtime_dirs)
+        return TestClient(create_app(runtime_dirs=runtime_dirs, loaded_config=loaded_config, db_info=db_info)), runtime_dirs
 
 
 if __name__ == "__main__":

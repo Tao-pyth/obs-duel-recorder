@@ -29,6 +29,7 @@ _MIGRATIONS: tuple[str, ...] = (
     "0006_image_recognition_metadata",
     "0007_statistics_indexes",
     "0008_runtime_optimization_indexes",
+    "0009_recording_match_link",
 )
 
 

@@ -36,6 +36,7 @@ Initial (v0.3):
 - `created_at`
 
 v1.1 match metadata columns:
+- `recording_session_id`
 - `deck_name`
 - `opponent_deck`
 - `result`
@@ -46,6 +47,7 @@ v1.1 match metadata columns:
 - `updated_at`
 
 v1.1 metadata indexes:
+- `idx_matches_recording_session_id`
 - `idx_matches_opponent_deck`
 - `idx_matches_result`
 - `idx_matches_started_at`

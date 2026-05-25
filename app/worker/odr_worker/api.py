@@ -293,6 +293,20 @@ def create_app(*, runtime_dirs: RuntimeDirs, loaded_config: LoadedWorkerConfig, 
                 app.state.overlay_state,
                 {"recording_state": overlay_recording_state(app.state.recording_state)},
             )
+            response = app.state.recording_state.as_payload()
+            if (
+                app.state.recording_state.state == "completed"
+                and app.state.recording_state.command_source == "manual"
+                and app.state.metadata_store is not None
+            ):
+                match = app.state.metadata_store.get_or_create_recording_match(
+                    recording_session_id=app.state.recording_state.session_id,
+                    source=app.state.recording_state.command_source,
+                    ended_at=app.state.recording_state.updated_at,
+                )
+                response["match_id"] = match.id
+                response["match_state"] = "pending_metadata"
+            return response
         except RecordingCommandError as exc:
             status_code = 409 if exc.code == "recording_transition_invalid" else 400
             return JSONResponse(
@@ -308,7 +322,6 @@ def create_app(*, runtime_dirs: RuntimeDirs, loaded_config: LoadedWorkerConfig, 
                 status_code=400,
                 content=_error_payload(code="recording_command_invalid", message="Recording command must be JSON object"),
             )
-        return app.state.recording_state.as_payload()
 
     @app.get("/queue/recovery")
     def get_queue_recovery() -> dict[str, object]:
