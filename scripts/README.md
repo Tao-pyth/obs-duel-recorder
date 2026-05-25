@@ -15,6 +15,7 @@ Current helpers:
 - `build_docs_site.py`
 - `build_release_package.ps1`
 - `build_worker_exe.ps1`
+- `install_release_package.ps1`
 - `validate_release_package.ps1`
 - `verify_obs_install_layout.ps1`
 
@@ -29,7 +30,9 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build_worker_exe.ps1
 
 Use `-PythonExe <path-to-python.exe>` when building from an isolated virtual environment.
 
-`build_release_package.ps1` creates the release ZIP under `build/release/` from an existing `obs-duel-recorder.dll`, the bundled Worker executable, Worker source fallback files, `update.bat`, and the minimum documentation set. It writes `SHA256SUMS.txt` beside the ZIP and calls `validate_release_package.ps1` to reject runtime data, secrets, logs, databases, screenshots, videos, and local game assets.
+`build_release_package.ps1` creates the release ZIP under `build/release/` from an existing `obs-duel-recorder.dll`, the bundled Worker executable, Worker source fallback files, `install.bat`, `update.bat`, and the minimum documentation set. It writes `SHA256SUMS.txt` beside the ZIP and calls `validate_release_package.ps1` to reject runtime data, secrets, logs, databases, screenshots, videos, and local game assets.
+
+`install_release_package.ps1` copies a packaged Plugin DLL and Worker bundle into a selected OBS root. Packaged users normally run `install.bat "<OBS install>"` from the ZIP root; the batch wrapper requires only Windows PowerShell and does not require Python or development tools. The assistant validates the OBS root before copying and does not modify runtime `user_data`.
 
 `verify_obs_install_layout.ps1` validates a packaged install against an OBS root directory. Packaged users normally run `verify-install.bat "<OBS install>"` from the ZIP root; the batch wrapper requires only Windows PowerShell and does not require Python or development tools.
 

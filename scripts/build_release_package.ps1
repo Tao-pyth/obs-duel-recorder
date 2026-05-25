@@ -151,6 +151,7 @@ Copy-RequiredFile -Source (Join-Path $workerSource "README.md") -Destination (Jo
 Copy-RequiredFile -Source (Join-Path $workerSource "requirements.txt") -Destination (Join-Path $workerDest "requirements.txt")
 
 Copy-RequiredFile -Source (Join-Path $RepoRoot "update.bat") -Destination (Join-Path $packageRoot "update.bat")
+Copy-RequiredFile -Source (Join-Path $RepoRoot "install.bat") -Destination (Join-Path $packageRoot "install.bat")
 Copy-RequiredFile -Source (Join-Path $RepoRoot "verify-install.bat") -Destination (Join-Path $packageRoot "verify-install.bat")
 Copy-RequiredFile -Source (Join-Path $RepoRoot "README.md") -Destination (Join-Path $packageRoot "README.md")
 Copy-RequiredFile -Source (Join-Path $RepoRoot "LICENSE") -Destination (Join-Path $packageRoot "LICENSE")
@@ -160,6 +161,7 @@ Copy-RequiredFile -Source (Join-Path $RepoRoot "docs/README.md") -Destination (J
 Copy-RequiredFile -Source (Join-Path $RepoRoot "docs/architecture/packaging.md") -Destination (Join-Path $packageRoot "docs/architecture/packaging.md")
 Copy-RequiredFile -Source (Join-Path $RepoRoot "docs/architecture/update-system.md") -Destination (Join-Path $packageRoot "docs/architecture/update-system.md")
 Copy-RequiredFile -Source (Join-Path $RepoRoot "docs/architecture/plugin-worker.md") -Destination (Join-Path $packageRoot "docs/architecture/plugin-worker.md")
+Copy-RequiredFile -Source (Join-Path $RepoRoot "scripts/install_release_package.ps1") -Destination (Join-Path $packageRoot "scripts/install_release_package.ps1")
 Copy-RequiredFile -Source (Join-Path $RepoRoot "scripts/verify_obs_install_layout.ps1") -Destination (Join-Path $packageRoot "scripts/verify_obs_install_layout.ps1")
 
 $manifest = [ordered]@{
@@ -169,6 +171,7 @@ $manifest = [ordered]@{
     plugin_dll = "app/plugin/obs-duel-recorder.dll"
     worker_executable = "app/worker/odr-worker/odr-worker.exe"
     worker_source_fallback = "app/worker/odr_worker"
+    install_entrypoint = "install.bat"
     update_entrypoint = "update.bat"
     install_verifier = "verify-install.bat"
     checksum_file = "SHA256SUMS.txt beside the ZIP"

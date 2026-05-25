@@ -20,7 +20,9 @@ obs-duel-recorder-vX.Y.Z/
 |-- docs/
 |   `-- <minimal install/update/user docs>
 |-- scripts/
+|   |-- install_release_package.ps1
 |   `-- verify_obs_install_layout.ps1
+|-- install.bat
 |-- update.bat
 |-- verify-install.bat
 |-- README.md
@@ -60,6 +62,7 @@ Release ZIPs must not include:
 Packaging is implemented by:
 
 - `scripts/build_release_package.ps1`
+- `scripts/install_release_package.ps1`
 - `scripts/validate_release_package.ps1`
 - `scripts/verify_obs_install_layout.ps1`
 - `.github/workflows/release-package.yml`
@@ -74,9 +77,19 @@ normally created by `scripts/build_worker_exe.ps1` under
 packaged releases; source-based Worker execution is kept as a developer
 fallback.
 
-The release ZIP includes `verify-install.bat` and
-`scripts/verify_obs_install_layout.ps1` so packaged users can validate the OBS
-install layout without Python or development tools:
+The release ZIP includes `install.bat`,
+`scripts/install_release_package.ps1`, `verify-install.bat`, and
+`scripts/verify_obs_install_layout.ps1` so packaged users can install/update
+and validate the OBS layout without Python or development tools:
+
+```powershell
+.\install.bat "C:\Program Files\obs-studio"
+```
+
+The install assistant validates the OBS root, copies
+`obs-duel-recorder.dll` to `obs-plugins\64bit\`, copies the full Worker bundle
+to `obs-plugins\worker\odr-worker\`, preserves runtime `user_data`, and then
+runs the verifier.
 
 ```powershell
 .\verify-install.bat "C:\Program Files\obs-studio"

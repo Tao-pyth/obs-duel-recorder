@@ -28,9 +28,26 @@ Continue only when the printed hash matches the release checksum.
 
 ---
 
-## Copy Files Into OBS
+## Install Into OBS
 
-Extract the ZIP to a working folder first. Then copy the Plugin DLL and the whole Worker bundle into the OBS installation folder.
+Extract the ZIP to a working folder first. Then run the install assistant from
+the extracted release ZIP root:
+
+```powershell
+.\install.bat "C:\Program Files\obs-studio"
+```
+
+Use the root folder of your OBS installation. For Portable OBS, pass the
+portable OBS folder. The assistant validates that the path looks like OBS,
+copies the Plugin DLL and full Worker bundle, then runs the layout verifier.
+It uses Windows PowerShell only and does not require Python, CMake, Visual
+Studio, or other development tools.
+
+The assistant does not modify runtime `user_data`. It does not delete existing
+user files.
+
+Manual copy is still possible if the assistant cannot write into the OBS
+folder.
 
 Expected release ZIP paths:
 
@@ -71,7 +88,7 @@ Portable OBS uses the same layout under the portable OBS folder.
 
 ## Verify Installed Layout
 
-After copying files, run the verifier from the extracted release ZIP root:
+After installing or manually copying files, run the verifier from the extracted release ZIP root:
 
 ```powershell
 .\verify-install.bat "C:\Program Files\obs-studio"
