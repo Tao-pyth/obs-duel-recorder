@@ -19,6 +19,45 @@ Invoke-WebRequest http://127.0.0.1:8787/health | Select-Object -ExpandProperty C
 
 通常の ZIP 配置では、Plugin は OBS の `obs-plugins\64bit\obs-duel-recorder.dll` から見て `..\worker\odr-worker\odr-worker.exe` を優先します。そこに Worker EXE がない場合、開発者向けの `odr-worker` fallback を試します。
 
+正しい配置:
+
+```text
+<OBSインストール先>\
+`-- obs-plugins\
+    |-- 64bit\
+    |   `-- obs-duel-recorder.dll
+    `-- worker\
+        `-- odr-worker\
+            |-- odr-worker.exe
+            `-- <その他の Worker bundle ファイル>
+```
+
+誤った配置:
+
+```text
+<OBSインストール先>\
+`-- obs-plugins\
+    `-- 64bit\
+        |-- obs-duel-recorder.dll
+        `-- worker\
+            `-- odr-worker\
+                `-- odr-worker.exe
+```
+
+`odr-worker.exe` だけではなく、`odr-worker` ディレクトリ全体を `obs-plugins\worker\odr-worker\` にコピーしてください。
+
+## Settings は開くが Start / Stop がグレーアウトしている
+
+Settings が開く場合でも、Worker が `running` になるまでは手動 Start / Stop は有効になりません。
+
+1. `<OBSインストール先>\obs-plugins\worker\odr-worker\odr-worker.exe` が存在するか確認します。
+2. Worker を `<OBSインストール先>\obs-plugins\64bit\worker\` に置いていないか確認します。
+3. 誤配置していた場合は、`worker` フォルダを `64bit` の外へ移動し、`obs-plugins\worker\odr-worker\` になるよう直します。
+4. OBS を再起動します。
+5. Dock の Worker state が `running` になることを確認します。
+
+この状態は、Plugin DLL は読み込まれているが Worker launch に失敗している場合によく発生します。
+
 ## Plugin Dock が表示されない
 
 1. OBS Studio x64 を使用しているか確認します。
