@@ -21,6 +21,7 @@ Examples:
 - `v0.2.0`
 - `v0.12.0`
 - `v1.0.1`
+- `v1.1.0` as a target version, subject to the legacy tag conflict rule below
 
 ## Usability-Based Versioning Policy
 
@@ -43,6 +44,11 @@ The project reached its first user-ready OBS Plugin release at `v1.0.1`. A
 - public release assets are approved and published,
 - the final v1.0 tag naming decision is recorded.
 
+The active `v1.1` target is First Trial Usability Hardening, coordinated through
+#415. It is complete only when the required child issues #416 through #438 are
+closed or explicitly deferred with maintainer approval, and the v1.1 acceptance
+and release readiness records are complete.
+
 Existing `v1.x` and `v2.x` tags created before this rule are legacy non-product
 tags. They must not be interpreted as active release versions. Do not move or
 overwrite existing tags without explicit maintainer approval. If a future
@@ -51,6 +57,11 @@ publication/tag naming decision before tagging.
 
 For the active v1.0 publication gate, the existing `v1.0.0` tag is a legacy
 non-product tag. The active publication tag is `v1.0.1`.
+
+For the active v1.1 target, an existing legacy `v1.1.0` tag is preserved for
+auditability. The target version remains `v1.1.0`, but the final publication tag
+must be chosen and recorded before release without moving, deleting, or
+overwriting the legacy tag.
 
 ## Version Terms
 
@@ -76,6 +87,7 @@ Tracking issue title format:
 Examples:
 - `[v0.2] Worker Core API release tracking`
 - `[v0.3] SQLite Foundation release tracking`
+- `[v1.1] First Trial Usability Hardening release tracking`
 
 The tracking issue is for version management, progress aggregation, release readiness, release records, and handoff to the next version. Implementation work, documentation changes, validation work, and fixes must be handled by child issues or PRs.
 
@@ -114,7 +126,7 @@ Implementation-only work must not create a product version tag.
 
 Required tag points:
 - Major release completion: tag the merged release commit as `vX.0.0`, unless the release plan explicitly defines a different minor or patch number.
-- Minor release completion: tag the merged release commit as `vX.Y.0`.
+- Minor release completion: tag the merged release commit as `vX.Y.0`, unless that tag already exists as a legacy non-product tag or the release plan explicitly records a different non-conflicting tag.
 
 Patch tags are optional and are created only when a patch release boundary is intentionally needed.
 
@@ -137,6 +149,7 @@ Use a version-scoped readiness checklist before tagging:
 - v0.12: `docs/release/v0.12-release-readiness.md`
 - v0.13: `docs/release/v0.13-release-readiness.md`
 - active v1.0: `docs/release/v1.0-first-usable-release-readiness.md`
+- active v1.1: `docs/release/v1.1-first-trial-usability-hardening-readiness.md`
 
 The v0.11 readiness checklist is a version gate, not a packaged release
 approval by itself. It was completed together with the OBS real-load smoke
@@ -151,11 +164,17 @@ distribution readiness. It proves that normal Windows users can use the release
 ZIP without manually setting up Python, pip, or a virtual environment.
 
 The active v1.0 readiness checklist is the publication gate for the first
-normal-user GitHub Release package. It must record final ZIP/SHA verification,
+normal-user GitHub Release package. It records final ZIP/SHA verification,
 install/update preservation evidence, Release asset publication, and the
 non-conflicting tag decision before #401 closes.
 
 The active v1.0 checklist was completed for `v1.0.1`.
+
+The active v1.1 readiness checklist is the publication gate for the first
+post-trial usability hardening release. It must prove that all nine problem
+areas from the first real OBS trial are resolved through #415 and its required
+child issues, and that the legacy `v1.1.0` tag conflict has a documented
+non-overwrite publication decision.
 
 Do not retroactively create a `v0.1.0` tag unless explicitly approved.
 
@@ -187,8 +206,8 @@ When a major or minor roadmap milestone is completed:
 3. Confirm the release readiness checklist is complete.
 4. Confirm the release PR is merged into `main`.
 5. Identify the merged commit SHA on `main`.
-6. Create the release tag if the available GitHub tooling supports tag creation.
-7. If tag creation is not available, report the intended tag name and target commit SHA.
+6. Create the release tag if the available GitHub tooling supports tag creation and the tag does not conflict with a legacy tag.
+7. If tag creation is not available or the canonical tag conflicts with a legacy tag, report the intended tag name, target commit SHA, and required maintainer decision.
 8. Save release point information to persistent release docs.
 9. Confirm version information such as `released_version` and `current_development_version` is updated where defined.
 10. Confirm the next version tracking issue is created from `docs/roadmap.md`.
