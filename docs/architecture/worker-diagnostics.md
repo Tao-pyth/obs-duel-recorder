@@ -138,7 +138,10 @@ This evidence is expected to be present across:
 For the v1.1 Dock UI, the status-first diagnostic rows should expose selectable
 text for the current state, endpoint, `user_data_dir`, expected Worker path,
 ownership, latest detail/error, and recommended action. Manual Start/Stop
-controls remain enabled only when the diagnostic state is `running`.
+controls remain enabled only when the diagnostic state is `running`. The Dock
+should also show the last manual recording command result, including recording
+state, `session_id`, source, last action, reason, and update time when
+available; failed commands should leave a compact diagnostic reason visible.
 
 ---
 

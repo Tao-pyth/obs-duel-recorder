@@ -50,8 +50,10 @@ struct WorkerStatusSnapshot {
 	std::wstring worker_command;
 	std::wstring expected_worker_path;
 	std::wstring wrong_nested_worker_path;
+	RecordingStatePayload recording_state;
 	std::string last_probe_summary;
 	std::string error;
+	std::string recording_error;
 	std::string overlay_error;
 	std::string api_version;
 	std::string version;
@@ -61,6 +63,7 @@ struct WorkerStatusSnapshot {
 	unsigned long http_status = 0;
 	unsigned long overlay_http_status = 0;
 	unsigned int consecutive_failures = 0;
+	bool recording_state_available = false;
 	bool overlay_state_available = false;
 };
 

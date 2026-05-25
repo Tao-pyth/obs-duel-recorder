@@ -538,10 +538,23 @@ RecordingCommandResult WorkerProcessManager::send_recording_command(const std::s
 			RecordingCommandResult result;
 			result.status = RecordingCommandStatus::unavailable;
 			result.error = "Worker is not running";
+			status_.recording_state_available = false;
+			status_.recording_error = result.error;
 			return result;
 		}
 	}
-	return api_client_.send_recording_command(endpoint, action, source);
+	RecordingCommandResult result = api_client_.send_recording_command(endpoint, action, source);
+	{
+		std::lock_guard<std::mutex> lock(mutex_);
+		if (result.accepted()) {
+			status_.recording_state_available = true;
+			status_.recording_state = result.state;
+			status_.recording_error.clear();
+		} else {
+			status_.recording_error = result.error.empty() ? "Recording command failed" : result.error;
+		}
+	}
+	return result;
 }
 
 void WorkerProcessManager::stop()

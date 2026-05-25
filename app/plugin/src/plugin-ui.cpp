@@ -18,6 +18,7 @@
 #include <QVBoxLayout>
 #include <QWidget>
 
+#include <sstream>
 #include <string>
 
 namespace odr::plugin {
@@ -95,6 +96,36 @@ const char *recommended_action(WorkerDiagnosticState state)
 	return "Check OBS and Worker logs.";
 }
 
+std::string recording_summary(const WorkerStatusSnapshot &snapshot)
+{
+	if (!snapshot.recording_error.empty()) {
+		return "command failed: " + snapshot.recording_error;
+	}
+	if (!snapshot.recording_state_available) {
+		return "not available";
+	}
+
+	const RecordingStatePayload &state = snapshot.recording_state;
+	std::ostringstream out;
+	out << "state=" << state.state;
+	if (!state.session_id.empty()) {
+		out << " session_id=" << state.session_id;
+	}
+	if (!state.command_source.empty()) {
+		out << " source=" << state.command_source;
+	}
+	if (!state.last_action.empty()) {
+		out << " last_action=" << state.last_action;
+	}
+	if (!state.reason.empty()) {
+		out << " reason=" << state.reason;
+	}
+	if (!state.updated_at.empty()) {
+		out << " updated_at=" << state.updated_at;
+	}
+	return out.str();
+}
+
 QLabel *add_row(QFormLayout *layout, const char *name)
 {
 	auto *value = new QLabel;
@@ -133,6 +164,7 @@ void PluginUiController::register_ui()
 	auto *form = new QFormLayout;
 	form->setFieldGrowthPolicy(QFormLayout::AllNonFixedFieldsGrow);
 	state_value_ = add_row(form, "State");
+	recording_value_ = add_row(form, "Recording");
 	endpoint_value_ = add_row(form, "Endpoint");
 	user_data_value_ = add_row(form, "User data");
 	worker_path_value_ = add_row(form, "Worker path");
@@ -198,6 +230,7 @@ void PluginUiController::refresh()
 						 snapshot.expected_worker_path;
 
 	state_value_->setText(QString::fromUtf8(state_name(snapshot.state)));
+	recording_value_->setText(qstr_utf8(recording_summary(snapshot)));
 	endpoint_value_->setText(qstr_utf8(endpoint));
 	user_data_value_->setText(snapshot.user_data_dir.empty() ? QString::fromUtf8("not configured") : qstr_wide(snapshot.user_data_dir));
 	worker_path_value_->setText(worker_path.empty() ? QString::fromUtf8("not available") : qstr_wide(worker_path));
