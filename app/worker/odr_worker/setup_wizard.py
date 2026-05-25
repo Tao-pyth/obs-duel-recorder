@@ -162,7 +162,9 @@ class SetupWizardStore:
             except OSError:
                 diagnostics.append({"code": "directory_not_writable", "label": label, "path": path.as_posix()})
         existing_data = any(path.exists() for path in (self.runtime_dirs.db_dir / "odr.sqlite3",))
-        return _validation_payload("ready" if not diagnostics else "action_required", diagnostics, existing_data)
+        status = "ready" if not diagnostics else "action_required"
+        code = "runtime_path_ready" if status == "ready" else "runtime_path_action_required"
+        return _validation_payload(status, code, diagnostics, existing_data)
 
     def _validate_obs_integration(self) -> dict[str, object]:
         diagnostics = [
@@ -172,7 +174,7 @@ class SetupWizardStore:
                 "worker_version": __version__,
             }
         ]
-        return _validation_payload("ready", diagnostics, False)
+        return _validation_payload("ready", "worker_api_compatible", diagnostics, False)
 
     def _validate_oauth(self) -> dict[str, object]:
         settings = build_upload_settings(user_data_dir=self.runtime_dirs.user_data_dir)
@@ -182,21 +184,23 @@ class SetupWizardStore:
         if not settings.token_configured:
             diagnostics.append({"code": "token_missing", "path": settings.token_path.as_posix()})
         status = "ready" if not diagnostics else "action_required"
-        return _validation_payload(status, diagnostics, False)
+        code = "oauth_ready" if status == "ready" else "oauth_action_required"
+        return _validation_payload(status, code, diagnostics, False)
 
     def _validate_templates(self) -> dict[str, object]:
         try:
             config = load_template_config(self.runtime_dirs.user_data_dir)
             loaded = load_templates(config)
         except TemplateConfigError as exc:
-            return _validation_payload("action_required", [exc.details], False)
+            return _validation_payload("action_required", "templates_action_required", [exc.details], False)
         diagnostics: list[dict[str, object]] = list(config.errors)
         if not config.config_loaded:
             diagnostics.append({"code": "template_config_missing", "path": config.config_path.as_posix()})
         if config.config_loaded and not loaded:
             diagnostics.append({"code": "templates_not_loaded", "templates_dir": config.templates_dir.as_posix()})
         status = "ready" if config.config_loaded and loaded and not diagnostics else "action_required"
-        return _validation_payload(status, diagnostics, False)
+        code = "templates_ready" if status == "ready" else "templates_action_required"
+        return _validation_payload(status, code, diagnostics, False)
 
 
 def _default_state() -> dict[str, object]:
@@ -241,9 +245,15 @@ def _step_payload(step_id: str, *, completed: bool, validation: dict[str, object
     ).as_payload()
 
 
-def _validation_payload(status: str, diagnostics: list[dict[str, object]], existing_data: bool) -> dict[str, object]:
+def _validation_payload(
+    status: str,
+    code: str,
+    diagnostics: list[dict[str, object]],
+    existing_data: bool,
+) -> dict[str, object]:
     return {
         "status": status,
+        "code": code,
         "diagnostics": diagnostics,
         "existing_runtime_data": existing_data,
     }

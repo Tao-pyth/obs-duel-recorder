@@ -84,10 +84,14 @@ class SetupWizardApiTests(unittest.TestCase):
         self.assertEqual(validations.status_code, 200)
         body = validations.json()["validations"]
         self.assertEqual(body["runtime_path"]["status"], "ready")
+        self.assertEqual(body["runtime_path"]["code"], "runtime_path_ready")
         self.assertTrue(body["runtime_path"]["existing_runtime_data"])
         self.assertEqual(body["obs_integration"]["status"], "ready")
+        self.assertEqual(body["obs_integration"]["code"], "worker_api_compatible")
         self.assertEqual(body["oauth"]["status"], "action_required")
+        self.assertEqual(body["oauth"]["code"], "oauth_action_required")
         self.assertEqual(body["templates"]["status"], "action_required")
+        self.assertEqual(body["templates"]["code"], "templates_action_required")
 
         secrets_dir = runtime_dirs.config_dir / "secrets"
         secrets_dir.mkdir(parents=True, exist_ok=True)
@@ -109,7 +113,23 @@ path = "start.bin"
         ready_client = self._client_for_runtime(runtime_dirs)
         ready = ready_client.post("/setup/validate").json()["validations"]
         self.assertEqual(ready["oauth"]["status"], "ready")
+        self.assertEqual(ready["oauth"]["code"], "oauth_ready")
         self.assertEqual(ready["templates"]["status"], "ready")
+        self.assertEqual(ready["templates"]["code"], "templates_ready")
+
+    def test_validate_reports_runtime_path_failure_with_stable_code(self) -> None:
+        client, runtime_dirs = self._client()
+        runtime_dirs.videos_dir.rmdir()
+
+        validations = client.post("/setup/validate")
+        self.assertEqual(validations.status_code, 200)
+        runtime_path = validations.json()["validations"]["runtime_path"]
+        self.assertEqual(runtime_path["status"], "action_required")
+        self.assertEqual(runtime_path["code"], "runtime_path_action_required")
+        self.assertIn(
+            {"code": "directory_missing", "label": "videos", "path": runtime_dirs.videos_dir.as_posix()},
+            runtime_path["diagnostics"],
+        )
 
     def test_invalid_step_and_invalid_state_are_actionable(self) -> None:
         client, runtime_dirs = self._client()

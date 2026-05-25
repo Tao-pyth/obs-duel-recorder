@@ -41,6 +41,24 @@ Returns the persisted setup state, current step, completed steps, and validation
 
 Returns validation results without mutating setup state.
 
+Each validation result includes:
+
+- `status`: `ready` or `action_required`
+- `code`: stable machine-readable result code
+- `diagnostics`: stable diagnostic objects, each with a `code`
+- `existing_runtime_data`: whether existing runtime data was detected where
+  relevant
+
+Current stable result codes:
+
+- `runtime_path_ready`
+- `runtime_path_action_required`
+- `worker_api_compatible`
+- `oauth_ready`
+- `oauth_action_required`
+- `templates_ready`
+- `templates_action_required`
+
 ### `POST /setup/steps/{step_id}/complete`
 
 Marks one step complete by default.

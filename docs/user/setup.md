@@ -18,6 +18,12 @@ The setup status can be:
 
 The current step is reported as `runtime_path`, `obs_integration`, `oauth`, or `templates`.
 
+Validation responses include stable `code` values such as
+`runtime_path_ready`, `runtime_path_action_required`,
+`worker_api_compatible`, `oauth_action_required`, and
+`templates_action_required`. The Dock can use these codes without parsing
+diagnostic text.
+
 ---
 
 ## Runtime Path Setup

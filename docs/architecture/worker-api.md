@@ -422,6 +422,18 @@ Purpose:
 Purpose:
 - Validate setup prerequisites without mutating setup state.
 - Return runtime path, OBS integration, OAuth, and template validation diagnostics.
+- Return stable `status` and `code` fields so the OBS Dock can make first-run
+  decisions without parsing free-form text.
+
+Validation result codes:
+
+- `runtime_path_ready`
+- `runtime_path_action_required`
+- `worker_api_compatible`
+- `oauth_ready`
+- `oauth_action_required`
+- `templates_ready`
+- `templates_action_required`
 
 ### `POST /setup/steps/{step_id}/complete`
 
