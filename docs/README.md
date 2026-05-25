@@ -110,6 +110,7 @@ User-facing setup and usage documents live under `docs/user/`.
 - [First setup](user/setup.md)
 - [Operation flow and system overview](user/operation-flow.md)
 - [UI images](user/ui-images.md)
+- [OBS sources used by the Plugin](user/obs-sources.md)
 - [Usage](user/usage.md)
 - [Troubleshooting](user/troubleshooting.md)
 

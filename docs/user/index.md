@@ -15,6 +15,7 @@ These pages remain the current source of truth until `docs/user/en/**` is introd
 - [First setup](setup.md)
 - [Operation flow and system overview](operation-flow.md)
 - [UI images](ui-images.md)
+- [OBS sources used by the Plugin](obs-sources.md)
 - [Usage](usage.md)
 - [Troubleshooting](troubleshooting.md)
 

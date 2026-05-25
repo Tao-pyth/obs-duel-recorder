@@ -98,5 +98,6 @@ Responsibility boundary:
 - [Installation](install.md)
 - [First setup](setup.md)
 - [UI images](ui-images.md)
+- [OBS sources used by the Plugin](obs-sources.md)
 - [Usage](usage.md)
 - [Troubleshooting](troubleshooting.md)

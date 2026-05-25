@@ -98,5 +98,6 @@ flowchart LR
 - [インストール](install.md)
 - [初回セットアップ](first-setup.md)
 - [UI 画像](ui-images.md)
+- [Plugin が使う OBS Sources](obs-sources.md)
 - [使い方](usage.md)
 - [トラブルシューティング](troubleshooting.md)

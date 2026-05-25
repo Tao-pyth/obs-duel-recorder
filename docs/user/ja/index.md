@@ -10,6 +10,7 @@
 - [初回セットアップ](first-setup.md)
 - [操作フローとシステム概要](operation-flow.md)
 - [UI 画像](ui-images.md)
+- [Plugin が使う OBS Sources](obs-sources.md)
 - [OBS セットアップ](obs-setup.md)
 - [YouTube セットアップ](youtube-setup.md)
 - [使い方](usage.md)
