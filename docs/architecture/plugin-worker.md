@@ -245,6 +245,12 @@ the checked command plus the expected packaged Worker path. These diagnostics
 must not include OAuth tokens, client secrets, bearer strings, or environment
 dumps.
 
+For v1.1 launch evidence, OBS logs may also include a sanitized launch summary
+with the Worker command path, fixed `--host`/`--port` arguments, Worker working
+directory, and resolved `user_data_dir`. The summary must not dump environment
+variables or include OAuth tokens, client secrets, authorization codes, bearer
+strings, or other unrelated runtime secrets.
+
 ---
 
 ## Communication

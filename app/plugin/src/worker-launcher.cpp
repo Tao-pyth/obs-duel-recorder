@@ -80,6 +80,31 @@ std::wstring parent_directory(const std::wstring &path)
 	return path.substr(0, pos);
 }
 
+bool looks_like_path(const std::wstring &value)
+{
+	return value.find_first_of(L"\\/") != std::wstring::npos;
+}
+
+std::wstring worker_working_directory(const WorkerLaunchConfig &config)
+{
+	if (!looks_like_path(config.command)) {
+		return {};
+	}
+	return parent_directory(config.command);
+}
+
+std::string sanitized_launch_summary(const WorkerLaunchConfig &config, const std::wstring &working_directory)
+{
+	std::ostringstream out;
+	out << "command_path=" << to_utf8(config.command)
+	    << " args=\"--host " << to_utf8(config.endpoint.host)
+	    << " --port " << config.endpoint.port << "\""
+	    << " working_dir="
+	    << (working_directory.empty() ? "<inherit>" : to_utf8(working_directory))
+	    << " user_data_dir=" << to_utf8(config.user_data_dir);
+	return out.str();
+}
+
 std::string worker_discovery_summary(const WorkerLaunchConfig &config)
 {
 	std::ostringstream out;
@@ -244,9 +269,14 @@ void WorkerProcessManager::start(WorkerLaunchConfig config)
 
 	WorkerProbeResult ready_probe;
 	if (!wait_until_ready(config, ready_probe)) {
-		update_status(WorkerDiagnosticState::unhealthy, config, WorkerOwnership::spawned_by_plugin,
-			      "worker startup timeout", &ready_probe);
-		blog(LOG_WARNING, "%s worker startup timeout; terminating plugin-owned process", kLogPrefix);
+		const bool exited_before_ready =
+			ready_probe.error.find("exited before readiness") != std::string::npos;
+		const std::string startup_error =
+			exited_before_ready ? ready_probe.error : "worker startup timeout";
+		update_status(exited_before_ready ? WorkerDiagnosticState::crashed : WorkerDiagnosticState::unhealthy,
+			      config, WorkerOwnership::spawned_by_plugin, startup_error, &ready_probe);
+		blog(LOG_WARNING, "%s worker startup %s; terminating plugin-owned process",
+		     kLogPrefix, exited_before_ready ? "exited_before_ready" : "timeout");
 #ifdef _WIN32
 		std::lock_guard<std::mutex> lock(mutex_);
 		if (ownership_ == WorkerOwnership::spawned_by_plugin && process_info_.hProcess) {
@@ -267,6 +297,8 @@ bool WorkerProcessManager::spawn_worker(const WorkerLaunchConfig &config, std::s
 {
 #ifdef _WIN32
 	const std::string discovery = worker_discovery_summary(config);
+	const std::wstring working_directory = worker_working_directory(config);
+	const std::string launch_summary = sanitized_launch_summary(config, working_directory);
 	if (!config.expected_worker_path.empty() && !file_exists(config.expected_worker_path)) {
 		blog(LOG_WARNING, "%s worker discovery packaged_worker_missing %s", kLogPrefix, discovery.c_str());
 	}
@@ -274,6 +306,12 @@ bool WorkerProcessManager::spawn_worker(const WorkerLaunchConfig &config, std::s
 	    (file_exists(config.wrong_nested_worker_path) ||
 	     directory_exists(parent_directory(parent_directory(config.wrong_nested_worker_path))))) {
 		blog(LOG_WARNING, "%s worker discovery wrong_nested_worker_detected %s", kLogPrefix, discovery.c_str());
+	}
+	if (!working_directory.empty() && !directory_exists(working_directory)) {
+		launch_error = "Worker launch failed category=bad_working_directory " + launch_summary +
+			       " " + discovery;
+		blog(LOG_WARNING, "%s worker launch preflight_failed %s", kLogPrefix, launch_error.c_str());
+		return false;
 	}
 
 	std::wstring command_line = L"\"" + config.command + L"\" --host " + config.endpoint.host +
@@ -286,23 +324,25 @@ bool WorkerProcessManager::spawn_worker(const WorkerLaunchConfig &config, std::s
 	startup_info.cb = sizeof(startup_info);
 
 	PROCESS_INFORMATION process_info{};
+	blog(LOG_INFO, "%s worker launch attempt %s", kLogPrefix, launch_summary.c_str());
 	if (!CreateProcessW(nullptr, mutable_command.data(), nullptr, nullptr, FALSE,
 			    CREATE_UNICODE_ENVIRONMENT | CREATE_NO_WINDOW,
-			    environment.empty() ? nullptr : environment.data(), nullptr,
+			    environment.empty() ? nullptr : environment.data(),
+			    working_directory.empty() ? nullptr : working_directory.c_str(),
 			    &startup_info, &process_info)) {
 		const DWORD error = GetLastError();
 		launch_error = "Worker launch failed category=" + std::string(launch_error_category(error)) +
-			       " windows_error=" + std::to_string(error) + " " + discovery;
-		blog(LOG_WARNING, "%s worker launch failed user_data_dir=%s %s",
-		     kLogPrefix, to_utf8(config.user_data_dir).c_str(), launch_error.c_str());
+			       " windows_error=" + std::to_string(error) + " " +
+			       launch_summary + " " + discovery;
+		blog(LOG_WARNING, "%s worker launch failed %s", kLogPrefix, launch_error.c_str());
 		return false;
 	}
 
 	std::lock_guard<std::mutex> lock(mutex_);
 	process_info_ = process_info;
 	ownership_ = WorkerOwnership::spawned_by_plugin;
-	blog(LOG_INFO, "%s worker spawned pid=%lu user_data_dir=%s",
-	     kLogPrefix, process_info_.dwProcessId, to_utf8(config.user_data_dir).c_str());
+	blog(LOG_INFO, "%s worker spawned pid=%lu %s",
+	     kLogPrefix, process_info_.dwProcessId, launch_summary.c_str());
 	return true;
 #else
 	(void)config;
@@ -318,6 +358,31 @@ bool WorkerProcessManager::wait_until_ready(const WorkerLaunchConfig &config, Wo
 			      std::chrono::milliseconds(config.startup_timeout_ms);
 
 	while (!stop_requested_ && std::chrono::steady_clock::now() < deadline) {
+#ifdef _WIN32
+		bool plugin_owned = false;
+		HANDLE process_handle = nullptr;
+		{
+			std::lock_guard<std::mutex> lock(mutex_);
+			plugin_owned = ownership_ == WorkerOwnership::spawned_by_plugin;
+			process_handle = process_info_.hProcess;
+		}
+		if (plugin_owned && process_handle) {
+			DWORD exit_code = 0;
+			if (GetExitCodeProcess(process_handle, &exit_code) && exit_code != STILL_ACTIVE) {
+				ready_probe.status = WorkerProbeStatus::unreachable;
+				ready_probe.error = "Worker exited before readiness exit_code=" +
+						    std::to_string(exit_code);
+				update_status(WorkerDiagnosticState::crashed, config,
+					      WorkerOwnership::spawned_by_plugin, ready_probe.error, &ready_probe);
+				const std::wstring working_directory = worker_working_directory(config);
+				const std::string launch_summary = sanitized_launch_summary(config, working_directory);
+				blog(LOG_WARNING, "%s worker startup exited_before_ready exit_code=%lu %s",
+				     kLogPrefix, exit_code, launch_summary.c_str());
+				return false;
+			}
+		}
+#endif
+
 		WorkerProbeResult probe = api_client_.probe_health(config.endpoint, config.user_data_dir);
 		if (probe.reusable()) {
 			ready_probe = probe;
