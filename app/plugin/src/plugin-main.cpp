@@ -61,18 +61,19 @@ void record_current_output_path()
 	blog(LOG_INFO, "%s recording output_path_current=%s", kLogPrefix, path.c_str());
 }
 
-void record_last_output_path()
+std::string record_last_output_path()
 {
 	const std::string path = take_frontend_path(obs_frontend_get_last_recording());
 	if (!path.empty()) {
 		worker_manager.record_recording_output_path(path, "OBS last recording path");
 		blog(LOG_INFO, "%s recording output_path_last=%s", kLogPrefix, path.c_str());
-		return;
+		return path;
 	}
 
 	worker_manager.record_recording_output_evidence(
 		"OBS did not return a last recording path; check OBS Output settings and OBS logs.");
 	blog(LOG_WARNING, "%s recording output_path_last unavailable", kLogPrefix);
+	return {};
 }
 
 void frontend_event(enum obs_frontend_event event, void *)
@@ -94,11 +95,13 @@ void frontend_event(enum obs_frontend_event event, void *)
 			worker_manager.send_recording_command("confirm_started", "manual"));
 		break;
 	case OBS_FRONTEND_EVENT_RECORDING_STOPPED:
-		record_last_output_path();
+	{
+		const std::string output_path = record_last_output_path();
 		log_recording_command_result(
 			"confirm_stopped",
-			worker_manager.send_recording_command("confirm_stopped", "manual"));
+			worker_manager.send_recording_command("confirm_stopped", "manual", output_path));
 		break;
+	}
 	default:
 		break;
 	}

@@ -47,6 +47,46 @@ std::string normalize_path(std::string value)
 	return value;
 }
 
+std::string json_escape(const std::string &value)
+{
+	std::ostringstream out;
+	for (const unsigned char ch : value) {
+		switch (ch) {
+		case '"':
+			out << "\\\"";
+			break;
+		case '\\':
+			out << "\\\\";
+			break;
+		case '\b':
+			out << "\\b";
+			break;
+		case '\f':
+			out << "\\f";
+			break;
+		case '\n':
+			out << "\\n";
+			break;
+		case '\r':
+			out << "\\r";
+			break;
+		case '\t':
+			out << "\\t";
+			break;
+		default:
+			if (ch < 0x20) {
+				out << "\\u00";
+				const char *hex = "0123456789abcdef";
+				out << hex[(ch >> 4) & 0x0f] << hex[ch & 0x0f];
+			} else {
+				out << static_cast<char>(ch);
+			}
+			break;
+		}
+	}
+	return out.str();
+}
+
 #ifdef _WIN32
 
 struct HttpResponse {
@@ -290,12 +330,17 @@ OverlayFetchResult LocalhostApiClient::fetch_overlay_state(const WorkerEndpoint 
 
 RecordingCommandResult LocalhostApiClient::send_recording_command(const WorkerEndpoint &endpoint,
 								  const std::string &action,
-								  const std::string &source) const
+								  const std::string &source,
+								  const std::string &video_path) const
 {
 	RecordingCommandResult result;
 
 #ifdef _WIN32
-	const std::string body = "{\"action\":\"" + action + "\",\"source\":\"" + source + "\"}";
+	std::string body = "{\"action\":\"" + json_escape(action) + "\",\"source\":\"" + json_escape(source) + "\"";
+	if (!video_path.empty()) {
+		body += ",\"video_path\":\"" + json_escape(video_path) + "\"";
+	}
+	body += "}";
 	const HttpResponse response = http_post_json(endpoint, L"/recording/command", body);
 	result.http_status = response.status;
 	result.body = response.body;

@@ -151,6 +151,44 @@ class QueueStore:
         finally:
             conn.close()
 
+    def get_or_create_ready_item_for_match(self, *, match_id: int, video_path: str) -> QueueItem:
+        if not video_path:
+            raise QueueCommandError("queue_payload_invalid", {"video_path": "required"})
+
+        now = _utc_now_iso()
+        conn = self._connect()
+        try:
+            existing = conn.execute(
+                "SELECT * FROM upload_queue WHERE match_id = ? ORDER BY id LIMIT 1;",
+                (match_id,),
+            ).fetchone()
+            if existing is not None:
+                return _item_from_row(existing)
+
+            cursor = conn.execute(
+                """
+                INSERT INTO upload_queue(
+                  match_id, state, video_path, updated_at
+                ) VALUES(?, 'ready_upload', ?, ?);
+                """,
+                (match_id, video_path, now),
+            )
+            conn.commit()
+            return self._get_item(conn, int(cursor.lastrowid))
+        finally:
+            conn.close()
+
+    def get_item_for_match(self, match_id: int) -> QueueItem | None:
+        conn = self._connect()
+        try:
+            row = conn.execute(
+                "SELECT * FROM upload_queue WHERE match_id = ? ORDER BY id LIMIT 1;",
+                (match_id,),
+            ).fetchone()
+            return _item_from_row(row) if row is not None else None
+        finally:
+            conn.close()
+
     def list_items(self, state: str | None = None) -> list[QueueItem]:
         conn = self._connect()
         try:

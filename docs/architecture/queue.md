@@ -85,6 +85,22 @@ Minimum persisted evidence:
 - last error code/message when known
 - reason for manual review
 
+---
+
+## Recording Completion Handoff
+
+When manual recording completion includes a completed OBS output path, the
+Worker creates or reuses a `ready_upload` queue item linked to the pending match
+row for that recording session. The handoff is idempotent by `match_id`.
+
+If the output path is not known, the recording command response reports
+`queue_state: pending_output_path` and `queue_reason:
+recording_output_path_missing`. The Worker does not create a queue item without
+a media path. If a queued path later proves missing, existing upload processing
+moves it through the established discard/manual-review semantics.
+
+---
+
 Allowed operator actions:
 - `retry`: only after the operator decides duplicate upload risk is acceptable.
 - `discard`: when the local file is missing, intentionally abandoned, or known not to need upload.

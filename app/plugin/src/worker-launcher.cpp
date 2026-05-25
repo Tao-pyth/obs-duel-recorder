@@ -627,7 +627,8 @@ void WorkerProcessManager::record_recording_output_evidence(std::string evidence
 	status_.recording_output_evidence = std::move(evidence);
 }
 
-RecordingCommandResult WorkerProcessManager::send_recording_command(const std::string &action, const std::string &source)
+RecordingCommandResult WorkerProcessManager::send_recording_command(const std::string &action, const std::string &source,
+								     const std::string &video_path)
 {
 	WorkerEndpoint endpoint;
 	{
@@ -642,7 +643,7 @@ RecordingCommandResult WorkerProcessManager::send_recording_command(const std::s
 			return result;
 		}
 	}
-	RecordingCommandResult result = api_client_.send_recording_command(endpoint, action, source);
+	RecordingCommandResult result = api_client_.send_recording_command(endpoint, action, source, video_path);
 	{
 		std::lock_guard<std::mutex> lock(mutex_);
 		if (result.accepted()) {

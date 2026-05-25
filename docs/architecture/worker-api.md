@@ -64,6 +64,11 @@ Response fields:
 - `match_id`: present when a completed manual recording has been linked to a
   durable pending match row
 - `match_state`: `pending_metadata` when `match_id` was created or reused
+- `queue_item_id`: present when the completed recording is linked to an upload
+  queue item
+- `queue_state`: upload queue state, or `pending_output_path` when the Plugin
+  could not provide the completed recording path
+- `queue_reason`: stable queue handoff reason
 
 ### `POST /recording/command`
 
@@ -86,8 +91,12 @@ Error behavior:
 Manual completion handoff:
 - `confirm_stopped` from `stopping` to `completed` creates or reuses one match
   row keyed by `recording_session_id`.
+- If `video_path` is supplied, the Worker creates or reuses one
+  `ready_upload` queue item linked to that `match_id`.
 - Repeated `confirm_stopped` for the same completed recording returns the same
-  `match_id`.
+  `match_id` and queue item.
+- If `video_path` is missing, the response reports `queue_state:
+  pending_output_path` and does not create a misleading queue item.
 - Interrupted or failed recordings do not create match rows.
 
 The v0.6 recording API is defined by:

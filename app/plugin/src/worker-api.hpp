@@ -94,7 +94,8 @@ public:
 	WorkerProbeResult probe_health(const WorkerEndpoint &endpoint, const std::wstring &expected_user_data_dir) const;
 	OverlayFetchResult fetch_overlay_state(const WorkerEndpoint &endpoint) const;
 	RecordingCommandResult send_recording_command(const WorkerEndpoint &endpoint, const std::string &action,
-						      const std::string &source) const;
+						      const std::string &source,
+						      const std::string &video_path = {}) const;
 
 private:
 	std::string expected_api_version_;

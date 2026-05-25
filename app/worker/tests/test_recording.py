@@ -46,7 +46,7 @@ class RecordingStateApiTests(unittest.TestCase):
         self.assertTrue(body["updated_at"].endswith("Z"))
 
     def test_manual_start_confirm_stop_flow(self) -> None:
-        client, _ = self._client()
+        client, runtime_dirs = self._client()
 
         start = client.post("/recording/command", json={"action": "start", "source": "manual"})
         self.assertEqual(start.status_code, 200)
@@ -68,12 +68,19 @@ class RecordingStateApiTests(unittest.TestCase):
         self.assertEqual(stopping.status_code, 200)
         self.assertEqual(stopping.json()["state"], "stopping")
 
-        completed = client.post("/recording/command", json={"action": "confirm_stopped", "source": "manual"})
+        video_path = (runtime_dirs.videos_dir / "duel.mkv").as_posix()
+        completed = client.post(
+            "/recording/command",
+            json={"action": "confirm_stopped", "source": "manual", "video_path": video_path},
+        )
         self.assertEqual(completed.status_code, 200)
         self.assertEqual(completed.json()["state"], "completed")
         self.assertEqual(completed.json()["session_id"], start_body["session_id"])
         self.assertEqual(completed.json()["match_state"], "pending_metadata")
         match_id = completed.json()["match_id"]
+        queue_item_id = completed.json()["queue_item_id"]
+        self.assertEqual(completed.json()["queue_state"], "ready_upload")
+        self.assertEqual(completed.json()["queue_reason"], "recording_output_linked")
 
         match = client.get(f"/matches/{match_id}")
         self.assertEqual(match.status_code, 200)
@@ -83,8 +90,13 @@ class RecordingStateApiTests(unittest.TestCase):
         repeated = client.post("/recording/command", json={"action": "confirm_stopped", "source": "manual"})
         self.assertEqual(repeated.status_code, 200)
         self.assertEqual(repeated.json()["match_id"], match_id)
+        self.assertEqual(repeated.json()["queue_item_id"], queue_item_id)
+        self.assertEqual(repeated.json()["queue_reason"], "recording_output_already_linked")
         matches = client.get("/matches")
         self.assertEqual([item["id"] for item in matches.json()["items"]], [match_id])
+        queue = client.get("/queue/items")
+        self.assertEqual([item["id"] for item in queue.json()["items"]], [queue_item_id])
+        self.assertEqual(queue.json()["items"][0]["video_path"], video_path)
 
         overlay_completed = client.get("/overlay/state")
         self.assertEqual(overlay_completed.json()["recording_state"], "idle")
@@ -101,6 +113,21 @@ class RecordingStateApiTests(unittest.TestCase):
         self.assertEqual(body["details"]["action"], "stop")
         matches = client.get("/matches")
         self.assertEqual(matches.json()["items"], [])
+
+    def test_completed_recording_without_output_path_reports_pending_queue(self) -> None:
+        client, runtime_dirs = self._client()
+        client.post("/recording/command", json={"action": "start", "source": "manual"})
+        client.post("/recording/command", json={"action": "confirm_started", "source": "manual"})
+        client.post("/recording/command", json={"action": "stop", "source": "manual"})
+
+        completed = client.post("/recording/command", json={"action": "confirm_stopped", "source": "manual"})
+
+        self.assertEqual(completed.status_code, 200)
+        self.assertEqual(completed.json()["state"], "completed")
+        self.assertEqual(completed.json()["queue_state"], "pending_output_path")
+        self.assertEqual(completed.json()["queue_reason"], "recording_output_path_missing")
+        queue = client.get("/queue/items")
+        self.assertEqual(queue.json()["items"], [])
 
     def test_payload_validation_returns_stable_diagnostics(self) -> None:
         client, _ = self._client()

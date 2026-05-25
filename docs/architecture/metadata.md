@@ -108,7 +108,12 @@ match metadata row for that recording `session_id`. The row is intentionally
 pending: unknown deck, result, and opponent fields remain blank until later
 metadata editing or recognition assistance fills them.
 
+If the Plugin supplies the completed recording `video_path`, the same handoff
+creates or reuses one `ready_upload` queue item linked to the pending match. If
+the path is unavailable, the response reports `pending_output_path` and leaves
+queue creation pending instead of inventing a media path.
+
 Repeated `confirm_stopped` calls for the same recording session return the same
-`match_id` and must not create duplicate match rows. Interrupted or failed
-recordings do not create completed match rows.
+`match_id` and queue item, and must not create duplicate match or queue rows.
+Interrupted or failed recordings do not create completed match rows.
 

@@ -287,6 +287,18 @@ def create_app(*, runtime_dirs: RuntimeDirs, loaded_config: LoadedWorkerConfig, 
     async def post_recording_command(request: Request):
         try:
             payload = await request.json()
+            video_path = payload.get("video_path", "") if isinstance(payload, dict) else ""
+            if video_path is None:
+                video_path = ""
+            if not isinstance(video_path, str):
+                return JSONResponse(
+                    status_code=400,
+                    content=_error_payload(
+                        code="recording_command_invalid",
+                        message="Recording command is invalid",
+                        details={"video_path": "must_be_string"},
+                    ),
+                )
             app.state.recording_state = apply_recording_command(app.state.recording_state, payload)
             save_recording_state(app.state.recording_state_path, app.state.recording_state)
             app.state.overlay_state = apply_overlay_update(
@@ -306,6 +318,26 @@ def create_app(*, runtime_dirs: RuntimeDirs, loaded_config: LoadedWorkerConfig, 
                 )
                 response["match_id"] = match.id
                 response["match_state"] = "pending_metadata"
+                if app.state.queue_store is None:
+                    response["queue_state"] = "queue_unavailable"
+                    response["queue_reason"] = "queue_store_unavailable"
+                elif video_path.strip():
+                    queue_item = app.state.queue_store.get_or_create_ready_item_for_match(
+                        match_id=match.id,
+                        video_path=video_path.strip(),
+                    )
+                    response["queue_item_id"] = queue_item.id
+                    response["queue_state"] = queue_item.state
+                    response["queue_reason"] = "recording_output_linked"
+                else:
+                    queue_item = app.state.queue_store.get_item_for_match(match.id)
+                    if queue_item is not None:
+                        response["queue_item_id"] = queue_item.id
+                        response["queue_state"] = queue_item.state
+                        response["queue_reason"] = "recording_output_already_linked"
+                    else:
+                        response["queue_state"] = "pending_output_path"
+                        response["queue_reason"] = "recording_output_path_missing"
             return response
         except RecordingCommandError as exc:
             status_code = 409 if exc.code == "recording_transition_invalid" else 400

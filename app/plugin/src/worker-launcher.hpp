@@ -79,7 +79,8 @@ public:
 	WorkerStatusSnapshot status_snapshot() const;
 	void record_recording_output_path(std::string output_path, std::string evidence);
 	void record_recording_output_evidence(std::string evidence);
-	RecordingCommandResult send_recording_command(const std::string &action, const std::string &source);
+	RecordingCommandResult send_recording_command(const std::string &action, const std::string &source,
+						      const std::string &video_path = {});
 
 private:
 	void start(WorkerLaunchConfig config);
