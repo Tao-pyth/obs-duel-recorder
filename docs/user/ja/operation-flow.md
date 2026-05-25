@@ -97,5 +97,6 @@ flowchart LR
 
 - [インストール](install.md)
 - [初回セットアップ](first-setup.md)
+- [UI 画像](ui-images.md)
 - [使い方](usage.md)
 - [トラブルシューティング](troubleshooting.md)

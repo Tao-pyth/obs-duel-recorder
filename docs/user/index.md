@@ -14,6 +14,7 @@ These pages remain the current source of truth until `docs/user/en/**` is introd
 - [Installation](install.md)
 - [First setup](setup.md)
 - [Operation flow and system overview](operation-flow.md)
+- [UI images](ui-images.md)
 - [Usage](usage.md)
 - [Troubleshooting](troubleshooting.md)
 

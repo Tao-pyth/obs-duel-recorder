@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="540" viewBox="0 0 960 540" role="img" aria-labelledby="title desc">
+  <title id="title">Dock Help message</title>
+  <desc id="desc">Annotated documentation image showing the simple Help message reached from the Dock.</desc>
+  <rect width="960" height="540" fill="#f7f9fc"/>
+  <rect x="84" y="56" width="792" height="428" rx="18" fill="#ffffff" stroke="#d7deea" stroke-width="2"/>
+  <rect x="84" y="56" width="792" height="72" rx="18" fill="#52796f"/>
+  <text x="124" y="102" font-family="Segoe UI, Arial, sans-serif" font-size="26" font-weight="700" fill="#ffffff">Help</text>
+  <text x="724" y="101" font-family="Segoe UI, Arial, sans-serif" font-size="16" fill="#e8f5ee">OBS Duel Recorder</text>
+
+  <g font-family="Segoe UI, Arial, sans-serif">
+    <text x="124" y="166" font-size="18" font-weight="700" fill="#263947">Setup</text>
+    <text x="124" y="194" font-size="15" fill="#52616b">Confirm Worker status, runtime directory, OBS integration, OAuth, and templates.</text>
+    <text x="124" y="236" font-size="18" font-weight="700" fill="#263947">Manual recording</text>
+    <text x="124" y="264" font-size="15" fill="#52616b">Use Start and Stop after Worker status is running. Check the latest output evidence.</text>
+    <text x="124" y="306" font-size="18" font-weight="700" fill="#263947">Automatic recording</text>
+    <text x="124" y="334" font-size="15" fill="#52616b">Register start/end templates, test detection, and confirm thresholds before enabling.</text>
+    <text x="124" y="376" font-size="18" font-weight="700" fill="#263947">Metadata and upload</text>
+    <text x="124" y="404" font-size="15" fill="#52616b">Review metadata and generated upload text before real YouTube upload.</text>
+  </g>
+
+  <rect x="704" y="426" width="112" height="34" rx="17" fill="#2ec4b6"/>
+  <text x="742" y="449" font-family="Segoe UI, Arial, sans-serif" font-size="15" font-weight="700" fill="#073b3a">Close</text>
+  <line x1="650" y1="438" x2="704" y2="438" stroke="#1d3557" stroke-width="3"/>
+  <circle cx="650" cy="438" r="6" fill="#1d3557"/>
+  <text x="538" y="443" font-family="Segoe UI, Arial, sans-serif" font-size="13" fill="#1d3557">simple and safe</text>
+</svg>

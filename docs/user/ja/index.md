@@ -9,6 +9,7 @@
 - [インストール](install.md)
 - [初回セットアップ](first-setup.md)
 - [操作フローとシステム概要](operation-flow.md)
+- [UI 画像](ui-images.md)
 - [OBS セットアップ](obs-setup.md)
 - [YouTube セットアップ](youtube-setup.md)
 - [使い方](usage.md)

@@ -97,5 +97,6 @@ Responsibility boundary:
 
 - [Installation](install.md)
 - [First setup](setup.md)
+- [UI images](ui-images.md)
 - [Usage](usage.md)
 - [Troubleshooting](troubleshooting.md)
