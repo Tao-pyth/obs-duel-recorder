@@ -262,6 +262,7 @@ The version tracking issue may contain the working release summary, but finalize
 - Tag: `v1.1.1`
 - Tag target: `18f291455a3d6a646a9905c00d27efbe59c51d8b`
 - Release decision recorded at: `2026-05-26`
+- GitHub Release: `https://github.com/Tao-pyth/obs-duel-recorder/releases/tag/v1.1.1`
 - Major child issues: #441, #442, #443, #444, #445, #446, #447, #448, #449, #450, #451
 - Follow-up publication issue: #452
 - Validation ZIP evidence: `obs-duel-recorder-v1.1.1.zip`
