@@ -35,6 +35,7 @@ private:
 	void request_edit_metadata();
 	void request_preview_upload_metadata();
 	void request_show_help();
+	void request_automatic_setup();
 	void handle_automatic_recording(const WorkerStatusSnapshot &snapshot);
 	void log_recording_command_result(const char *action, const RecordingCommandResult &result);
 	void log_queue_command_result(const char *action, const QueueCommandResult &result);
@@ -63,6 +64,7 @@ private:
 	QGroupBox *diagnostics_group_ = nullptr;
 	QPushButton *settings_button_ = nullptr;
 	QPushButton *help_button_ = nullptr;
+	QPushButton *automatic_setup_button_ = nullptr;
 	QPushButton *start_button_ = nullptr;
 	QPushButton *stop_button_ = nullptr;
 	QPushButton *retry_upload_button_ = nullptr;

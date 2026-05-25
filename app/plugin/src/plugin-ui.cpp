@@ -10,6 +10,7 @@
 #include <QDialog>
 #include <QDialogButtonBox>
 #include <QComboBox>
+#include <QDoubleSpinBox>
 #include <QFormLayout>
 #include <QFrame>
 #include <QGroupBox>
@@ -424,13 +425,17 @@ void PluginUiController::register_ui()
 
 	settings_button_ = new QPushButton("Settings");
 	help_button_ = new QPushButton("Help");
+	automatic_setup_button_ = new QPushButton("Automatic Setup");
 	QObject::connect(settings_button_, &QPushButton::clicked, [this]() { show_settings_dialog(); });
 	QObject::connect(help_button_, &QPushButton::clicked, [this]() { request_show_help(); });
+	QObject::connect(automatic_setup_button_, &QPushButton::clicked, [this]() { request_automatic_setup(); });
 	style_button(settings_button_, "#2ec4b6", "#073b3a");
 	style_button(help_button_, "#52796f", "#ffffff");
+	style_button(automatic_setup_button_, "#52796f", "#ffffff");
 	auto *setup_controls = new QHBoxLayout;
 	setup_controls->addWidget(settings_button_);
 	setup_controls->addWidget(help_button_);
+	setup_controls->addWidget(automatic_setup_button_);
 	setup_layout->addLayout(setup_controls);
 	root->addWidget(setup_card_);
 
@@ -552,6 +557,9 @@ void PluginUiController::apply_dock_theme(const std::string &theme)
 	if (help_button_) {
 		style_button(help_button_, palette.secondary_bg, palette.secondary_fg);
 	}
+	if (automatic_setup_button_) {
+		style_button(automatic_setup_button_, palette.upload_bg_button, palette.upload_fg_button);
+	}
 	if (start_button_) {
 		style_button(start_button_, palette.start_bg, palette.start_fg);
 	}
@@ -639,6 +647,9 @@ void PluginUiController::refresh()
 	}
 	if (preview_metadata_button_) {
 		preview_metadata_button_->setEnabled(worker_running);
+	}
+	if (automatic_setup_button_) {
+		automatic_setup_button_->setEnabled(worker_running);
 	}
 
 	handle_automatic_recording(snapshot);
@@ -967,10 +978,101 @@ void PluginUiController::request_show_help()
 		QString::fromUtf8(
 			"Setup: open Settings, confirm the runtime data directory, then save. Worker status should become running.\n\n"
 			"Manual recording: use Start Recording and Stop Recording after Worker status is running. Check the Recording card for output evidence.\n\n"
-			"Automatic recording: register local start/end templates, run detection tests, and confirm threshold and confirmation count before enabling it.\n\n"
+			"Automatic recording: open Automatic Setup, register local start/end templates, run detection tests, and confirm threshold and confirmation count before enabling it.\n\n"
 			"Metadata: use Edit Metadata after a completed recording. Recognition results are suggestions until you apply or edit them.\n\n"
 			"Upload review: preview upload metadata before real YouTube upload. Use retry or discard only after checking the queue item.\n\n"
 			"Diagnostics: use the Diagnostics section for endpoint, user data, Worker path, logs, ownership, and last detail. Logs stay under the configured user data directory."));
+}
+
+void PluginUiController::request_automatic_setup()
+{
+	QDialog dialog(dock_widget_);
+	dialog.setWindowTitle("Automatic Recording Setup");
+
+	auto *layout = new QVBoxLayout(&dialog);
+	auto *form = new QFormLayout;
+
+	auto *kind_input = new QComboBox;
+	kind_input->addItem("Start template", QString::fromUtf8("start"));
+	kind_input->addItem("End template", QString::fromUtf8("end"));
+	auto *path_input = new QLineEdit;
+	path_input->setPlaceholderText("C:/path/to/user_data/templates/duel-start.tpl");
+	auto *threshold_input = new QDoubleSpinBox;
+	threshold_input->setRange(0.0, 1.0);
+	threshold_input->setSingleStep(0.05);
+	threshold_input->setDecimals(2);
+	threshold_input->setValue(1.0);
+	auto *confirmations_input = new QSpinBox;
+	confirmations_input->setRange(1, 20);
+	confirmations_input->setValue(2);
+	auto *test_frame_input = new QTextEdit;
+	test_frame_input->setAcceptRichText(false);
+	test_frame_input->setPlaceholderText("Paste a local fixture string or test frame text. Do not paste secrets.");
+	test_frame_input->setFixedHeight(84);
+
+	form->addRow("Template kind", kind_input);
+	form->addRow("Template path", path_input);
+	form->addRow("Threshold", threshold_input);
+	form->addRow("Confirmations", confirmations_input);
+	form->addRow("Test frame text", test_frame_input);
+	layout->addLayout(form);
+
+	auto *status = new QTextEdit;
+	status->setReadOnly(true);
+	status->setAcceptRichText(false);
+	status->setPlaceholderText("Validation, registration, and detection test results appear here.");
+	status->setMinimumHeight(150);
+	layout->addWidget(status);
+
+	auto *buttons = new QHBoxLayout;
+	auto *validate_button = new QPushButton("Validate Setup");
+	auto *register_button = new QPushButton("Register Template");
+	auto *test_button = new QPushButton("Test Detection");
+	auto *close_button = new QPushButton("Close");
+	buttons->addWidget(validate_button);
+	buttons->addWidget(register_button);
+	buttons->addWidget(test_button);
+	buttons->addWidget(close_button);
+	layout->addLayout(buttons);
+
+	auto result_text = [](const char *title, const WorkerActionResult &result) {
+		std::string text = std::string(title) + "\n";
+		text += "http=" + std::to_string(result.http_status) + "\n";
+		if (!result.error.empty()) {
+			text += "error=" + result.error + "\n";
+		}
+		if (!result.body.empty()) {
+			text += result.body;
+		}
+		return qstr_utf8(text);
+	};
+
+	QObject::connect(validate_button, &QPushButton::clicked, [this, status, result_text]() {
+		const WorkerActionResult result = worker_manager_.fetch_setup_validation();
+		status->setPlainText(result_text("Setup validation", result));
+	});
+	QObject::connect(register_button, &QPushButton::clicked,
+			 [this, kind_input, path_input, threshold_input, confirmations_input, status, result_text]() {
+				 const std::string kind = utf8_string(kind_input->currentData().toString());
+				 const std::string path = utf8_string(path_input->text().trimmed());
+				 const WorkerActionResult result = worker_manager_.register_detection_template(
+					 kind, path, threshold_input->value(), confirmations_input->value());
+				 status->setPlainText(result_text("Template registration", result));
+			 });
+	QObject::connect(test_button, &QPushButton::clicked,
+			 [this, kind_input, test_frame_input, status, result_text]() {
+				 const std::string kind = utf8_string(kind_input->currentData().toString());
+				 const std::string frame_text = utf8_string(test_frame_input->toPlainText());
+				 const WorkerActionResult result = worker_manager_.test_detection_template(kind, frame_text);
+				 status->setPlainText(result_text("Detection test", result));
+			 });
+	QObject::connect(close_button, &QPushButton::clicked, &dialog, &QDialog::accept);
+
+	const WorkerActionResult initial = worker_manager_.fetch_setup_validation();
+	status->setPlainText(result_text(
+		"Setup validation\nIf templates are action_required, register both start and end templates, then run Test Detection.",
+		initial));
+	dialog.exec();
 }
 
 void PluginUiController::handle_automatic_recording(const WorkerStatusSnapshot &snapshot)

@@ -752,6 +752,58 @@ UploadMetadataPreviewResult WorkerProcessManager::fetch_upload_metadata_preview(
 	return api_client_.fetch_upload_metadata_preview(endpoint, match_id);
 }
 
+WorkerActionResult WorkerProcessManager::fetch_setup_validation()
+{
+	WorkerEndpoint endpoint;
+	{
+		std::lock_guard<std::mutex> lock(mutex_);
+		endpoint = status_.endpoint;
+		if (status_.state != WorkerDiagnosticState::running) {
+			WorkerActionResult result;
+			result.status = WorkerActionStatus::unavailable;
+			result.error = "Worker is not running";
+			return result;
+		}
+	}
+	return api_client_.fetch_setup_validation(endpoint);
+}
+
+WorkerActionResult WorkerProcessManager::register_detection_template(const std::string &kind,
+								     const std::string &path,
+								     double threshold,
+								     int confirmations)
+{
+	WorkerEndpoint endpoint;
+	{
+		std::lock_guard<std::mutex> lock(mutex_);
+		endpoint = status_.endpoint;
+		if (status_.state != WorkerDiagnosticState::running) {
+			WorkerActionResult result;
+			result.status = WorkerActionStatus::unavailable;
+			result.error = "Worker is not running";
+			return result;
+		}
+	}
+	return api_client_.register_detection_template(endpoint, kind, path, threshold, confirmations);
+}
+
+WorkerActionResult WorkerProcessManager::test_detection_template(const std::string &kind,
+								 const std::string &frame_text)
+{
+	WorkerEndpoint endpoint;
+	{
+		std::lock_guard<std::mutex> lock(mutex_);
+		endpoint = status_.endpoint;
+		if (status_.state != WorkerDiagnosticState::running) {
+			WorkerActionResult result;
+			result.status = WorkerActionStatus::unavailable;
+			result.error = "Worker is not running";
+			return result;
+		}
+	}
+	return api_client_.test_detection_template(endpoint, kind, frame_text);
+}
+
 void WorkerProcessManager::stop()
 {
 	stop_requested_ = true;

@@ -805,4 +805,114 @@ UploadMetadataPreviewResult LocalhostApiClient::fetch_upload_metadata_preview(co
 #endif
 }
 
+WorkerActionResult LocalhostApiClient::fetch_setup_validation(const WorkerEndpoint &endpoint) const
+{
+	WorkerActionResult result;
+
+#ifdef _WIN32
+	const HttpResponse response = http_post_json(endpoint, L"/setup/validate", "{}");
+	result.http_status = response.status;
+	result.body = response.body;
+	if (!response.ok) {
+		result.status = WorkerActionStatus::unavailable;
+		result.error = response.error;
+		return result;
+	}
+	if (response.status != 200) {
+		result.status = WorkerActionStatus::invalid_response;
+		result.error = "POST /setup/validate returned non-200 status";
+		return result;
+	}
+	result.status = WorkerActionStatus::accepted;
+	return result;
+#else
+	result.status = WorkerActionStatus::unavailable;
+	result.error = "Setup validation is only implemented on Windows";
+	return result;
+#endif
+}
+
+WorkerActionResult LocalhostApiClient::register_detection_template(const WorkerEndpoint &endpoint,
+								   const std::string &kind,
+								   const std::string &path,
+								   double threshold,
+								   int confirmations) const
+{
+	WorkerActionResult result;
+
+#ifdef _WIN32
+	std::ostringstream body;
+	body << "{\"kind\":\"" << json_escape(kind)
+	     << "\",\"path\":\"" << json_escape(path)
+	     << "\",\"threshold\":" << threshold
+	     << ",\"confirmations\":" << confirmations << "}";
+	const HttpResponse response = http_post_json(endpoint, L"/setup/templates/register", body.str());
+	result.http_status = response.status;
+	result.body = response.body;
+	if (!response.ok) {
+		result.status = WorkerActionStatus::unavailable;
+		result.error = response.error;
+		return result;
+	}
+	if (response.status == 400 || response.status == 409) {
+		result.status = WorkerActionStatus::rejected;
+		result.error = extract_json_string(response.body, "message");
+		if (result.error.empty()) {
+			result.error = "POST /setup/templates/register rejected the template";
+		}
+		return result;
+	}
+	if (response.status != 200) {
+		result.status = WorkerActionStatus::invalid_response;
+		result.error = "POST /setup/templates/register returned non-200 status";
+		return result;
+	}
+	result.status = WorkerActionStatus::accepted;
+	return result;
+#else
+	result.status = WorkerActionStatus::unavailable;
+	result.error = "Template registration is only implemented on Windows";
+	return result;
+#endif
+}
+
+WorkerActionResult LocalhostApiClient::test_detection_template(const WorkerEndpoint &endpoint,
+							      const std::string &kind,
+							      const std::string &frame_text) const
+{
+	WorkerActionResult result;
+
+#ifdef _WIN32
+	const std::string body = "{\"kind\":\"" + json_escape(kind) + "\",\"frame_text\":\"" +
+				 json_escape(frame_text) + "\"}";
+	const HttpResponse response = http_post_json(endpoint, L"/detection/test", body);
+	result.http_status = response.status;
+	result.body = response.body;
+	if (!response.ok) {
+		result.status = WorkerActionStatus::unavailable;
+		result.error = response.error;
+		return result;
+	}
+	if (response.status == 400 || response.status == 409) {
+		result.status = WorkerActionStatus::rejected;
+		result.error = extract_json_string(response.body, "message");
+		if (result.error.empty()) {
+			result.error = "POST /detection/test rejected the test payload";
+		}
+		return result;
+	}
+	if (response.status != 200) {
+		result.status = WorkerActionStatus::invalid_response;
+		result.error = "POST /detection/test returned non-200 status";
+		return result;
+	}
+	result.status = WorkerActionStatus::accepted;
+	return result;
+#else
+	result.status = WorkerActionStatus::unavailable;
+	result.error = "Detection tests are only implemented on Windows";
+	return result;
+#endif
+}
+
 } // namespace odr::plugin

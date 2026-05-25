@@ -90,6 +90,10 @@ public:
 	MatchFetchResult fetch_latest_match();
 	MetadataUpdateResult update_match_metadata(const MatchMetadataPayload &metadata);
 	UploadMetadataPreviewResult fetch_upload_metadata_preview(int match_id);
+	WorkerActionResult fetch_setup_validation();
+	WorkerActionResult register_detection_template(const std::string &kind, const std::string &path,
+						       double threshold, int confirmations);
+	WorkerActionResult test_detection_template(const std::string &kind, const std::string &frame_text);
 
 private:
 	void start(WorkerLaunchConfig config);

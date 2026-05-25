@@ -130,6 +130,13 @@ enum class UploadMetadataPreviewStatus {
 	invalid_response,
 };
 
+enum class WorkerActionStatus {
+	accepted,
+	unavailable,
+	rejected,
+	invalid_response,
+};
+
 struct RecordingStatePayload {
 	std::string state;
 	std::string session_id;
@@ -256,6 +263,18 @@ struct UploadMetadataPreviewResult {
 	}
 };
 
+struct WorkerActionResult {
+	WorkerActionStatus status = WorkerActionStatus::unavailable;
+	unsigned long http_status = 0;
+	std::string error;
+	std::string body;
+
+	bool accepted() const
+	{
+		return status == WorkerActionStatus::accepted;
+	}
+};
+
 class LocalhostApiClient {
 public:
 	explicit LocalhostApiClient(std::string expected_api_version, std::string expected_worker_version);
@@ -274,6 +293,12 @@ public:
 	MetadataUpdateResult update_match_metadata(const WorkerEndpoint &endpoint,
 						   const MatchMetadataPayload &metadata) const;
 	UploadMetadataPreviewResult fetch_upload_metadata_preview(const WorkerEndpoint &endpoint, int match_id) const;
+	WorkerActionResult fetch_setup_validation(const WorkerEndpoint &endpoint) const;
+	WorkerActionResult register_detection_template(const WorkerEndpoint &endpoint, const std::string &kind,
+						       const std::string &path, double threshold,
+						       int confirmations) const;
+	WorkerActionResult test_detection_template(const WorkerEndpoint &endpoint, const std::string &kind,
+						   const std::string &frame_text) const;
 
 private:
 	std::string expected_api_version_;
