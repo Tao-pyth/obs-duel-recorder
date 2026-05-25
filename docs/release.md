@@ -21,7 +21,8 @@ Examples:
 - `v0.2.0`
 - `v0.12.0`
 - `v1.0.1`
-- `v1.1.0` as a target version, subject to the legacy tag conflict rule below
+- `v1.1.0` as a completed hardening target, subject to the legacy tag conflict rule below
+- `v1.1.1` as the active usability UI and documentation hardening target
 
 ## Usability-Based Versioning Policy
 
@@ -44,10 +45,16 @@ The project reached its first user-ready OBS Plugin release at `v1.0.1`. A
 - public release assets are approved and published,
 - the final v1.0 tag naming decision is recorded.
 
-The active `v1.1` target is First Trial Usability Hardening, coordinated through
-#415. It is complete only when the required child issues #416 through #438 are
-closed or explicitly deferred with maintainer approval, and the v1.1 acceptance
-and release readiness records are complete.
+The completed `v1.1.0` issue set is First Trial Usability Hardening,
+coordinated through #415. It is complete only when the required child issues
+#416 through #438 are closed or explicitly deferred with maintainer approval,
+and the v1.1 acceptance and release readiness records are complete.
+
+The active `v1.1.1` target is Usability UI And Documentation Hardening,
+coordinated through #440. It is complete only when required child issues #441
+through #451 are closed or explicitly deferred with maintainer approval, the
+v1.1.1 acceptance and release readiness records are complete, and the final
+release asset/publication decision is recorded.
 
 Existing `v1.x` and `v2.x` tags created before this rule are legacy non-product
 tags. They must not be interpreted as active release versions. Do not move or
@@ -58,16 +65,16 @@ publication/tag naming decision before tagging.
 For the active v1.0 publication gate, the existing `v1.0.0` tag is a legacy
 non-product tag. The active publication tag is `v1.0.1`.
 
-For the active v1.1 target, an existing legacy `v1.1.0` tag is preserved for
-auditability. The target version remains `v1.1.0`, but the final publication tag
-must be chosen and recorded before release without moving, deleting, or
+For the completed v1.1.0 target, an existing legacy `v1.1.0` tag is preserved
+for auditability. The target version remains `v1.1.0`, but the final publication
+tag must be chosen and recorded before release without moving, deleting, or
 overwriting the legacy tag.
 
-Until that non-overwrite publication decision is recorded in the v1.1 readiness
-and release-history records, agents must not create or move a `v1.1.0` tag. If
-the chosen publication tag is not `v1.1.0`, the release records must explain the
-target version, actual tag name, target commit SHA, and reason for the
-non-conflicting tag.
+Until a non-overwrite publication decision is recorded in the relevant v1.1.x
+readiness and release-history records, agents must not create or move a
+`v1.1.0` tag. If a chosen publication tag differs from the target version, the
+release records must explain the target version, actual tag name, target commit
+SHA, and reason for the non-conflicting tag.
 
 ## Version Terms
 
@@ -155,7 +162,8 @@ Use a version-scoped readiness checklist before tagging:
 - v0.12: `docs/release/v0.12-release-readiness.md`
 - v0.13: `docs/release/v0.13-release-readiness.md`
 - active v1.0: `docs/release/v1.0-first-usable-release-readiness.md`
-- active v1.1: `docs/release/v1.1-first-trial-usability-hardening-readiness.md`
+- v1.1.0: `docs/release/v1.1-first-trial-usability-hardening-readiness.md`
+- active v1.1.1: `docs/release/v1.1.1-usability-ui-documentation-hardening-readiness.md`
 
 The v0.11 readiness checklist is a version gate, not a packaged release
 approval by itself. It was completed together with the OBS real-load smoke
@@ -176,11 +184,17 @@ non-conflicting tag decision before #401 closes.
 
 The active v1.0 checklist was completed for `v1.0.1`.
 
-The active v1.1 readiness checklist is the publication gate for the first
-post-trial usability hardening release. It must prove that all nine problem
+The v1.1.0 readiness checklist is the publication gate for the first
+post-trial usability hardening issue set. It must prove that all nine problem
 areas from the first real OBS trial are resolved through #415 and its required
 child issues, and that the legacy `v1.1.0` tag conflict has a documented
 non-overwrite publication decision.
+
+The active v1.1.1 readiness checklist is the publication gate for the UI and
+documentation hardening release. It must prove that #441 through #451 are
+complete, including documentation flow/diagram/images, Dock UI/theme/Help work,
+automatic recording setup-flow improvements, comprehensive validation, package
+validation, release assets, checksum records, and the final publication decision.
 
 Do not retroactively create a `v0.1.0` tag unless explicitly approved.
 

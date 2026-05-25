@@ -93,6 +93,26 @@ Goals:
   - `docs/requirements/requirements.md` -> Upload Rules / Match Data / Setup Rules / Packaging Rules / Detection Rules / Runtime Rules
   - `AGENTS.md` -> Runtime Directory Rules / Responsibility Separation
 
+### v1.1.1 - Usability UI And Documentation Hardening
+
+- Roadmap: `docs/roadmap.md` -> **v1.1.1 - Usability UI And Documentation Hardening**
+- Version tracking issue: `#440` - `[v1.1.1] Usability UI and documentation hardening release tracking`
+- Acceptance checklist: `docs/requirements/v1.1.1-usability-ui-documentation-hardening-acceptance.md`
+- Release readiness checklist: `docs/release/v1.1.1-usability-ui-documentation-hardening-readiness.md`
+- Release policy: `docs/release.md`
+- Previous hardening target: `#415` / `v1.1.0` - First Trial Usability Hardening
+- Target version: `v1.1.1`
+- Completion rule: #440 closes only after all required child issues are complete, release records are durable, and the final publication decision is recorded.
+- Required child issues:
+  - Planning and verification prerequisites: `#441`, `#442`
+  - User documentation and UI imagery: `#443`, `#444`, `#447`
+  - Dock UI and settings work: `#445`, `#446`, `#448`
+  - Automatic recording setup flow: `#449`
+  - Final validation and release: `#450`, `#451`
+- Requirements (relevant sections):
+  - `docs/requirements/requirements.md` -> Setup Rules / Packaging Rules / Detection Rules / Runtime Rules / Upload Rules / Match Data
+  - `AGENTS.md` -> Runtime Directory Rules / Responsibility Separation
+
 ---
 
 ## Legacy Implementation Records

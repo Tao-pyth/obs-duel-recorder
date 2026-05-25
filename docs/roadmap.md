@@ -5,13 +5,15 @@
 This roadmap uses one version sequence based on user-visible usability.
 
 - The project reached its first user-ready OBS Plugin release at `v1.0.1`.
-- The current active development target is `v1.1` - First Trial Usability Hardening, coordinated through #415.
+- The current active development target is `v1.1.1` - Usability UI And Documentation Hardening, coordinated through #440.
 - Existing `v1.x` and `v2.x` tags are legacy non-product tags from before this rule.
 - The `v0.11` gate completed built OBS Plugin DLL, real OBS load smoke evidence, Dock visibility, Worker heartbeat, and basic recording control evidence.
 - The `v0.12` gate completed packaging workflow, release asset automation path, SHA256 checksum generation, and package layout validation.
 - The `v0.13` gate completed Worker EXE bundled distribution and local download-to-first-run smoke evidence.
 - The user-ready `v1.0` release was published as `v1.0.1` because legacy `v1.0.0` already exists.
-- The active `v1.1.0` target conflicts with an existing legacy `v1.1.0` tag, so the final publication tag decision must be recorded before release without moving or overwriting the legacy tag.
+- The completed `v1.1.0` issue set was coordinated through #415 and remains the previous hardening scope.
+- The active `v1.1.1` target follows #415 and must complete UI, documentation, verification, packaging, and release-record work through #440 before publication.
+- Existing legacy tags must not be moved or overwritten. Because a legacy `v1.1.0` tag exists, v1.1.x publication decisions must be recorded before release.
 
 ---
 
@@ -207,6 +209,55 @@ Tracking issue: #415
 ### Release Note
 
 The target version is `v1.1.0`, but an existing legacy `v1.1.0` tag is preserved for auditability. The final publication tag decision must be recorded before release and must not move, delete, or overwrite the legacy tag.
+
+---
+
+## v1.1.1 - Usability UI And Documentation Hardening
+
+### Goals
+
+Complete the next usability release by turning the post-trial UI, documentation, setup-flow, verification, and release-asset requests into a coherent normal-user release.
+
+Tracking issue: #440
+
+Previous hardening scope: #415 / `v1.1.0`
+
+### Planned
+
+- v1.1.1 roadmap, acceptance, readiness, README, traceability, and release-policy records
+- full release verification matrix for Worker, Plugin, package, and documentation checks
+- user operation flow and system overview documentation with an overview diagram
+- UI images in user documentation for Dock, Settings/theme selection, and Help
+- colorful user-focused OBS Dock redesign that keeps diagnostics available without making them dominant
+- selectable Dock color themes from Settings
+- detailed documentation for OBS sources created or used by the Plugin
+- simple Help message accessible from the Dock UI
+- smoother automatic recording information registration flow for templates, tests, thresholds, and setup status
+- comprehensive validation for the UI and documentation changes
+- v1.1.1 release packaging, publication, checksum, and release-record completion
+
+### Required Child Issues
+
+- Planning and verification prerequisites: #441, #442
+- User documentation and UI imagery: #443, #444, #447
+- Dock UI and settings work: #445, #446, #448
+- Automatic recording setup flow: #449
+- Final validation and release: #450, #451
+
+### Deliverables
+
+- active v1.1.1 acceptance, readiness, README, Roadmap, traceability, and release-policy records
+- operation flow and system overview documentation for normal users
+- redaction-safe UI images linked from user documentation
+- user-focused Dock UI with selectable color themes and built-in Help
+- documented OBS source names, behavior, customization expectations, and troubleshooting links
+- improved automatic recording setup path that reduces manual JSON/TOML editing
+- validation evidence covering Worker tests, Plugin build or smoke expectations, package validation, documentation links, and Japanese user-doc coverage
+- release package, SHA256 checksums, release notes, tag decision, and durable release-history record
+
+### Release Note
+
+The completed version is `v1.1.1`. #440 must remain open until #441 through #451 are complete, release assets or approved publication blockers are recorded, and the final tag/publication decision is documented without moving or overwriting legacy tags.
 
 ---
 

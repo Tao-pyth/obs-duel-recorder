@@ -14,6 +14,8 @@ usability.
 - #404 records completed Worker EXE bundled distribution and local download-to-first-run smoke for the v0.13 version gate.
 - The project reached its first user-ready OBS Plugin release at `v1.0.1`.
 - The active v1.0 publication tag is `v1.0.1` because `v1.0.0` already exists as a legacy non-product tag.
+- #415 records the completed v1.1.0 post-trial usability hardening issue set.
+- #440 tracks the active `v1.1.1` usability UI and documentation hardening release; final release records remain pending #451.
 - Existing `v1.x` and `v2.x` tags created before this policy are legacy non-product tags. They are preserved for auditability, but they are not part of the active product version sequence.
 - Older `Status: released` entries before this policy note mean "legacy implementation record completed" unless a record explicitly says it is a user-ready product release.
 
@@ -242,6 +244,11 @@ The version tracking issue may contain the working release summary, but finalize
   recording-to-queue handoff, automatic recording setup, production upload,
   metadata UI, ZIP install/update assistance, installer/MSI deferral, and
   release-record synchronization.
+- Follow-up release tracking: #440 tracks `v1.1.1` Usability UI and
+  Documentation Hardening after the v1.1.0 issue set, including user operation
+  flow docs, system overview, UI images, Dock redesign, theme selection, OBS
+  source docs, Help UI, automatic recording setup-flow improvements,
+  comprehensive validation, release assets, and release records.
 - Status: released user-ready OBS Plugin package
 
 ### Legacy tag v1.0.0 - YouTube Upload MVP
