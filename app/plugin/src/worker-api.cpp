@@ -35,6 +35,12 @@ std::string extract_json_number(const std::string &body, const char *key)
 	return match[1].str();
 }
 
+bool response_has_items(const std::string &body)
+{
+	const std::regex pattern("\"items\"\\s*:\\s*\\[\\s*\\{");
+	return std::regex_search(body, pattern);
+}
+
 std::string normalize_path(std::string value)
 {
 	std::replace(value.begin(), value.end(), '\\', '/');
@@ -95,6 +101,16 @@ void populate_recording_state(RecordingStatePayload &state, const std::string &b
 	state.last_action = extract_json_string(body, "last_action");
 	state.reason = extract_json_string(body, "reason");
 	state.updated_at = extract_json_string(body, "updated_at");
+}
+
+void populate_queue_item(QueueActionItemPayload &item, const std::string &body)
+{
+	const std::string id = extract_json_number(body, "id");
+	item.id = id.empty() ? 0 : std::stoi(id);
+	item.state = extract_json_string(body, "state");
+	item.video_path = extract_json_string(body, "video_path");
+	item.manual_review_reason = extract_json_string(body, "manual_review_reason");
+	item.last_error_code = extract_json_string(body, "last_error_code");
 }
 
 #ifdef _WIN32
@@ -416,6 +432,52 @@ RecordingStateFetchResult LocalhostApiClient::fetch_recording_state(const Worker
 #endif
 }
 
+QueueActionFetchResult LocalhostApiClient::fetch_queue_action_item(const WorkerEndpoint &endpoint) const
+{
+	QueueActionFetchResult result;
+
+#ifdef _WIN32
+	const wchar_t *paths[] = {
+		L"/queue/items?state=need_manual_review",
+		L"/queue/items?state=upload_failed",
+		L"/queue/items?state=quota_waiting",
+	};
+	for (const wchar_t *path : paths) {
+		const HttpResponse response = http_get(endpoint, path);
+		result.http_status = response.status;
+		result.body = response.body;
+		if (!response.ok) {
+			result.status = QueueActionFetchStatus::unavailable;
+			result.error = response.error;
+			return result;
+		}
+		if (response.status != 200) {
+			result.status = QueueActionFetchStatus::invalid_response;
+			result.error = "GET /queue/items returned non-200 status";
+			return result;
+		}
+		if (!response_has_items(response.body)) {
+			continue;
+		}
+		populate_queue_item(result.item, response.body);
+		if (result.item.id <= 0 || result.item.state.empty()) {
+			result.status = QueueActionFetchStatus::invalid_response;
+			result.error = "GET /queue/items response is missing queue item fields";
+			return result;
+		}
+		result.status = QueueActionFetchStatus::reachable;
+		return result;
+	}
+	result.status = QueueActionFetchStatus::unavailable;
+	result.error = "No failed or manual-review upload items";
+	return result;
+#else
+	result.status = QueueActionFetchStatus::unavailable;
+	result.error = "Queue item probing is only implemented on Windows";
+	return result;
+#endif
+}
+
 RecordingCommandResult LocalhostApiClient::send_recording_command(const WorkerEndpoint &endpoint,
 								  const std::string &action,
 								  const std::string &source,
@@ -467,6 +529,57 @@ RecordingCommandResult LocalhostApiClient::send_recording_command(const WorkerEn
 #else
 	result.status = RecordingCommandStatus::unavailable;
 	result.error = "Recording commands are only implemented on Windows";
+	return result;
+#endif
+}
+
+QueueCommandResult LocalhostApiClient::send_queue_command(const WorkerEndpoint &endpoint, int item_id,
+							  const std::string &action,
+							  const std::string &youtube_video_id) const
+{
+	QueueCommandResult result;
+
+#ifdef _WIN32
+	std::string body = "{\"action\":\"" + json_escape(action) + "\"";
+	if (!youtube_video_id.empty()) {
+		body += ",\"youtube_video_id\":\"" + json_escape(youtube_video_id) + "\"";
+	}
+	body += "}";
+	const std::wstring path = L"/queue/items/" + std::to_wstring(item_id) + L"/command";
+	const HttpResponse response = http_post_json(endpoint, path.c_str(), body);
+	result.http_status = response.status;
+	result.body = response.body;
+
+	if (!response.ok) {
+		result.status = QueueCommandStatus::unavailable;
+		result.error = response.error;
+		return result;
+	}
+	if (response.status == 400 || response.status == 404 || response.status == 409) {
+		result.status = QueueCommandStatus::rejected;
+		result.error = extract_json_string(response.body, "message");
+		if (result.error.empty()) {
+			result.error = "POST /queue/items/{id}/command rejected command";
+		}
+		return result;
+	}
+	if (response.status != 200) {
+		result.status = QueueCommandStatus::invalid_response;
+		result.error = "POST /queue/items/{id}/command returned non-200 status";
+		return result;
+	}
+
+	populate_queue_item(result.item, response.body);
+	if (result.item.id <= 0 || result.item.state.empty()) {
+		result.status = QueueCommandStatus::invalid_response;
+		result.error = "POST /queue/items/{id}/command response is missing queue item fields";
+		return result;
+	}
+	result.status = QueueCommandStatus::accepted;
+	return result;
+#else
+	result.status = QueueCommandStatus::unavailable;
+	result.error = "Queue commands are only implemented on Windows";
 	return result;
 #endif
 }

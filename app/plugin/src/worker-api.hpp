@@ -96,6 +96,19 @@ enum class RecordingStateFetchStatus {
 	invalid_response,
 };
 
+enum class QueueActionFetchStatus {
+	reachable,
+	unavailable,
+	invalid_response,
+};
+
+enum class QueueCommandStatus {
+	accepted,
+	unavailable,
+	rejected,
+	invalid_response,
+};
+
 struct RecordingStatePayload {
 	std::string state;
 	std::string session_id;
@@ -131,6 +144,40 @@ struct RecordingStateFetchResult {
 	}
 };
 
+struct QueueActionItemPayload {
+	int id = 0;
+	std::string state;
+	std::string video_path;
+	std::string manual_review_reason;
+	std::string last_error_code;
+};
+
+struct QueueActionFetchResult {
+	QueueActionFetchStatus status = QueueActionFetchStatus::unavailable;
+	unsigned long http_status = 0;
+	QueueActionItemPayload item;
+	std::string error;
+	std::string body;
+
+	bool reachable() const
+	{
+		return status == QueueActionFetchStatus::reachable;
+	}
+};
+
+struct QueueCommandResult {
+	QueueCommandStatus status = QueueCommandStatus::unavailable;
+	unsigned long http_status = 0;
+	QueueActionItemPayload item;
+	std::string error;
+	std::string body;
+
+	bool accepted() const
+	{
+		return status == QueueCommandStatus::accepted;
+	}
+};
+
 class LocalhostApiClient {
 public:
 	explicit LocalhostApiClient(std::string expected_api_version, std::string expected_worker_version);
@@ -139,9 +186,12 @@ public:
 	OverlayFetchResult fetch_overlay_state(const WorkerEndpoint &endpoint) const;
 	UploadStatusResult fetch_upload_status(const WorkerEndpoint &endpoint) const;
 	RecordingStateFetchResult fetch_recording_state(const WorkerEndpoint &endpoint) const;
+	QueueActionFetchResult fetch_queue_action_item(const WorkerEndpoint &endpoint) const;
 	RecordingCommandResult send_recording_command(const WorkerEndpoint &endpoint, const std::string &action,
 						      const std::string &source,
 						      const std::string &video_path = {}) const;
+	QueueCommandResult send_queue_command(const WorkerEndpoint &endpoint, int item_id, const std::string &action,
+					      const std::string &youtube_video_id = {}) const;
 
 private:
 	std::string expected_api_version_;

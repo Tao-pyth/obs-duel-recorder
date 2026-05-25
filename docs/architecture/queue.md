@@ -99,10 +99,13 @@ recording_output_path_missing`. The Worker does not create a queue item without
 a media path. If a queued path later proves missing, existing upload processing
 moves it through the established discard/manual-review semantics.
 
-The OBS Dock should expose compact queue counts from `/upload/status` so users
-can see whether completed recordings are ready, uploading, uploaded, failed,
-quota-waiting, need manual review, or discarded. Full upload management remains
-outside this display-only handoff.
+The OBS Dock exposes compact queue counts from `/upload/status` so users can see
+whether completed recordings are ready, uploading, uploaded, failed,
+quota-waiting, need manual review, or discarded.
+
+For v1.1, the Dock also surfaces the first actionable upload item from
+`need_manual_review`, then `upload_failed`, then `quota_waiting`, and sends
+operator actions through `POST /queue/items/{item_id}/command`.
 
 ---
 
@@ -110,6 +113,11 @@ Allowed operator actions:
 - `retry`: only after the operator decides duplicate upload risk is acceptable.
 - `discard`: when the local file is missing, intentionally abandoned, or known not to need upload.
 - `mark_uploaded`: only after the operator confirms the upload on YouTube and provides `youtube_video_id`.
+
+The Dock must warn before retrying `need_manual_review` items because the prior
+upload outcome may be ambiguous and retrying can create a duplicate YouTube
+upload. UI logs must not include OAuth tokens, client secrets, bearer strings,
+or raw Google API responses.
 
 The default startup rule for interrupted `uploading` is `need_manual_review`, not automatic retry.
 

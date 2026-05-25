@@ -22,8 +22,15 @@ start or stop recording.
 The Dock UI supports:
 - manual start
 - manual stop
-- retry
-- queue recovery
+- upload retry
+- upload discard
+- mark uploaded after confirming the YouTube video id
+- queue recovery visibility
+
+Retrying an item that needs manual review can create a duplicate YouTube upload.
+Use Retry only after checking YouTube. Use Discard when the item should no
+longer be uploaded, and Mark Uploaded only when the video already exists on
+YouTube.
 
 ---
 

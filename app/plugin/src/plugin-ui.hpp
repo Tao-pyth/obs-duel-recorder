@@ -26,8 +26,12 @@ private:
 	void save_settings_and_restart(const PluginSettings &settings);
 	void request_manual_start();
 	void request_manual_stop();
+	void request_upload_retry();
+	void request_upload_discard();
+	void request_upload_mark_uploaded();
 	void handle_automatic_recording(const WorkerStatusSnapshot &snapshot);
 	void log_recording_command_result(const char *action, const RecordingCommandResult &result);
+	void log_queue_command_result(const char *action, const QueueCommandResult &result);
 
 	WorkerProcessManager &worker_manager_;
 	QWidget *dock_widget_ = nullptr;
@@ -37,6 +41,7 @@ private:
 	QLabel *recording_value_ = nullptr;
 	QLabel *output_value_ = nullptr;
 	QLabel *queue_value_ = nullptr;
+	QLabel *review_item_value_ = nullptr;
 	QLabel *endpoint_value_ = nullptr;
 	QLabel *user_data_value_ = nullptr;
 	QLabel *worker_path_value_ = nullptr;
@@ -46,6 +51,9 @@ private:
 	QLabel *action_value_ = nullptr;
 	QPushButton *start_button_ = nullptr;
 	QPushButton *stop_button_ = nullptr;
+	QPushButton *retry_upload_button_ = nullptr;
+	QPushButton *discard_upload_button_ = nullptr;
+	QPushButton *mark_uploaded_button_ = nullptr;
 	OverlayStatePayload last_applied_overlay_state_;
 	std::string automatic_recording_request_key_;
 	bool overlay_state_applied_ = false;

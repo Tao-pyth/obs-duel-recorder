@@ -10,8 +10,10 @@
 #include <QDialogButtonBox>
 #include <QFormLayout>
 #include <QHBoxLayout>
+#include <QInputDialog>
 #include <QLabel>
 #include <QLineEdit>
+#include <QMessageBox>
 #include <QPushButton>
 #include <QSpinBox>
 #include <QTimer>
@@ -189,6 +191,26 @@ std::string queue_summary(const WorkerStatusSnapshot &snapshot)
 	return out.str();
 }
 
+std::string review_item_summary(const WorkerStatusSnapshot &snapshot)
+{
+	if (!snapshot.queue_action_item_available) {
+		return "none";
+	}
+	const QueueActionItemPayload &item = snapshot.queue_action_item.item;
+	std::ostringstream out;
+	out << "id=" << item.id << " state=" << item.state;
+	if (!item.manual_review_reason.empty()) {
+		out << " reason=" << item.manual_review_reason;
+	}
+	if (!item.last_error_code.empty()) {
+		out << " error=" << item.last_error_code;
+	}
+	if (!item.video_path.empty()) {
+		out << " video=" << item.video_path;
+	}
+	return out.str();
+}
+
 QLabel *add_row(QFormLayout *layout, const char *name)
 {
 	auto *value = new QLabel;
@@ -231,6 +253,7 @@ void PluginUiController::register_ui()
 	recording_value_ = add_row(form, "Recording");
 	output_value_ = add_row(form, "Output");
 	queue_value_ = add_row(form, "Queue");
+	review_item_value_ = add_row(form, "Review item");
 	endpoint_value_ = add_row(form, "Endpoint");
 	user_data_value_ = add_row(form, "User data");
 	worker_path_value_ = add_row(form, "Worker path");
@@ -252,6 +275,18 @@ void PluginUiController::register_ui()
 	recording_controls->addWidget(start_button_);
 	recording_controls->addWidget(stop_button_);
 	root->addLayout(recording_controls);
+
+	auto *upload_controls = new QHBoxLayout;
+	retry_upload_button_ = new QPushButton("Retry Upload");
+	discard_upload_button_ = new QPushButton("Discard Upload");
+	mark_uploaded_button_ = new QPushButton("Mark Uploaded");
+	QObject::connect(retry_upload_button_, &QPushButton::clicked, [this]() { request_upload_retry(); });
+	QObject::connect(discard_upload_button_, &QPushButton::clicked, [this]() { request_upload_discard(); });
+	QObject::connect(mark_uploaded_button_, &QPushButton::clicked, [this]() { request_upload_mark_uploaded(); });
+	upload_controls->addWidget(retry_upload_button_);
+	upload_controls->addWidget(discard_upload_button_);
+	upload_controls->addWidget(mark_uploaded_button_);
+	root->addLayout(upload_controls);
 	root->addStretch(1);
 
 	if (!obs_frontend_add_dock_by_id(kDockId, "OBS Duel Recorder", dock_widget_)) {
@@ -300,6 +335,7 @@ void PluginUiController::refresh()
 	recording_value_->setText(qstr_utf8(recording_summary(snapshot)));
 	output_value_->setText(qstr_utf8(recording_output_summary(snapshot)));
 	queue_value_->setText(qstr_utf8(queue_summary(snapshot)));
+	review_item_value_->setText(qstr_utf8(review_item_summary(snapshot)));
 	endpoint_value_->setText(qstr_utf8(endpoint));
 	user_data_value_->setText(snapshot.user_data_dir.empty() ? QString::fromUtf8("not configured") : qstr_wide(snapshot.user_data_dir));
 	worker_path_value_->setText(worker_path.empty() ? QString::fromUtf8("not available") : qstr_wide(worker_path));
@@ -313,6 +349,17 @@ void PluginUiController::refresh()
 	}
 	if (stop_button_) {
 		stop_button_->setEnabled(worker_running);
+	}
+	const bool queue_action_available = worker_running && snapshot.queue_action_item_available;
+	if (retry_upload_button_) {
+		retry_upload_button_->setEnabled(queue_action_available);
+	}
+	if (discard_upload_button_) {
+		discard_upload_button_->setEnabled(queue_action_available);
+	}
+	if (mark_uploaded_button_) {
+		mark_uploaded_button_->setEnabled(queue_action_available &&
+						  snapshot.queue_action_item.item.state == "need_manual_review");
 	}
 
 	handle_automatic_recording(snapshot);
@@ -439,6 +486,74 @@ void PluginUiController::request_manual_stop()
 	refresh();
 }
 
+void PluginUiController::request_upload_retry()
+{
+	const WorkerStatusSnapshot snapshot = worker_manager_.status_snapshot();
+	if (!snapshot.queue_action_item_available) {
+		return;
+	}
+	const QueueActionItemPayload &item = snapshot.queue_action_item.item;
+	if (item.state == "need_manual_review") {
+		const auto answer = QMessageBox::warning(
+			dock_widget_,
+			"Retry upload",
+			"Retrying a manual-review item can create a duplicate YouTube upload. Continue only after checking YouTube.",
+			QMessageBox::Yes | QMessageBox::No,
+			QMessageBox::No);
+		if (answer != QMessageBox::Yes) {
+			return;
+		}
+	}
+	QueueCommandResult result = worker_manager_.send_queue_command(item.id, "retry");
+	log_queue_command_result("retry", result);
+	refresh();
+}
+
+void PluginUiController::request_upload_discard()
+{
+	const WorkerStatusSnapshot snapshot = worker_manager_.status_snapshot();
+	if (!snapshot.queue_action_item_available) {
+		return;
+	}
+	const auto answer = QMessageBox::question(
+		dock_widget_,
+		"Discard upload",
+		"Discard this upload queue item? This keeps the local video file but removes it from upload work.",
+		QMessageBox::Yes | QMessageBox::No,
+		QMessageBox::No);
+	if (answer != QMessageBox::Yes) {
+		return;
+	}
+	const QueueCommandResult result = worker_manager_.send_queue_command(snapshot.queue_action_item.item.id, "discard");
+	log_queue_command_result("discard", result);
+	refresh();
+}
+
+void PluginUiController::request_upload_mark_uploaded()
+{
+	const WorkerStatusSnapshot snapshot = worker_manager_.status_snapshot();
+	if (!snapshot.queue_action_item_available) {
+		return;
+	}
+	bool ok = false;
+	const QString video_id = QInputDialog::getText(
+		dock_widget_,
+		"Mark uploaded",
+		"YouTube video id",
+		QLineEdit::Normal,
+		QString(),
+		&ok);
+	if (!ok || video_id.trimmed().isEmpty()) {
+		return;
+	}
+	const QueueCommandResult result = worker_manager_.send_queue_command(
+		snapshot.queue_action_item.item.id,
+		"mark_uploaded",
+		video_id.trimmed().toStdString());
+	log_queue_command_result("mark_uploaded", result);
+	refresh();
+}
+
 void PluginUiController::handle_automatic_recording(const WorkerStatusSnapshot &snapshot)
 {
 	if (!snapshot.recording_state_available ||
@@ -485,6 +600,19 @@ void PluginUiController::handle_automatic_recording(const WorkerStatusSnapshot &
 	if (state.state == "recording" || state.state == "completed" || state.state == "idle") {
 		automatic_recording_request_key_.clear();
 	}
+}
+
+void PluginUiController::log_queue_command_result(const char *action, const QueueCommandResult &result)
+{
+	if (result.accepted()) {
+		blog(LOG_INFO,
+		     "%s queue command=%s accepted id=%d state=%s",
+		     kLogPrefix, action, result.item.id, result.item.state.c_str());
+		return;
+	}
+
+	blog(LOG_WARNING, "%s queue command=%s failed status=%d http=%lu error=%s",
+	     kLogPrefix, action, static_cast<int>(result.status), result.http_status, result.error.c_str());
 }
 
 void PluginUiController::log_recording_command_result(const char *action, const RecordingCommandResult &result)

@@ -47,6 +47,7 @@ struct WorkerStatusSnapshot {
 	WorkerEndpoint endpoint;
 	OverlayStatePayload overlay_state;
 	UploadStatusResult upload_status;
+	QueueActionFetchResult queue_action_item;
 	std::wstring user_data_dir;
 	std::wstring worker_command;
 	std::wstring expected_worker_path;
@@ -69,6 +70,7 @@ struct WorkerStatusSnapshot {
 	bool recording_state_available = false;
 	bool overlay_state_available = false;
 	bool upload_status_available = false;
+	bool queue_action_item_available = false;
 };
 
 class WorkerProcessManager {
@@ -83,6 +85,8 @@ public:
 	void record_recording_output_evidence(std::string evidence);
 	RecordingCommandResult send_recording_command(const std::string &action, const std::string &source,
 						      const std::string &video_path = {});
+	QueueCommandResult send_queue_command(int item_id, const std::string &action,
+					      const std::string &youtube_video_id = {});
 
 private:
 	void start(WorkerLaunchConfig config);
@@ -95,7 +99,8 @@ private:
 			   const WorkerProbeResult *probe = nullptr, unsigned int consecutive_failures = 0,
 			   const OverlayFetchResult *overlay = nullptr,
 			   const UploadStatusResult *upload = nullptr,
-			   const RecordingStateFetchResult *recording = nullptr);
+			   const RecordingStateFetchResult *recording = nullptr,
+			   const QueueActionFetchResult *queue_action = nullptr);
 	void close_process_handles();
 
 	LocalhostApiClient api_client_;

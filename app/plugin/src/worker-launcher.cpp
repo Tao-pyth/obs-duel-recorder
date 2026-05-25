@@ -539,7 +539,8 @@ void WorkerProcessManager::monitor_heartbeat(const WorkerLaunchConfig &config, c
 			OverlayFetchResult overlay = api_client_.fetch_overlay_state(config.endpoint);
 			UploadStatusResult upload = api_client_.fetch_upload_status(config.endpoint);
 			RecordingStateFetchResult recording = api_client_.fetch_recording_state(config.endpoint);
-			update_status(WorkerDiagnosticState::running, config, current_ownership(), {}, &probe, 0, &overlay, &upload, &recording);
+			QueueActionFetchResult queue_action = api_client_.fetch_queue_action_item(config.endpoint);
+			update_status(WorkerDiagnosticState::running, config, current_ownership(), {}, &probe, 0, &overlay, &upload, &recording, &queue_action);
 
 			if (!replacement_reported && identity_changed(baseline, probe)) {
 				replacement_reported = true;
@@ -580,7 +581,8 @@ void WorkerProcessManager::update_status(WorkerDiagnosticState state, const Work
 					 WorkerOwnership ownership, const std::string &error,
 					 const WorkerProbeResult *probe, unsigned int consecutive_failures,
 					 const OverlayFetchResult *overlay, const UploadStatusResult *upload,
-					 const RecordingStateFetchResult *recording)
+					 const RecordingStateFetchResult *recording,
+					 const QueueActionFetchResult *queue_action)
 {
 	std::lock_guard<std::mutex> lock(mutex_);
 	status_.state = state;
@@ -619,6 +621,10 @@ void WorkerProcessManager::update_status(WorkerDiagnosticState state, const Work
 		if (recording->reachable()) {
 			status_.recording_state = recording->state;
 		}
+	}
+	if (queue_action) {
+		status_.queue_action_item = *queue_action;
+		status_.queue_action_item_available = queue_action->reachable();
 	}
 }
 
@@ -666,6 +672,33 @@ RecordingCommandResult WorkerProcessManager::send_recording_command(const std::s
 			status_.recording_error.clear();
 		} else {
 			status_.recording_error = result.error.empty() ? "Recording command failed" : result.error;
+		}
+	}
+	return result;
+}
+
+QueueCommandResult WorkerProcessManager::send_queue_command(int item_id, const std::string &action,
+							    const std::string &youtube_video_id)
+{
+	WorkerEndpoint endpoint;
+	{
+		std::lock_guard<std::mutex> lock(mutex_);
+		endpoint = status_.endpoint;
+		if (status_.state != WorkerDiagnosticState::running) {
+			QueueCommandResult result;
+			result.status = QueueCommandStatus::unavailable;
+			result.error = "Worker is not running";
+			return result;
+		}
+	}
+	QueueCommandResult result = api_client_.send_queue_command(endpoint, item_id, action, youtube_video_id);
+	{
+		std::lock_guard<std::mutex> lock(mutex_);
+		if (result.accepted()) {
+			status_.queue_action_item_available = false;
+			status_.queue_action_item = QueueActionFetchResult{};
+		} else {
+			status_.queue_action_item.error = result.error.empty() ? "Queue command failed" : result.error;
 		}
 	}
 	return result;

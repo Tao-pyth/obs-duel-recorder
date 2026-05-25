@@ -400,6 +400,9 @@ Manual decisions continue to use `POST /queue/items/{item_id}/command`:
 - `discard`
 - `mark_uploaded`
 
+The OBS Dock uses this queue command API for failed/manual-review upload
+controls. It displays only compact item fields and redacted queue evidence.
+
 The v1.0 upload API is defined by:
 - `docs/architecture/upload.md`
 - `docs/requirements/v1.0-youtube-upload-mvp-acceptance.md`
