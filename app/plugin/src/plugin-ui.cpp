@@ -9,6 +9,7 @@
 #include <QByteArray>
 #include <QDialog>
 #include <QDialogButtonBox>
+#include <QComboBox>
 #include <QFormLayout>
 #include <QFrame>
 #include <QGroupBox>
@@ -231,6 +232,73 @@ QLabel *add_row(QFormLayout *layout, const char *name)
 	return value;
 }
 
+struct DockThemePalette {
+	const char *name;
+	const char *window_bg;
+	const char *header_bg;
+	const char *header_border;
+	const char *setup_bg;
+	const char *setup_border;
+	const char *recording_bg;
+	const char *recording_border;
+	const char *upload_bg;
+	const char *upload_border;
+	const char *metadata_bg;
+	const char *metadata_border;
+	const char *diagnostics_bg;
+	const char *diagnostics_border;
+	const char *settings_bg;
+	const char *settings_fg;
+	const char *start_bg;
+	const char *start_fg;
+	const char *stop_bg;
+	const char *stop_fg;
+	const char *upload_bg_button;
+	const char *upload_fg_button;
+	const char *secondary_bg;
+	const char *secondary_fg;
+	const char *metadata_bg_button;
+	const char *metadata_fg_button;
+};
+
+const DockThemePalette &palette_for_theme(const std::string &theme)
+{
+	static const DockThemePalette classic{
+		"classic", "#f7f9fc", "#274c77", "#274c77", "#e8f7f4", "#84d9cf", "#fff3df",
+		"#ffd08a", "#edf2ff", "#b6c7ff", "#fff7fb", "#ffb3d1", "#f2f6f8", "#cdd8df",
+		"#2ec4b6", "#073b3a", "#ff9f1c", "#3d2400", "#f05d5e", "#ffffff", "#5b7cfa",
+		"#ffffff", "#6b7280", "#ffffff", "#d45087", "#ffffff"};
+	static const DockThemePalette forest{
+		"forest", "#f5f8f4", "#354f52", "#354f52", "#ecf6ef", "#84a98c", "#fff4df",
+		"#f4a261", "#edf7f6", "#86c5b8", "#f7eff6", "#c9a0c8", "#eef3ef", "#cad2c5",
+		"#84a98c", "#16332b", "#f4a261", "#3a2508", "#bc4749", "#ffffff", "#52796f",
+		"#ffffff", "#6b705c", "#ffffff", "#9d4edd", "#ffffff"};
+	static const DockThemePalette bright{
+		"bright", "#fbf8ff", "#5b3c88", "#5b3c88", "#eef7ff", "#bde0fe", "#fff8df",
+		"#ffd166", "#f4f0ff", "#cdb4db", "#fff0f6", "#ffafcc", "#f6f2fb", "#d7c7ef",
+		"#00b4d8", "#073b4c", "#ffd166", "#3a2a00", "#ef476f", "#ffffff", "#7b2cbf",
+		"#ffffff", "#6c757d", "#ffffff", "#ff5d8f", "#ffffff"};
+
+	if (theme == "forest") {
+		return forest;
+	}
+	if (theme == "bright") {
+		return bright;
+	}
+	return classic;
+}
+
+void style_card(QFrame *card, const char *background, const char *border)
+{
+	if (!card) {
+		return;
+	}
+	card->setStyleSheet(QString::fromUtf8(
+		"QFrame { background: %1; border: 1px solid %2; border-radius: 8px; } "
+		"QLabel { border: 0; background: transparent; }")
+				    .arg(QString::fromUtf8(background), QString::fromUtf8(border)));
+}
+
 QLabel *make_value_label()
 {
 	auto *value = new QLabel;
@@ -254,10 +322,7 @@ QFrame *make_card(const char *background, const char *border)
 {
 	auto *card = new QFrame;
 	card->setFrameShape(QFrame::NoFrame);
-	card->setStyleSheet(QString::fromUtf8(
-		"QFrame { background: %1; border: 1px solid %2; border-radius: 8px; } "
-		"QLabel { border: 0; background: transparent; }")
-				    .arg(QString::fromUtf8(background), QString::fromUtf8(border)));
+	style_card(card, background, border);
 	auto *layout = new QVBoxLayout(card);
 	layout->setContentsMargins(12, 10, 12, 10);
 	layout->setSpacing(6);
@@ -334,36 +399,37 @@ void PluginUiController::register_ui()
 
 	dock_widget_ = new QWidget;
 	dock_widget_->setMinimumWidth(320);
-	dock_widget_->setStyleSheet("QWidget { background: #f7f9fc; }");
+	PluginSettings settings = load_plugin_settings();
+	dock_theme_ = settings.dock_theme;
 
 	auto *root = new QVBoxLayout(dock_widget_);
 	root->setContentsMargins(12, 12, 12, 12);
 	root->setSpacing(10);
 
-	auto *header = make_card("#274c77", "#274c77");
-	auto *header_layout = qobject_cast<QVBoxLayout *>(header->layout());
+	header_card_ = make_card("#274c77", "#274c77");
+	auto *header_layout = qobject_cast<QVBoxLayout *>(header_card_->layout());
 	auto *title = new QLabel("OBS Duel Recorder");
 	title->setStyleSheet("color: #ffffff; font-size: 18px; font-weight: 700;");
 	header_layout->addWidget(title);
 	state_value_ = new QLabel;
 	state_value_->setTextInteractionFlags(Qt::TextSelectableByMouse);
 	header_layout->addWidget(state_value_);
-	root->addWidget(header);
+	root->addWidget(header_card_);
 
-	auto *setup_card = make_card("#e8f7f4", "#84d9cf");
-	auto *setup_layout = qobject_cast<QVBoxLayout *>(setup_card->layout());
+	setup_card_ = make_card("#e8f7f4", "#84d9cf");
+	auto *setup_layout = qobject_cast<QVBoxLayout *>(setup_card_->layout());
 	add_card_title(setup_layout, "Setup", "#0f4c5c");
 	setup_value_ = add_card_value(setup_layout, "Readiness");
 	action_value_ = add_card_value(setup_layout, "Next action");
 
-	auto *settings_button = new QPushButton("Settings");
-	QObject::connect(settings_button, &QPushButton::clicked, [this]() { show_settings_dialog(); });
-	style_button(settings_button, "#2ec4b6", "#073b3a");
-	setup_layout->addWidget(settings_button);
-	root->addWidget(setup_card);
+	settings_button_ = new QPushButton("Settings");
+	QObject::connect(settings_button_, &QPushButton::clicked, [this]() { show_settings_dialog(); });
+	style_button(settings_button_, "#2ec4b6", "#073b3a");
+	setup_layout->addWidget(settings_button_);
+	root->addWidget(setup_card_);
 
-	auto *recording_card = make_card("#fff3df", "#ffd08a");
-	auto *recording_layout = qobject_cast<QVBoxLayout *>(recording_card->layout());
+	recording_card_ = make_card("#fff3df", "#ffd08a");
+	auto *recording_layout = qobject_cast<QVBoxLayout *>(recording_card_->layout());
 	add_card_title(recording_layout, "Recording", "#7c4700");
 	recording_value_ = add_card_value(recording_layout, "State");
 	output_value_ = add_card_value(recording_layout, "Output");
@@ -378,10 +444,10 @@ void PluginUiController::register_ui()
 	recording_controls->addWidget(start_button_);
 	recording_controls->addWidget(stop_button_);
 	recording_layout->addLayout(recording_controls);
-	root->addWidget(recording_card);
+	root->addWidget(recording_card_);
 
-	auto *upload_card = make_card("#edf2ff", "#b6c7ff");
-	auto *upload_layout = qobject_cast<QVBoxLayout *>(upload_card->layout());
+	upload_card_ = make_card("#edf2ff", "#b6c7ff");
+	auto *upload_layout = qobject_cast<QVBoxLayout *>(upload_card_->layout());
 	add_card_title(upload_layout, "Upload Review", "#304c89");
 	queue_value_ = add_card_value(upload_layout, "Queue");
 	review_item_value_ = add_card_value(upload_layout, "Review item");
@@ -400,10 +466,10 @@ void PluginUiController::register_ui()
 	upload_controls->addWidget(discard_upload_button_);
 	upload_controls->addWidget(mark_uploaded_button_);
 	upload_layout->addLayout(upload_controls);
-	root->addWidget(upload_card);
+	root->addWidget(upload_card_);
 
-	auto *metadata_card = make_card("#fff7fb", "#ffb3d1");
-	auto *metadata_layout = qobject_cast<QVBoxLayout *>(metadata_card->layout());
+	metadata_card_ = make_card("#fff7fb", "#ffb3d1");
+	auto *metadata_layout = qobject_cast<QVBoxLayout *>(metadata_card_->layout());
 	add_card_title(metadata_layout, "Metadata", "#8a2d5d");
 	auto *metadata_note = new QLabel("Review match fields and generated upload text before publishing.");
 	metadata_note->setWordWrap(true);
@@ -420,15 +486,10 @@ void PluginUiController::register_ui()
 	metadata_controls->addWidget(edit_metadata_button_);
 	metadata_controls->addWidget(preview_metadata_button_);
 	metadata_layout->addLayout(metadata_controls);
-	root->addWidget(metadata_card);
+	root->addWidget(metadata_card_);
 
-	auto *diagnostics = new QGroupBox("Diagnostics");
-	diagnostics->setStyleSheet(
-		"QGroupBox { color: #354f52; font-weight: 700; border: 1px solid #cdd8df; "
-		"border-radius: 8px; margin-top: 8px; padding: 8px; background: #f2f6f8; } "
-		"QGroupBox::title { subcontrol-origin: margin; left: 8px; padding: 0 4px; } "
-		"QLabel { background: transparent; }");
-	auto *diagnostics_form = new QFormLayout(diagnostics);
+	diagnostics_group_ = new QGroupBox("Diagnostics");
+	auto *diagnostics_form = new QFormLayout(diagnostics_group_);
 	diagnostics_form->setFieldGrowthPolicy(QFormLayout::AllNonFixedFieldsGrow);
 	endpoint_value_ = add_row(diagnostics_form, "Endpoint");
 	user_data_value_ = add_row(diagnostics_form, "User data");
@@ -436,8 +497,9 @@ void PluginUiController::register_ui()
 	logs_value_ = add_row(diagnostics_form, "Logs");
 	ownership_value_ = add_row(diagnostics_form, "Ownership");
 	detail_value_ = add_row(diagnostics_form, "Detail");
-	root->addWidget(diagnostics);
+	root->addWidget(diagnostics_group_);
 	root->addStretch(1);
+	apply_dock_theme(dock_theme_);
 
 	if (!obs_frontend_add_dock_by_id(kDockId, "OBS Duel Recorder", dock_widget_)) {
 		blog(LOG_WARNING, "%s dock registration failed id=%s", kLogPrefix, kDockId);
@@ -451,6 +513,57 @@ void PluginUiController::register_ui()
 	refresh_timer_->start(1000);
 	refresh();
 	blog(LOG_INFO, "%s dock registered id=%s", kLogPrefix, kDockId);
+}
+
+void PluginUiController::apply_dock_theme(const std::string &theme)
+{
+	const DockThemePalette &palette = palette_for_theme(theme);
+	dock_theme_ = palette.name;
+	if (!dock_widget_) {
+		return;
+	}
+
+	dock_widget_->setStyleSheet(QString::fromUtf8("QWidget { background: %1; }")
+					    .arg(QString::fromUtf8(palette.window_bg)));
+	style_card(header_card_, palette.header_bg, palette.header_border);
+	style_card(setup_card_, palette.setup_bg, palette.setup_border);
+	style_card(recording_card_, palette.recording_bg, palette.recording_border);
+	style_card(upload_card_, palette.upload_bg, palette.upload_border);
+	style_card(metadata_card_, palette.metadata_bg, palette.metadata_border);
+	if (diagnostics_group_) {
+		diagnostics_group_->setStyleSheet(QString::fromUtf8(
+			"QGroupBox { color: #354f52; font-weight: 700; border: 1px solid %1; "
+			"border-radius: 8px; margin-top: 8px; padding: 8px; background: %2; } "
+			"QGroupBox::title { subcontrol-origin: margin; left: 8px; padding: 0 4px; } "
+			"QLabel { background: transparent; }")
+							    .arg(QString::fromUtf8(palette.diagnostics_border),
+								 QString::fromUtf8(palette.diagnostics_bg)));
+	}
+
+	if (settings_button_) {
+		style_button(settings_button_, palette.settings_bg, palette.settings_fg);
+	}
+	if (start_button_) {
+		style_button(start_button_, palette.start_bg, palette.start_fg);
+	}
+	if (stop_button_) {
+		style_button(stop_button_, palette.stop_bg, palette.stop_fg);
+	}
+	if (retry_upload_button_) {
+		style_button(retry_upload_button_, palette.upload_bg_button, palette.upload_fg_button);
+	}
+	if (discard_upload_button_) {
+		style_button(discard_upload_button_, palette.secondary_bg, palette.secondary_fg);
+	}
+	if (mark_uploaded_button_) {
+		style_button(mark_uploaded_button_, palette.settings_bg, palette.settings_fg);
+	}
+	if (edit_metadata_button_) {
+		style_button(edit_metadata_button_, palette.metadata_bg_button, palette.metadata_fg_button);
+	}
+	if (preview_metadata_button_) {
+		style_button(preview_metadata_button_, palette.header_bg, "#ffffff");
+	}
 }
 
 void PluginUiController::unregister_ui()
@@ -558,6 +671,12 @@ void PluginUiController::show_settings_dialog()
 	port_input->setRange(1, 65535);
 	port_input->setValue(settings.endpoint.port);
 	auto *user_data_input = new QLineEdit(qstr_wide(settings.user_data_dir));
+	auto *theme_input = new QComboBox;
+	theme_input->addItem("Classic", QString::fromUtf8("classic"));
+	theme_input->addItem("Forest", QString::fromUtf8("forest"));
+	theme_input->addItem("Bright", QString::fromUtf8("bright"));
+	const int theme_index = theme_input->findData(QString::fromUtf8(settings.dock_theme.c_str()));
+	theme_input->setCurrentIndex(theme_index >= 0 ? theme_index : 0);
 	auto *settings_path = new QLabel(qstr_wide(settings.settings_path));
 	settings_path->setTextInteractionFlags(Qt::TextSelectableByMouse);
 	settings_path->setWordWrap(true);
@@ -565,6 +684,7 @@ void PluginUiController::show_settings_dialog()
 	form->addRow("Host", host_input);
 	form->addRow("Port", port_input);
 	form->addRow("User data dir", user_data_input);
+	form->addRow("Dock theme", theme_input);
 	form->addRow("Settings file", settings_path);
 	layout->addLayout(form);
 
@@ -584,7 +704,9 @@ void PluginUiController::show_settings_dialog()
 	settings.endpoint.host = host_input->text().toStdWString();
 	settings.endpoint.port = static_cast<uint16_t>(port_input->value());
 	settings.user_data_dir = user_data_input->text().toStdWString();
+	settings.dock_theme = utf8_string(theme_input->currentData().toString());
 	settings.restart_worker_on_change = true;
+	apply_dock_theme(settings.dock_theme);
 	save_settings_and_restart(settings);
 }
 

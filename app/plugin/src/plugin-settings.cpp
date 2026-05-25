@@ -22,6 +22,7 @@ constexpr const wchar_t *kSettingsFile = L"plugin-settings.json";
 constexpr const char *kOverlayKey = "overlay";
 constexpr const char *kOverlaySourcesKey = "sources";
 constexpr const char *kOverlayDefaultsKey = "defaults";
+constexpr const char *kDefaultDockTheme = "classic";
 
 std::wstring from_utf8(const char *value)
 {
@@ -169,6 +170,12 @@ void apply_defaults(obs_data_t *data)
 	obs_data_set_default_int(data, "port", kDefaultPort);
 	obs_data_set_default_string(data, "user_data_dir", to_utf8(default_user_data_dir()).c_str());
 	obs_data_set_default_bool(data, "restart_worker_on_change", true);
+	obs_data_set_default_string(data, "dock_theme", kDefaultDockTheme);
+}
+
+bool is_valid_dock_theme(const std::string &theme)
+{
+	return theme == "classic" || theme == "forest" || theme == "bright";
 }
 
 void apply_overlay_sources_defaults(obs_data_t *sources)
@@ -321,6 +328,10 @@ PluginSettings load_plugin_settings()
 	settings.endpoint.port = clamp_port(obs_data_get_int(data, "port"));
 	settings.user_data_dir = from_utf8(obs_data_get_string(data, "user_data_dir"));
 	settings.restart_worker_on_change = obs_data_get_bool(data, "restart_worker_on_change");
+	settings.dock_theme = obs_data_get_string(data, "dock_theme");
+	if (!is_valid_dock_theme(settings.dock_theme)) {
+		settings.dock_theme = kDefaultDockTheme;
+	}
 	settings.overlay = load_overlay_settings(data);
 
 	obs_data_release(data);
@@ -340,6 +351,8 @@ bool save_plugin_settings(const PluginSettings &settings)
 	obs_data_set_int(data, "port", settings.endpoint.port);
 	obs_data_set_string(data, "user_data_dir", to_utf8(settings.user_data_dir).c_str());
 	obs_data_set_bool(data, "restart_worker_on_change", settings.restart_worker_on_change);
+	obs_data_set_string(data, "dock_theme",
+			    is_valid_dock_theme(settings.dock_theme) ? settings.dock_theme.c_str() : kDefaultDockTheme);
 	save_overlay_settings(data, settings.overlay);
 
 	const bool saved = obs_data_save_json_safe(data, to_utf8(settings.settings_path).c_str(), "tmp", "bak");

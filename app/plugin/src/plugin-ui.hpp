@@ -7,6 +7,8 @@
 
 class QLabel;
 class QPushButton;
+class QFrame;
+class QGroupBox;
 class QTimer;
 class QWidget;
 
@@ -22,6 +24,7 @@ public:
 
 private:
 	static void open_settings_from_menu(void *private_data);
+	void apply_dock_theme(const std::string &theme);
 	void show_settings_dialog();
 	void save_settings_and_restart(const PluginSettings &settings);
 	void request_manual_start();
@@ -51,6 +54,13 @@ private:
 	QLabel *ownership_value_ = nullptr;
 	QLabel *detail_value_ = nullptr;
 	QLabel *action_value_ = nullptr;
+	QFrame *header_card_ = nullptr;
+	QFrame *setup_card_ = nullptr;
+	QFrame *recording_card_ = nullptr;
+	QFrame *upload_card_ = nullptr;
+	QFrame *metadata_card_ = nullptr;
+	QGroupBox *diagnostics_group_ = nullptr;
+	QPushButton *settings_button_ = nullptr;
 	QPushButton *start_button_ = nullptr;
 	QPushButton *stop_button_ = nullptr;
 	QPushButton *retry_upload_button_ = nullptr;
@@ -58,6 +68,7 @@ private:
 	QPushButton *mark_uploaded_button_ = nullptr;
 	QPushButton *edit_metadata_button_ = nullptr;
 	QPushButton *preview_metadata_button_ = nullptr;
+	std::string dock_theme_ = "classic";
 	OverlayStatePayload last_applied_overlay_state_;
 	std::string automatic_recording_request_key_;
 	bool overlay_state_applied_ = false;

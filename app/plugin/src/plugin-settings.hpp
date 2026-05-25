@@ -24,6 +24,7 @@ struct OverlaySettings {
 struct PluginSettings {
 	WorkerEndpoint endpoint;
 	OverlaySettings overlay;
+	std::string dock_theme = "classic";
 	std::wstring user_data_dir;
 	std::wstring settings_path;
 	bool restart_worker_on_change = true;

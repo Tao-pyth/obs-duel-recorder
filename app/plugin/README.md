@@ -102,6 +102,7 @@ Current keys:
   "host": "127.0.0.1",
   "port": 8787,
   "user_data_dir": "C:/path/to/user_data",
+  "dock_theme": "classic",
   "restart_worker_on_change": true,
   "overlay": {
     "enabled": true,
