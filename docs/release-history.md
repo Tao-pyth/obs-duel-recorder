@@ -260,7 +260,7 @@ The version tracking issue may contain the working release summary, but finalize
 - Validation report: `docs/release/v1.1.1-validation-report.md`
 - Release summary: `docs/release/v1.1.1-release-summary.md`
 - Tag: `v1.1.1`
-- Tag target: pending final release commit
+- Tag target: `18f291455a3d6a646a9905c00d27efbe59c51d8b`
 - Release decision recorded at: `2026-05-26`
 - Major child issues: #441, #442, #443, #444, #445, #446, #447, #448, #449, #450, #451
 - Follow-up publication issue: #452
