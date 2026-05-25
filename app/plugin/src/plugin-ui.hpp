@@ -34,6 +34,7 @@ private:
 	void request_upload_mark_uploaded();
 	void request_edit_metadata();
 	void request_preview_upload_metadata();
+	void request_show_help();
 	void handle_automatic_recording(const WorkerStatusSnapshot &snapshot);
 	void log_recording_command_result(const char *action, const RecordingCommandResult &result);
 	void log_queue_command_result(const char *action, const QueueCommandResult &result);
@@ -61,6 +62,7 @@ private:
 	QFrame *metadata_card_ = nullptr;
 	QGroupBox *diagnostics_group_ = nullptr;
 	QPushButton *settings_button_ = nullptr;
+	QPushButton *help_button_ = nullptr;
 	QPushButton *start_button_ = nullptr;
 	QPushButton *stop_button_ = nullptr;
 	QPushButton *retry_upload_button_ = nullptr;

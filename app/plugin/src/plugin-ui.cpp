@@ -423,9 +423,15 @@ void PluginUiController::register_ui()
 	action_value_ = add_card_value(setup_layout, "Next action");
 
 	settings_button_ = new QPushButton("Settings");
+	help_button_ = new QPushButton("Help");
 	QObject::connect(settings_button_, &QPushButton::clicked, [this]() { show_settings_dialog(); });
+	QObject::connect(help_button_, &QPushButton::clicked, [this]() { request_show_help(); });
 	style_button(settings_button_, "#2ec4b6", "#073b3a");
-	setup_layout->addWidget(settings_button_);
+	style_button(help_button_, "#52796f", "#ffffff");
+	auto *setup_controls = new QHBoxLayout;
+	setup_controls->addWidget(settings_button_);
+	setup_controls->addWidget(help_button_);
+	setup_layout->addLayout(setup_controls);
 	root->addWidget(setup_card_);
 
 	recording_card_ = make_card("#fff3df", "#ffd08a");
@@ -542,6 +548,9 @@ void PluginUiController::apply_dock_theme(const std::string &theme)
 
 	if (settings_button_) {
 		style_button(settings_button_, palette.settings_bg, palette.settings_fg);
+	}
+	if (help_button_) {
+		style_button(help_button_, palette.secondary_bg, palette.secondary_fg);
 	}
 	if (start_button_) {
 		style_button(start_button_, palette.start_bg, palette.start_fg);
@@ -948,6 +957,20 @@ void PluginUiController::request_preview_upload_metadata()
 	dialog.exec();
 
 	blog(LOG_INFO, "%s upload metadata preview shown id=%d", kLogPrefix, preview.preview.match_id);
+}
+
+void PluginUiController::request_show_help()
+{
+	QMessageBox::information(
+		dock_widget_,
+		"OBS Duel Recorder Help",
+		QString::fromUtf8(
+			"Setup: open Settings, confirm the runtime data directory, then save. Worker status should become running.\n\n"
+			"Manual recording: use Start Recording and Stop Recording after Worker status is running. Check the Recording card for output evidence.\n\n"
+			"Automatic recording: register local start/end templates, run detection tests, and confirm threshold and confirmation count before enabling it.\n\n"
+			"Metadata: use Edit Metadata after a completed recording. Recognition results are suggestions until you apply or edit them.\n\n"
+			"Upload review: preview upload metadata before real YouTube upload. Use retry or discard only after checking the queue item.\n\n"
+			"Diagnostics: use the Diagnostics section for endpoint, user data, Worker path, logs, ownership, and last detail. Logs stay under the configured user data directory."));
 }
 
 void PluginUiController::handle_automatic_recording(const WorkerStatusSnapshot &snapshot)
