@@ -19,9 +19,9 @@ The project is designed around an OBS Plugin + Python Worker architecture.
 Important versioning note:
 - Project versions are assigned only by user-visible usability.
 - The first user-ready OBS Plugin release is `v1.0.1`.
-- The OBS Plugin DLL build, real OBS load smoke, packaging workflow, checksum gates, Worker EXE bundled distribution, local download-to-first-run smoke, and public release publication are complete.
-- The active v1.0 publication uses `v1.0.1` because legacy `v1.0.0` already exists.
+- The active `v1.1.0` target is First Trial Usability Hardening, coordinated through #415.
 - Existing `v1.x` and `v2.x` tags are legacy non-product tags from before this rule. They are not part of the active version sequence and are not proof of a usable OBS plugin release.
+- Existing legacy tags must not be moved or overwritten. Because a legacy `v1.1.0` tag exists, the v1.1 publication tag decision must be recorded before release.
 
 See [Release and tag policy](docs/release.md).
 
@@ -34,10 +34,12 @@ Latest release status:
 - Latest completed version gate: `v1.0` - First Usable OBS Plugin Release
 
 Current development target:
-- next roadmap target pending
+- `v1.1` - First Trial Usability Hardening
+- Tracking issue: [#415](https://github.com/Tao-pyth/obs-duel-recorder/issues/415)
+- Target version: `v1.1.0`
 
 Next roadmap target:
-- pending maintainer planning after `v1.0.1`
+- pending planning after `v1.1.0`
 
 ---
 
@@ -72,9 +74,18 @@ Completed foundation:
 - Runtime queue/upload optimization, DB indexes, and recovery diagnostics
 - OBS Plugin DLL build and real OBS load smoke evidence
 - Worker EXE bundled distribution and local download-to-first-run smoke evidence
+- First user-ready OBS Plugin release package (`v1.0.1`)
 
-Planned roadmap capabilities:
-- Post-v1.0 roadmap planning
+Planned roadmap capabilities for `v1.1`:
+- clearer install guidance and install layout verification
+- actionable Worker launch diagnostics in the Dock and OBS logs
+- recording completion and output evidence in the Dock
+- first-run setup validation UI
+- recording-to-match/queue handoff
+- practical automatic recording setup and template testing
+- production YouTube upload provider, OAuth setup, and manual-review controls
+- match metadata editing and upload metadata preview UI
+- ZIP install/update assistant and installer/MSI decision
 
 ---
 
@@ -126,8 +137,8 @@ obs-duel-recorder/
 - Released user-ready version: [`v1.0.1`](https://github.com/Tao-pyth/obs-duel-recorder/releases/tag/v1.0.1)
 - Status: first usable OBS Plugin release published with ZIP and SHA256 assets
 - Latest completed version gate: [#401](https://github.com/Tao-pyth/obs-duel-recorder/issues/401)
-- Current version tracking issue: none
-- Next release publication gate: pending maintainer planning
+- Current version tracking issue: [#415](https://github.com/Tao-pyth/obs-duel-recorder/issues/415)
+- Current development target: `v1.1` - First Trial Usability Hardening
 - Release record: [docs/release-history.md](docs/release-history.md)
 
 ### Completed Legacy Implementation Work
@@ -139,12 +150,13 @@ obs-duel-recorder/
 - Startup recovery diagnostics with scanned count, recovered count, and duration evidence
 - Runtime baseline, regression threshold, and long-session fixture documentation
 
-### Version Gates
+### Active Version Gates
 
 - `v0.11` - OBS Plugin Real Load Smoke
 - `v0.12` - Release Packaging Automation
 - `v0.13` - Practical Distribution Readiness
 - `v1.0` - First Usable OBS Plugin Release
+- `v1.1` - First Trial Usability Hardening
 
 ---
 
@@ -156,7 +168,8 @@ Key documents:
 - [Roadmap](docs/roadmap.md)
 - [Requirements](docs/requirements/requirements.md)
 - [Release and tag policy](docs/release.md)
-- [v0.1 acceptance checklist](docs/requirements/v0.1-acceptance.md)
+- [active v1.1 acceptance checklist](docs/requirements/v1.1-first-trial-usability-hardening-acceptance.md)
+- [active v1.1 release readiness checklist](docs/release/v1.1-first-trial-usability-hardening-readiness.md)
 - [Architecture docs](docs/architecture/)
 - [User docs (language selector / 日本語)](docs/user/index.md)
 - [Japanese user docs](docs/user/ja/index.md)
