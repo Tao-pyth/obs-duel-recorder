@@ -71,6 +71,83 @@ bool directory_exists(const std::wstring &path)
 	return attributes != INVALID_FILE_ATTRIBUTES && (attributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
 }
 
+std::wstring append_path(const std::wstring &directory, const wchar_t *name)
+{
+	if (directory.empty()) {
+		return name;
+	}
+	const wchar_t last = directory.back();
+	if (last == L'\\' || last == L'/') {
+		return directory + name;
+	}
+	return directory + L"\\" + name;
+}
+
+bool ensure_directory_tree(const std::wstring &path, std::string &error)
+{
+	if (path.empty()) {
+		error = "user_data_dir is empty";
+		return false;
+	}
+
+	std::wstring current;
+	for (size_t i = 0; i < path.size(); ++i) {
+		current.push_back(path[i]);
+		if (path[i] != L'\\' && path[i] != L'/') {
+			continue;
+		}
+		if (current.size() <= 3) {
+			continue;
+		}
+		if (directory_exists(current)) {
+			continue;
+		}
+		if (!CreateDirectoryW(current.c_str(), nullptr) && !directory_exists(current)) {
+			error = "Failed to create user_data_dir parent path=" + to_utf8(current) +
+				" windows_error=" + std::to_string(GetLastError());
+			return false;
+		}
+	}
+
+	if (directory_exists(path)) {
+		return true;
+	}
+	if (!CreateDirectoryW(path.c_str(), nullptr) && !directory_exists(path)) {
+		error = "Failed to create user_data_dir path=" + to_utf8(path) +
+			" windows_error=" + std::to_string(GetLastError());
+		return false;
+	}
+	return true;
+}
+
+bool validate_user_data_dir(const std::wstring &path, std::string &error)
+{
+	if (!ensure_directory_tree(path, error)) {
+		return false;
+	}
+
+	const std::wstring probe_path = append_path(path, L".odr-plugin-write-test");
+	HANDLE file = CreateFileW(probe_path.c_str(), GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS,
+				  FILE_ATTRIBUTE_TEMPORARY, nullptr);
+	if (file == INVALID_HANDLE_VALUE) {
+		error = "user_data_dir is not writable path=" + to_utf8(path) +
+			" windows_error=" + std::to_string(GetLastError());
+		return false;
+	}
+	const char probe[] = "ok";
+	DWORD written = 0;
+	const bool wrote = WriteFile(file, probe, sizeof(probe) - 1, &written, nullptr) &&
+			   written == sizeof(probe) - 1;
+	CloseHandle(file);
+	DeleteFileW(probe_path.c_str());
+	if (!wrote) {
+		error = "user_data_dir write probe failed path=" + to_utf8(path) +
+			" windows_error=" + std::to_string(GetLastError());
+		return false;
+	}
+	return true;
+}
+
 std::wstring parent_directory(const std::wstring &path)
 {
 	const size_t pos = path.find_last_of(L"\\/");
@@ -227,6 +304,15 @@ void WorkerProcessManager::start(WorkerLaunchConfig config)
 		blog(LOG_WARNING, "%s config_error: ODR_USER_DATA_DIR is required before launching Worker", kLogPrefix);
 		return;
 	}
+
+#ifdef _WIN32
+	std::string user_data_error;
+	if (!validate_user_data_dir(config.user_data_dir, user_data_error)) {
+		update_status(WorkerDiagnosticState::runtime_dir_error, config, WorkerOwnership::none, user_data_error);
+		blog(LOG_WARNING, "%s runtime_dir_error: %s", kLogPrefix, user_data_error.c_str());
+		return;
+	}
+#endif
 
 	update_status(WorkerDiagnosticState::starting, config, WorkerOwnership::none, "probing Worker health");
 	blog(LOG_INFO, "%s worker preflight host=%s port=%u user_data_dir=%s",

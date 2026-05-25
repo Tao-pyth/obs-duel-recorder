@@ -96,6 +96,33 @@ const char *recommended_action(WorkerDiagnosticState state)
 	return "Check OBS and Worker logs.";
 }
 
+std::string setup_summary(const WorkerStatusSnapshot &snapshot)
+{
+	if (snapshot.user_data_dir.empty()) {
+		return "action_required: set user_data_dir in Settings, then save.";
+	}
+
+	switch (snapshot.state) {
+	case WorkerDiagnosticState::running:
+		return "ready: Worker running and API compatible.";
+	case WorkerDiagnosticState::starting:
+		return "validating: waiting for Worker health.";
+	case WorkerDiagnosticState::runtime_dir_error:
+		return "runtime_path action_required: " + snapshot.error;
+	case WorkerDiagnosticState::config_error:
+		return "worker_launch action_required: " + snapshot.error;
+	case WorkerDiagnosticState::api_incompatible:
+		return "api_incompatible action_required: update Plugin and Worker together.";
+	case WorkerDiagnosticState::unhealthy:
+		return "endpoint_or_worker action_required: " + snapshot.error;
+	case WorkerDiagnosticState::crashed:
+		return "worker_crashed action_required: " + snapshot.error;
+	case WorkerDiagnosticState::not_started:
+		return "not_started: open Settings and save to start Worker.";
+	}
+	return "unknown: check OBS and Worker logs.";
+}
+
 std::string recording_summary(const WorkerStatusSnapshot &snapshot)
 {
 	if (!snapshot.recording_error.empty()) {
@@ -179,6 +206,7 @@ void PluginUiController::register_ui()
 	auto *form = new QFormLayout;
 	form->setFieldGrowthPolicy(QFormLayout::AllNonFixedFieldsGrow);
 	state_value_ = add_row(form, "State");
+	setup_value_ = add_row(form, "Setup");
 	recording_value_ = add_row(form, "Recording");
 	output_value_ = add_row(form, "Output");
 	endpoint_value_ = add_row(form, "Endpoint");
@@ -246,6 +274,7 @@ void PluginUiController::refresh()
 						 snapshot.expected_worker_path;
 
 	state_value_->setText(QString::fromUtf8(state_name(snapshot.state)));
+	setup_value_->setText(qstr_utf8(setup_summary(snapshot)));
 	recording_value_->setText(qstr_utf8(recording_summary(snapshot)));
 	output_value_->setText(qstr_utf8(recording_output_summary(snapshot)));
 	endpoint_value_->setText(qstr_utf8(endpoint));

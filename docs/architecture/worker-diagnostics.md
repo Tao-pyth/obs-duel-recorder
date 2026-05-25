@@ -139,6 +139,9 @@ For the v1.1 Dock UI, the status-first diagnostic rows should expose selectable
 text for the current state, endpoint, `user_data_dir`, expected Worker path,
 ownership, latest detail/error, and recommended action. Manual Start/Stop
 controls remain enabled only when the diagnostic state is `running`. The Dock
+should include a first-run `Setup` row that summarizes whether the minimum
+runtime path, Worker launch, endpoint health, and API compatibility checks are
+ready or need action. The Dock
 should also show the last manual recording command result, including recording
 state, `session_id`, source, last action, reason, and update time when
 available; failed commands should leave a compact diagnostic reason visible.

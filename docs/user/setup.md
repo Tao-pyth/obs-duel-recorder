@@ -26,6 +26,12 @@ The Worker validates that `user_data/` and its runtime directories exist and are
 
 Existing runtime data is preserved. Setup validation must not delete, move, overwrite, or migrate existing DBs, videos, screenshots, exports, logs, or config.
 
+In OBS, open the `OBS Duel Recorder` Dock and check the `Setup` row. Saving
+Settings starts the minimum first-run validation path: the Plugin creates
+`user_data_dir` when possible, checks that it is writable, starts the Worker,
+and reports endpoint/API compatibility in the Dock. Manual Start/Stop stays
+disabled until the Worker state is `running`.
+
 ---
 
 ## YouTube Setup

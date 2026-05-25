@@ -84,6 +84,19 @@ Existing runtime data is detected and reported so setup can preserve it.
 
 Reports Worker API and Worker version compatibility information. The Plugin still owns actual OBS process integration and Worker launch.
 
+For the v1.1 OBS Dock setup path, the Plugin performs the minimum preflight
+needed before Worker launch:
+
+- create `user_data_dir` when possible,
+- verify that `user_data_dir` is writable,
+- probe Worker health on the configured endpoint,
+- surface Worker launch failure and API incompatibility as distinct Dock setup
+  actions.
+
+This Dock setup path is intentionally smaller than the full Worker setup wizard.
+OAuth and template readiness remain separate setup steps unless they are needed
+for minimum manual recording.
+
 ### OAuth
 
 Checks whether the YouTube client secret and OAuth token files exist under:
