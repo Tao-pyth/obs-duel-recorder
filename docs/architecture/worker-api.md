@@ -207,9 +207,33 @@ Response fields:
 - `matches`: template match details
 - `recording_state`: current Worker recording state after detection integration
 
+### `POST /detection/test`
+
+Purpose:
+- Evaluate one local frame fixture against configured templates without changing
+  duel lifecycle state.
+- Return per-template match result, score, template name, and detection kind.
+- Report missing templates or no-match cases with actionable diagnostics before
+  automatic recording is enabled.
+
+Request:
+- `frame_text` or `frame_hex`: required fixture input.
+- `kind`: optional `start`, `end`, `duel_start`, or `duel_end` filter.
+
+Response fields:
+- `matched`: whether at least one selected template matched.
+- `matches`: list of `name`, `kind`, `score`, and `matched` results.
+- `diagnostics`: stable diagnostic objects such as `template_match_missing`,
+  `template_config_missing`, or `templates_not_configured`.
+- `state_changed`: always `false`.
+- `recording_command_sent`: always `false`.
+
 Error behavior:
 - Invalid detection payloads return HTTP 400 with `code=detection_payload_invalid`.
-- Invalid detection config makes runtime endpoints return HTTP 503 with `code=detection_unavailable`.
+- Invalid detection config makes state/frame runtime endpoints return HTTP 503
+  with `code=detection_unavailable`; `/detection/test` returns
+  `matched=false` with `detection_unavailable` diagnostics so setup workflows can
+  report the issue without starting recording.
 
 The v0.8 detection API is defined by:
 - `docs/architecture/detection.md`

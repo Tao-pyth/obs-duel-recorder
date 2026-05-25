@@ -79,6 +79,18 @@ between `0.0` and `1.0`, and confirmations is a positive integer. Successful
 registration writes `user_data/config/templates.toml` in the same format used by
 the detection API.
 
+Before enabling automatic recording, test your own local sample input:
+
+```powershell
+Invoke-WebRequest http://127.0.0.1:8787/detection/test -Method Post -ContentType "application/json" -Body '{"kind":"start","frame_text":"sample frame bytes or fixture text"}' | Select-Object -ExpandProperty Content
+```
+
+Use samples captured from your own environment and keep them under runtime
+storage such as `user_data/templates/`. Do not commit local template files,
+screenshots, or game assets to the repository. The test result includes
+template name, detection kind, score, match status, and diagnostics for missing
+or low-confidence matches.
+
 ---
 
 ## OBS Integration Setup

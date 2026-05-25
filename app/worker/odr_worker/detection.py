@@ -249,6 +249,31 @@ class DetectionRuntime:
             next_recording,
         )
 
+    def test(self, payload: Any) -> dict[str, object]:
+        frame = _frame_bytes(payload)
+        selected_kind = _optional_template_kind(payload)
+        templates = self.templates
+        if selected_kind:
+            templates = tuple(template for template in templates if template.spec.kind == selected_kind)
+
+        matches = match_templates(templates, frame)
+        matched = any(match.matched for match in matches)
+        diagnostics = _template_test_diagnostics(
+            config=self.config,
+            loaded=templates,
+            matches=matches,
+            selected_kind=selected_kind,
+        )
+        return {
+            "config_loaded": self.config.config_loaded,
+            "kind": selected_kind or "any",
+            "matched": matched,
+            "matches": [match.as_payload() for match in matches],
+            "diagnostics": diagnostics,
+            "state_changed": False,
+            "recording_command_sent": False,
+        }
+
 
 def _try_recording_command(state: RecordingState, action: str, events: list[str]) -> RecordingState:
     try:
@@ -278,6 +303,55 @@ def _frame_bytes(payload: Any) -> bytes:
         except ValueError as exc:
             raise TemplateConfigError({"frame_hex": "must_be_hex"}) from exc
     raise TemplateConfigError({"frame": "frame_text_or_frame_hex_required"})
+
+
+def _optional_template_kind(payload: Any) -> str | None:
+    if not isinstance(payload, dict):
+        raise TemplateConfigError({"payload": "must_be_object"})
+    if "kind" not in payload or payload["kind"] in (None, ""):
+        return None
+    value = payload["kind"]
+    aliases = {
+        "start": "duel_start",
+        "duel_start": "duel_start",
+        "end": "duel_end",
+        "duel_end": "duel_end",
+    }
+    if not isinstance(value, str) or value.strip() not in aliases:
+        raise TemplateConfigError({"kind": "must_be_start_or_end"})
+    return aliases[value.strip()]
+
+
+def _template_test_diagnostics(
+    *,
+    config: TemplateConfig,
+    loaded: tuple[LoadedTemplate, ...],
+    matches: list[TemplateMatch],
+    selected_kind: str | None,
+) -> list[dict[str, object]]:
+    diagnostics = list(config.errors)
+    configured = config.templates
+    if selected_kind:
+        configured = tuple(template for template in configured if template.kind == selected_kind)
+
+    if not config.config_loaded:
+        diagnostics.append({"code": "template_config_missing", "path": config.config_path.as_posix()})
+    if not config.templates:
+        diagnostics.append({"code": "templates_not_configured", "templates_dir": config.templates_dir.as_posix()})
+    elif not configured:
+        diagnostics.append({"code": "templates_not_configured_for_kind", "kind": selected_kind or "any"})
+    elif not loaded:
+        diagnostics.append({"code": "templates_not_loaded_for_kind", "kind": selected_kind or "any"})
+    elif not any(match.matched for match in matches):
+        best_score = max((match.score for match in matches), default=0.0)
+        diagnostics.append(
+            {
+                "code": "template_match_missing",
+                "kind": selected_kind or "any",
+                "best_score": best_score,
+            }
+        )
+    return diagnostics
 
 
 def _positive_int(value: object, label: str) -> int:

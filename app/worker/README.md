@@ -73,6 +73,12 @@ Template detection frame example:
 Invoke-WebRequest http://127.0.0.1:8787/detection/frame -Method Post -ContentType "application/json" -Body '{"frame_text":"sample frame bytes or fixture text"}' | Select-Object -ExpandProperty Content
 ```
 
+Template matching test without recording:
+
+```powershell
+Invoke-WebRequest http://127.0.0.1:8787/detection/test -Method Post -ContentType "application/json" -Body '{"kind":"start","frame_text":"sample frame bytes or fixture text"}' | Select-Object -ExpandProperty Content
+```
+
 Register a start template through setup:
 
 ```powershell

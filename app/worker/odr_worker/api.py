@@ -540,6 +540,37 @@ def create_app(*, runtime_dirs: RuntimeDirs, loaded_config: LoadedWorkerConfig, 
             "recording_state": app.state.recording_state.as_payload(),
         }
 
+    @app.post("/detection/test")
+    async def post_detection_test(request: Request):
+        if app.state.detection_runtime is None:
+            return {
+                "config_loaded": False,
+                "kind": "any",
+                "matched": False,
+                "matches": [],
+                "diagnostics": [
+                    {"code": "detection_unavailable", "details": app.state.detection_config_error},
+                ],
+                "state_changed": False,
+                "recording_command_sent": False,
+            }
+        try:
+            payload = await request.json()
+            return app.state.detection_runtime.test(payload)
+        except TemplateConfigError as exc:
+            return _error_response(
+                status_code=400,
+                code="detection_payload_invalid",
+                message="Detection test payload is invalid",
+                details=exc.details,
+            )
+        except ValueError:
+            return _error_response(
+                status_code=400,
+                code="detection_payload_invalid",
+                message="Detection test payload must be JSON object",
+            )
+
     @app.get("/matches")
     def get_matches(query: str | None = None) -> dict[str, object]:
         if app.state.metadata_store is None:

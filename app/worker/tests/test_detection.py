@@ -111,6 +111,47 @@ class TemplateDetectionApiTests(unittest.TestCase):
         self.assertEqual(resp.json()["code"], "detection_payload_invalid")
         self.assertEqual(resp.json()["details"]["frame_hex"], "must_be_hex")
 
+    def test_detection_test_reports_matches_without_recording_transition(self) -> None:
+        client, _ = self._configured_client()
+
+        result = client.post("/detection/test", json={"kind": "start", "frame_text": "DUEL_START_MARKER"})
+        state = client.get("/detection/state")
+        recording = client.get("/recording/state")
+
+        self.assertEqual(result.status_code, 200)
+        self.assertTrue(result.json()["matched"])
+        self.assertFalse(result.json()["state_changed"])
+        self.assertFalse(result.json()["recording_command_sent"])
+        self.assertEqual(result.json()["matches"][0]["name"], "start")
+        self.assertEqual(result.json()["matches"][0]["kind"], "duel_start")
+        self.assertEqual(result.json()["matches"][0]["score"], 1.0)
+        self.assertEqual(state.json()["lifecycle_state"], "no_duel")
+        self.assertEqual(recording.json()["state"], "idle")
+
+    def test_detection_test_reports_missing_or_low_confidence_matches(self) -> None:
+        client, _ = self._configured_client()
+
+        result = client.post("/detection/test", json={"kind": "end", "frame_text": "no marker here"})
+
+        self.assertEqual(result.status_code, 200)
+        self.assertFalse(result.json()["matched"])
+        self.assertEqual(result.json()["matches"][0]["score"], 0.0)
+        self.assertIn(
+            {"code": "template_match_missing", "kind": "duel_end", "best_score": 0.0},
+            result.json()["diagnostics"],
+        )
+
+    def test_detection_test_reports_missing_templates_without_starting_recording(self) -> None:
+        client, _ = self._client()
+
+        result = client.post("/detection/test", json={"kind": "start", "frame_text": "DUEL_START_MARKER"})
+
+        self.assertEqual(result.status_code, 200)
+        self.assertFalse(result.json()["matched"])
+        self.assertEqual(result.json()["matches"], [])
+        self.assertIn("template_config_missing", {item["code"] for item in result.json()["diagnostics"]})
+        self.assertIn("templates_not_configured", {item["code"] for item in result.json()["diagnostics"]})
+
     def _configured_client(self):
         return self._client(
             config_text="""

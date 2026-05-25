@@ -66,6 +66,19 @@ It accepts a start/end kind, local template path, threshold, and confirmation
 count, then writes the same `templates.toml` format shown above. This keeps the
 manual and guided paths on one compatible detection configuration contract.
 
+Template matching can be tested without changing lifecycle state or sending a
+recording command:
+
+```text
+POST /detection/test
+```
+
+The test endpoint accepts the same `frame_text` or `frame_hex` fixture payload
+as `/detection/frame`, plus optional `kind` (`start`, `end`, `duel_start`, or
+`duel_end`). It returns per-template `name`, `kind`, `score`, and `matched`
+fields with diagnostics such as `template_match_missing` or
+`templates_not_configured`.
+
 ---
 
 ## MVP Matching
