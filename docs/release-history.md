@@ -236,7 +236,7 @@ The version tracking issue may contain the working release summary, but finalize
 - ZIP SHA256: `28CF71B3C68736412B95495CDACEFDA7546EB1A11B4077426D7C9F79159CBBA3`
 - Verification: final package validation passed; packaged `update.bat validate --from-version v0.13.0` passed; packaged `update.bat apply --from-version v0.13.0` passed twice; `user_data/` sentinel files were preserved; SQLite backup was created under `user_data/data/db/backups/`
 - Legacy conflict: existing `v1.0.0` is preserved and must not be moved, deleted, or overwritten
-- Next version tracking issue: pending maintainer planning
+- Next version tracking issue: #415
 - Status: released user-ready OBS Plugin package
 
 ### Legacy tag v1.0.0 - YouTube Upload MVP
