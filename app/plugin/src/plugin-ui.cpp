@@ -168,6 +168,27 @@ std::string recording_output_summary(const WorkerStatusSnapshot &snapshot)
 	return "not available";
 }
 
+std::string queue_summary(const WorkerStatusSnapshot &snapshot)
+{
+	if (!snapshot.upload_status_available) {
+		if (!snapshot.upload_status.error.empty()) {
+			return "not available: " + snapshot.upload_status.error;
+		}
+		return "not available";
+	}
+
+	const UploadStatusResult &queue = snapshot.upload_status;
+	std::ostringstream out;
+	out << "ready=" << queue.ready_upload
+	    << " uploading=" << queue.uploading
+	    << " uploaded=" << queue.uploaded
+	    << " failed=" << queue.upload_failed
+	    << " quota=" << queue.quota_waiting
+	    << " review=" << queue.need_manual_review
+	    << " discarded=" << queue.discarded;
+	return out.str();
+}
+
 QLabel *add_row(QFormLayout *layout, const char *name)
 {
 	auto *value = new QLabel;
@@ -209,6 +230,7 @@ void PluginUiController::register_ui()
 	setup_value_ = add_row(form, "Setup");
 	recording_value_ = add_row(form, "Recording");
 	output_value_ = add_row(form, "Output");
+	queue_value_ = add_row(form, "Queue");
 	endpoint_value_ = add_row(form, "Endpoint");
 	user_data_value_ = add_row(form, "User data");
 	worker_path_value_ = add_row(form, "Worker path");
@@ -277,6 +299,7 @@ void PluginUiController::refresh()
 	setup_value_->setText(qstr_utf8(setup_summary(snapshot)));
 	recording_value_->setText(qstr_utf8(recording_summary(snapshot)));
 	output_value_->setText(qstr_utf8(recording_output_summary(snapshot)));
+	queue_value_->setText(qstr_utf8(queue_summary(snapshot)));
 	endpoint_value_->setText(qstr_utf8(endpoint));
 	user_data_value_->setText(snapshot.user_data_dir.empty() ? QString::fromUtf8("not configured") : qstr_wide(snapshot.user_data_dir));
 	worker_path_value_->setText(worker_path.empty() ? QString::fromUtf8("not available") : qstr_wide(worker_path));

@@ -328,6 +328,48 @@ OverlayFetchResult LocalhostApiClient::fetch_overlay_state(const WorkerEndpoint 
 #endif
 }
 
+UploadStatusResult LocalhostApiClient::fetch_upload_status(const WorkerEndpoint &endpoint) const
+{
+	UploadStatusResult result;
+
+#ifdef _WIN32
+	const HttpResponse response = http_get(endpoint, L"/upload/status");
+	result.http_status = response.status;
+	if (!response.ok) {
+		result.status = UploadStatusFetchStatus::unavailable;
+		result.error = response.error;
+		return result;
+	}
+	if (response.status != 200) {
+		result.status = UploadStatusFetchStatus::invalid_response;
+		result.error = "GET /upload/status returned non-200 status";
+		return result;
+	}
+
+	result.ready_upload = std::stoi(extract_json_number(response.body, "ready_upload").empty() ?
+					       "0" : extract_json_number(response.body, "ready_upload"));
+	result.uploading = std::stoi(extract_json_number(response.body, "uploading").empty() ?
+					     "0" : extract_json_number(response.body, "uploading"));
+	result.uploaded = std::stoi(extract_json_number(response.body, "uploaded").empty() ?
+					    "0" : extract_json_number(response.body, "uploaded"));
+	result.upload_failed = std::stoi(extract_json_number(response.body, "upload_failed").empty() ?
+						 "0" : extract_json_number(response.body, "upload_failed"));
+	result.quota_waiting = std::stoi(extract_json_number(response.body, "quota_waiting").empty() ?
+						 "0" : extract_json_number(response.body, "quota_waiting"));
+	result.need_manual_review = std::stoi(extract_json_number(response.body, "need_manual_review").empty() ?
+						      "0" : extract_json_number(response.body, "need_manual_review"));
+	result.discarded = std::stoi(extract_json_number(response.body, "discarded").empty() ?
+					     "0" : extract_json_number(response.body, "discarded"));
+	result.status = UploadStatusFetchStatus::reachable;
+	result.body = response.body;
+	return result;
+#else
+	result.status = UploadStatusFetchStatus::unavailable;
+	result.error = "Upload status probing is only implemented on Windows";
+	return result;
+#endif
+}
+
 RecordingCommandResult LocalhostApiClient::send_recording_command(const WorkerEndpoint &endpoint,
 								  const std::string &action,
 								  const std::string &source,

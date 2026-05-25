@@ -99,6 +99,11 @@ recording_output_path_missing`. The Worker does not create a queue item without
 a media path. If a queued path later proves missing, existing upload processing
 moves it through the established discard/manual-review semantics.
 
+The OBS Dock should expose compact queue counts from `/upload/status` so users
+can see whether completed recordings are ready, uploading, uploaded, failed,
+quota-waiting, need manual review, or discarded. Full upload management remains
+outside this display-only handoff.
+
 ---
 
 Allowed operator actions:

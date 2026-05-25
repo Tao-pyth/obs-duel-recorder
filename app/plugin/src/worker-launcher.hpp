@@ -46,6 +46,7 @@ struct WorkerStatusSnapshot {
 	WorkerOwnership ownership = WorkerOwnership::none;
 	WorkerEndpoint endpoint;
 	OverlayStatePayload overlay_state;
+	UploadStatusResult upload_status;
 	std::wstring user_data_dir;
 	std::wstring worker_command;
 	std::wstring expected_worker_path;
@@ -67,6 +68,7 @@ struct WorkerStatusSnapshot {
 	unsigned int consecutive_failures = 0;
 	bool recording_state_available = false;
 	bool overlay_state_available = false;
+	bool upload_status_available = false;
 };
 
 class WorkerProcessManager {
@@ -91,7 +93,8 @@ private:
 	void update_status(WorkerDiagnosticState state, const WorkerLaunchConfig &config,
 			   WorkerOwnership ownership, const std::string &error,
 			   const WorkerProbeResult *probe = nullptr, unsigned int consecutive_failures = 0,
-			   const OverlayFetchResult *overlay = nullptr);
+			   const OverlayFetchResult *overlay = nullptr,
+			   const UploadStatusResult *upload = nullptr);
 	void close_process_handles();
 
 	LocalhostApiClient api_client_;

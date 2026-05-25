@@ -148,7 +148,9 @@ available; failed commands should leave a compact diagnostic reason visible.
 The same Dock surface should include the last OBS recording output path or,
 when OBS does not return one, explicit fallback evidence from the current output
 path captured at recording start plus a note to check OBS Output settings and
-OBS logs.
+OBS logs. A compact `Queue` row should show upload queue counts from
+`/upload/status` (`ready`, `uploading`, `uploaded`, failed, quota-waiting,
+manual-review, and discarded) without adding full upload management controls.
 
 ---
 
