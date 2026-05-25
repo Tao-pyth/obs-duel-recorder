@@ -104,6 +104,8 @@ class MatchMetadataApiTests(unittest.TestCase):
         self.assertIn("DP: unknown", metadata.json()["description"])
         self.assertIn("Misplayed turn three.", metadata.json()["description"])
         self.assertIn("opponent_deck", metadata.json()["variables"])
+        self.assertEqual(metadata.json()["missing_fields"], ["rank", "dp"])
+        self.assertEqual(metadata.json()["warning"], "Missing metadata fields: rank, dp")
 
     def test_title_generation_uses_fallbacks_and_length_limit(self) -> None:
         client, _ = self._client()
@@ -117,6 +119,8 @@ class MatchMetadataApiTests(unittest.TestCase):
         self.assertEqual(metadata.status_code, 200)
         self.assertLessEqual(len(metadata.json()["title"]), 100)
         self.assertTrue(metadata.json()["title"].startswith("Replay unknown"))
+        self.assertIn("deck_name", metadata.json()["missing_fields"])
+        self.assertIn("opponent_deck", metadata.json()["missing_fields"])
 
     def test_metadata_persists_across_restart(self) -> None:
         client, runtime_dirs = self._client()

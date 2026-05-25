@@ -23,6 +23,7 @@ The Dock UI supports:
 - manual start
 - manual stop
 - metadata editing for the latest completed recording
+- upload title and description preview for the latest completed recording
 - upload retry
 - upload discard
 - mark uploaded after confirming the YouTube video id
@@ -45,3 +46,7 @@ Users can:
 
 Invalid metadata values are rejected by the Worker without replacing the saved
 match record.
+
+Use Preview Upload Metadata before upload to inspect the generated YouTube title
+and description. If the preview reports missing fields, use Edit Metadata and
+preview again before retrying upload.

@@ -206,12 +206,19 @@ class MatchMetadataStore:
         template = record.title_template or DEFAULT_TITLE_TEMPLATE
         title = _truncate(template.format_map(_SafeDict(values)), MAX_TITLE_LENGTH)
         description = _description(record, values)
+        missing_fields = [
+            field
+            for field in ("deck_name", "opponent_deck", "result", "rank", "dp")
+            if not getattr(record, field)
+        ]
         return {
             "match_id": record.id,
             "title": title,
             "description": description,
             "notes": record.memo,
             "variables": sorted(values.keys()),
+            "missing_fields": missing_fields,
+            "warning": _missing_metadata_warning(missing_fields),
         }
 
     def _get(self, conn: sqlite3.Connection, match_id: int) -> MatchMetadataRecord:
@@ -282,6 +289,12 @@ def _description(record: MatchMetadataRecord, values: dict[str, str]) -> str:
     if record.memo:
         lines.extend(["", "Notes:", record.memo])
     return _truncate("\n".join(lines), MAX_DESCRIPTION_LENGTH)
+
+
+def _missing_metadata_warning(missing_fields: list[str]) -> str:
+    if not missing_fields:
+        return ""
+    return "Missing metadata fields: " + ", ".join(missing_fields)
 
 
 def _truncate(value: str, limit: int) -> str:

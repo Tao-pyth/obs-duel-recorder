@@ -30,6 +30,7 @@ private:
 	void request_upload_discard();
 	void request_upload_mark_uploaded();
 	void request_edit_metadata();
+	void request_preview_upload_metadata();
 	void handle_automatic_recording(const WorkerStatusSnapshot &snapshot);
 	void log_recording_command_result(const char *action, const RecordingCommandResult &result);
 	void log_queue_command_result(const char *action, const QueueCommandResult &result);
@@ -56,6 +57,7 @@ private:
 	QPushButton *discard_upload_button_ = nullptr;
 	QPushButton *mark_uploaded_button_ = nullptr;
 	QPushButton *edit_metadata_button_ = nullptr;
+	QPushButton *preview_metadata_button_ = nullptr;
 	OverlayStatePayload last_applied_overlay_state_;
 	std::string automatic_recording_request_key_;
 	bool overlay_state_applied_ = false;

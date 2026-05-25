@@ -15,14 +15,56 @@
 namespace odr::plugin {
 namespace {
 
+std::string json_unescape(const std::string &value)
+{
+	std::ostringstream out;
+	for (size_t i = 0; i < value.size(); ++i) {
+		if (value[i] != '\\' || i + 1 >= value.size()) {
+			out << value[i];
+			continue;
+		}
+		const char escaped = value[++i];
+		switch (escaped) {
+		case '"':
+			out << '"';
+			break;
+		case '\\':
+			out << '\\';
+			break;
+		case '/':
+			out << '/';
+			break;
+		case 'b':
+			out << '\b';
+			break;
+		case 'f':
+			out << '\f';
+			break;
+		case 'n':
+			out << '\n';
+			break;
+		case 'r':
+			out << '\r';
+			break;
+		case 't':
+			out << '\t';
+			break;
+		default:
+			out << '\\' << escaped;
+			break;
+		}
+	}
+	return out.str();
+}
+
 std::string extract_json_string(const std::string &body, const char *key)
 {
-	const std::regex pattern(std::string("\"") + key + "\"\\s*:\\s*\"([^\"]*)\"");
+	const std::regex pattern(std::string("\"") + key + "\"\\s*:\\s*\"((?:\\\\.|[^\"])*)\"");
 	std::smatch match;
 	if (!std::regex_search(body, match, pattern) || match.size() < 2) {
 		return {};
 	}
-	return match[1].str();
+	return json_unescape(match[1].str());
 }
 
 std::string extract_json_number(const std::string &body, const char *key)
@@ -123,6 +165,16 @@ void populate_match_metadata(MatchMetadataPayload &match, const std::string &bod
 	match.rank = extract_json_string(body, "rank");
 	match.dp = extract_json_string(body, "dp");
 	match.memo = extract_json_string(body, "memo");
+}
+
+void populate_upload_metadata_preview(UploadMetadataPreviewPayload &preview, const std::string &body)
+{
+	const std::string id = extract_json_number(body, "match_id");
+	preview.match_id = id.empty() ? 0 : std::stoi(id);
+	preview.title = extract_json_string(body, "title");
+	preview.description = extract_json_string(body, "description");
+	preview.notes = extract_json_string(body, "notes");
+	preview.warning = extract_json_string(body, "warning");
 }
 
 #ifdef _WIN32
@@ -698,6 +750,57 @@ MetadataUpdateResult LocalhostApiClient::update_match_metadata(const WorkerEndpo
 #else
 	result.status = MetadataUpdateStatus::unavailable;
 	result.error = "Match metadata updates are only implemented on Windows";
+	return result;
+#endif
+}
+
+UploadMetadataPreviewResult LocalhostApiClient::fetch_upload_metadata_preview(const WorkerEndpoint &endpoint,
+									     int match_id) const
+{
+	UploadMetadataPreviewResult result;
+
+#ifdef _WIN32
+	if (match_id <= 0) {
+		result.status = UploadMetadataPreviewStatus::not_found;
+		result.error = "Match id is required";
+		return result;
+	}
+
+	const std::wstring path = L"/matches/" + std::to_wstring(match_id) + L"/upload-metadata";
+	const HttpResponse response = http_get(endpoint, path.c_str());
+	result.http_status = response.status;
+	result.body = response.body;
+
+	if (!response.ok) {
+		result.status = UploadMetadataPreviewStatus::unavailable;
+		result.error = response.error;
+		return result;
+	}
+	if (response.status == 404) {
+		result.status = UploadMetadataPreviewStatus::not_found;
+		result.error = extract_json_string(response.body, "message");
+		if (result.error.empty()) {
+			result.error = "Match metadata is not available";
+		}
+		return result;
+	}
+	if (response.status != 200) {
+		result.status = UploadMetadataPreviewStatus::invalid_response;
+		result.error = "GET /matches/{id}/upload-metadata returned non-200 status";
+		return result;
+	}
+
+	populate_upload_metadata_preview(result.preview, response.body);
+	if (result.preview.match_id <= 0 || result.preview.title.empty() || result.preview.description.empty()) {
+		result.status = UploadMetadataPreviewStatus::invalid_response;
+		result.error = "GET /matches/{id}/upload-metadata response is missing preview fields";
+		return result;
+	}
+	result.status = UploadMetadataPreviewStatus::reachable;
+	return result;
+#else
+	result.status = UploadMetadataPreviewStatus::unavailable;
+	result.error = "Upload metadata preview is only implemented on Windows";
 	return result;
 #endif
 }

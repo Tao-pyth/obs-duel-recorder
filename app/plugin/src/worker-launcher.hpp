@@ -89,6 +89,7 @@ public:
 					      const std::string &youtube_video_id = {});
 	MatchFetchResult fetch_latest_match();
 	MetadataUpdateResult update_match_metadata(const MatchMetadataPayload &metadata);
+	UploadMetadataPreviewResult fetch_upload_metadata_preview(int match_id);
 
 private:
 	void start(WorkerLaunchConfig config);

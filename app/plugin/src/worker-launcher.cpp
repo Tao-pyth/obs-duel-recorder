@@ -736,6 +736,22 @@ MetadataUpdateResult WorkerProcessManager::update_match_metadata(const MatchMeta
 	return api_client_.update_match_metadata(endpoint, metadata);
 }
 
+UploadMetadataPreviewResult WorkerProcessManager::fetch_upload_metadata_preview(int match_id)
+{
+	WorkerEndpoint endpoint;
+	{
+		std::lock_guard<std::mutex> lock(mutex_);
+		endpoint = status_.endpoint;
+		if (status_.state != WorkerDiagnosticState::running) {
+			UploadMetadataPreviewResult result;
+			result.status = UploadMetadataPreviewStatus::unavailable;
+			result.error = "Worker is not running";
+			return result;
+		}
+	}
+	return api_client_.fetch_upload_metadata_preview(endpoint, match_id);
+}
+
 void WorkerProcessManager::stop()
 {
 	stop_requested_ = true;

@@ -465,6 +465,8 @@ these fields automatically.
 Purpose:
 - Generate deterministic upload title, description, notes, and supported title-template variables.
 - Apply stable fallbacks for missing metadata and unknown template variables.
+- Return `missing_fields` and `warning` so the OBS Dock can show actionable
+  preview warnings before upload.
 
 ### Upload integration
 

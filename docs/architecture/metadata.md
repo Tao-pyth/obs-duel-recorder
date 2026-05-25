@@ -82,6 +82,8 @@ remains the single write boundary.
 - `description`
 - `notes`
 - supported template `variables`
+- `missing_fields`
+- `warning`
 
 Default title template:
 
@@ -102,6 +104,11 @@ Supported variables:
 Missing values use stable fallbacks such as `Unknown Opponent` or `unknown`. Unknown template variables render as `unknown`.
 
 Title length is capped at 100 characters. Description length is capped at 5000 characters. Truncation is deterministic.
+
+The OBS Dock `Preview Upload Metadata` action calls this same endpoint for the
+latest match and displays the generated title and description without starting
+an upload. When required metadata is missing, the preview shows the Worker
+warning and directs the user back to `Edit Metadata`.
 
 ---
 

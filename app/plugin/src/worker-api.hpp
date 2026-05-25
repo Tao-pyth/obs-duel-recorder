@@ -123,6 +123,13 @@ enum class MetadataUpdateStatus {
 	invalid_response,
 };
 
+enum class UploadMetadataPreviewStatus {
+	reachable,
+	unavailable,
+	not_found,
+	invalid_response,
+};
+
 struct RecordingStatePayload {
 	std::string state;
 	std::string session_id;
@@ -228,6 +235,27 @@ struct MetadataUpdateResult {
 	}
 };
 
+struct UploadMetadataPreviewPayload {
+	int match_id = 0;
+	std::string title;
+	std::string description;
+	std::string notes;
+	std::string warning;
+};
+
+struct UploadMetadataPreviewResult {
+	UploadMetadataPreviewStatus status = UploadMetadataPreviewStatus::unavailable;
+	unsigned long http_status = 0;
+	UploadMetadataPreviewPayload preview;
+	std::string error;
+	std::string body;
+
+	bool reachable() const
+	{
+		return status == UploadMetadataPreviewStatus::reachable;
+	}
+};
+
 class LocalhostApiClient {
 public:
 	explicit LocalhostApiClient(std::string expected_api_version, std::string expected_worker_version);
@@ -245,6 +273,7 @@ public:
 	MatchFetchResult fetch_latest_match(const WorkerEndpoint &endpoint) const;
 	MetadataUpdateResult update_match_metadata(const WorkerEndpoint &endpoint,
 						   const MatchMetadataPayload &metadata) const;
+	UploadMetadataPreviewResult fetch_upload_metadata_preview(const WorkerEndpoint &endpoint, int match_id) const;
 
 private:
 	std::string expected_api_version_;

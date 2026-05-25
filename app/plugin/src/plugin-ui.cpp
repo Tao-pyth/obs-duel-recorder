@@ -297,8 +297,13 @@ void PluginUiController::register_ui()
 	root->addLayout(upload_controls);
 
 	edit_metadata_button_ = new QPushButton("Edit Metadata");
+	preview_metadata_button_ = new QPushButton("Preview Upload Metadata");
 	QObject::connect(edit_metadata_button_, &QPushButton::clicked, [this]() { request_edit_metadata(); });
-	root->addWidget(edit_metadata_button_);
+	QObject::connect(preview_metadata_button_, &QPushButton::clicked, [this]() { request_preview_upload_metadata(); });
+	auto *metadata_controls = new QHBoxLayout;
+	metadata_controls->addWidget(edit_metadata_button_);
+	metadata_controls->addWidget(preview_metadata_button_);
+	root->addLayout(metadata_controls);
 	root->addStretch(1);
 
 	if (!obs_frontend_add_dock_by_id(kDockId, "OBS Duel Recorder", dock_widget_)) {
@@ -375,6 +380,9 @@ void PluginUiController::refresh()
 	}
 	if (edit_metadata_button_) {
 		edit_metadata_button_->setEnabled(worker_running);
+	}
+	if (preview_metadata_button_) {
+		preview_metadata_button_->setEnabled(worker_running);
 	}
 
 	handle_automatic_recording(snapshot);
@@ -631,6 +639,59 @@ void PluginUiController::request_edit_metadata()
 
 	blog(LOG_INFO, "%s metadata update accepted id=%d", kLogPrefix, result.match.id);
 	refresh();
+}
+
+void PluginUiController::request_preview_upload_metadata()
+{
+	const MatchFetchResult fetched = worker_manager_.fetch_latest_match();
+	if (!fetched.reachable()) {
+		const QString message = fetched.status == MatchFetchStatus::not_found ?
+						QString::fromUtf8("No completed match metadata is available yet.") :
+						qstr_utf8(fetched.error.empty() ? "Worker metadata API is unavailable." : fetched.error);
+		QMessageBox::warning(dock_widget_, "Preview upload metadata", message);
+		return;
+	}
+
+	const UploadMetadataPreviewResult preview =
+		worker_manager_.fetch_upload_metadata_preview(fetched.match.id);
+	if (!preview.reachable()) {
+		QMessageBox::warning(
+			dock_widget_,
+			"Preview upload metadata",
+			qstr_utf8(preview.error.empty() ? "Upload metadata preview is unavailable." : preview.error));
+		blog(LOG_WARNING, "%s upload metadata preview failed status=%d http=%lu id=%d error=%s",
+		     kLogPrefix, static_cast<int>(preview.status), preview.http_status, fetched.match.id,
+		     preview.error.c_str());
+		return;
+	}
+
+	QDialog dialog(dock_widget_);
+	dialog.setWindowTitle(QString::fromUtf8("Upload Metadata Preview"));
+
+	auto *layout = new QVBoxLayout(&dialog);
+	auto *form = new QFormLayout;
+	auto *title_preview = new QLineEdit(qstr_utf8(preview.preview.title));
+	title_preview->setReadOnly(true);
+	auto *description_preview = new QTextEdit(qstr_utf8(preview.preview.description));
+	description_preview->setReadOnly(true);
+	description_preview->setAcceptRichText(false);
+	auto *warning = new QLabel(qstr_utf8(
+		preview.preview.warning.empty() ?
+			std::string("Metadata is complete for the current preview.") :
+			preview.preview.warning + ". Use Edit Metadata before uploading if needed."));
+	warning->setWordWrap(true);
+
+	form->addRow("Title", title_preview);
+	form->addRow("Description", description_preview);
+	layout->addLayout(form);
+	layout->addWidget(warning);
+
+	auto *buttons = new QDialogButtonBox(QDialogButtonBox::Close);
+	QObject::connect(buttons, &QDialogButtonBox::rejected, &dialog, &QDialog::reject);
+	layout->addWidget(buttons);
+	dialog.exec();
+
+	blog(LOG_INFO, "%s upload metadata preview shown id=%d", kLogPrefix, preview.preview.match_id);
 }
 
 void PluginUiController::handle_automatic_recording(const WorkerStatusSnapshot &snapshot)
