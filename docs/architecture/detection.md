@@ -56,6 +56,16 @@ Rules:
 - `threshold` is a number from `0.0` to `1.0`.
 - Missing or empty template files are reported as diagnostics and are not matched.
 
+The setup API also provides an assisted registration workflow:
+
+```text
+POST /setup/templates/register
+```
+
+It accepts a start/end kind, local template path, threshold, and confirmation
+count, then writes the same `templates.toml` format shown above. This keeps the
+manual and guided paths on one compatible detection configuration contract.
+
 ---
 
 ## MVP Matching

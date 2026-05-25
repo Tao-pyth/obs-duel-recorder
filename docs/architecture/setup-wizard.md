@@ -71,6 +71,38 @@ Request:
 
 Passing `{"completed": false}` marks the step incomplete.
 
+### `POST /setup/templates/register`
+
+Registers or updates one local detection template and writes a compatible
+`user_data/config/templates.toml`.
+
+Request:
+
+```json
+{
+  "kind": "start",
+  "path": "duel-start.tpl",
+  "threshold": 1.0,
+  "confirmations": 2
+}
+```
+
+Rules:
+
+- `kind` accepts `start`, `end`, `duel_start`, or `duel_end`.
+- `path` must point to an existing, non-empty local template file. Relative
+  paths resolve through the same config/templates directories as detection.
+- `threshold` must be between `0.0` and `1.0`.
+- `confirmations` must be a positive integer and updates the matching
+  start/end confirmation count.
+- Template files are referenced from runtime storage; the endpoint does not
+  copy game assets into the repository or release package.
+
+Invalid registration requests return HTTP 400 with
+`code=setup_template_registration_invalid`. Successful registration reloads the
+Worker detection runtime so `GET /detection/templates` immediately reflects the
+generated config.
+
 ### `POST /setup/cancel`
 
 Records cancellation and returns the current setup state.
@@ -128,6 +160,10 @@ The validation result reports only file presence and safe paths. It never return
 ### Templates
 
 Checks `user_data/config/templates.toml` and local template files through the existing detection configuration loader. Missing, invalid, unreadable, or empty templates are reported as actionable diagnostics.
+
+The assisted registration endpoint can create this config without requiring a
+user to hand-edit TOML, while preserving the same detection loader and
+diagnostic behavior.
 
 ---
 

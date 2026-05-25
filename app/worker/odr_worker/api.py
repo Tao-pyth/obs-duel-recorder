@@ -80,6 +80,20 @@ def _statistics_group_response(
         )
 
 
+def _load_detection_runtime(app: FastAPI, runtime_dirs: RuntimeDirs) -> None:
+    app.state.detection_config_error = None
+    try:
+        app.state.detection_config = load_template_config(runtime_dirs.user_data_dir)
+        app.state.detection_runtime = DetectionRuntime(
+            app.state.detection_config,
+            load_templates(app.state.detection_config),
+        )
+    except TemplateConfigError as exc:
+        app.state.detection_config = None
+        app.state.detection_runtime = None
+        app.state.detection_config_error = exc.details
+
+
 def create_app(*, runtime_dirs: RuntimeDirs, loaded_config: LoadedWorkerConfig, db_info: DbInfo | None = None) -> FastAPI:
     app = FastAPI(title="OBS Duel Recorder Worker", version=__version__)
 
@@ -102,17 +116,7 @@ def create_app(*, runtime_dirs: RuntimeDirs, loaded_config: LoadedWorkerConfig, 
         app.state.overlay_state,
         {"recording_state": overlay_recording_state(app.state.recording_state)},
     )
-    app.state.detection_config_error = None
-    try:
-        app.state.detection_config = load_template_config(runtime_dirs.user_data_dir)
-        app.state.detection_runtime = DetectionRuntime(
-            app.state.detection_config,
-            load_templates(app.state.detection_config),
-        )
-    except TemplateConfigError as exc:
-        app.state.detection_config = None
-        app.state.detection_runtime = None
-        app.state.detection_config_error = exc.details
+    _load_detection_runtime(app, runtime_dirs)
 
     app.state.db = None
     app.state.queue_store = None
@@ -197,6 +201,29 @@ def create_app(*, runtime_dirs: RuntimeDirs, loaded_config: LoadedWorkerConfig, 
                 status_code=400,
                 code="setup_payload_invalid",
                 message="Setup wizard payload must be JSON object",
+            )
+
+    @app.post("/setup/templates/register")
+    async def post_setup_template_register(request: Request):
+        try:
+            payload = await request.json()
+            if not isinstance(payload, dict):
+                raise ValueError
+            result = app.state.setup_store.register_template(payload)
+            _load_detection_runtime(app, runtime_dirs)
+            return result
+        except SetupWizardError as exc:
+            return _error_response(
+                status_code=400,
+                code=exc.code,
+                message="Template registration request is invalid",
+                details=exc.details,
+            )
+        except ValueError:
+            return _error_response(
+                status_code=400,
+                code="setup_template_registration_invalid",
+                message="Template registration payload must be JSON object",
             )
 
     @app.post("/setup/cancel")

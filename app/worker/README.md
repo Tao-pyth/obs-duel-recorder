@@ -73,6 +73,18 @@ Template detection frame example:
 Invoke-WebRequest http://127.0.0.1:8787/detection/frame -Method Post -ContentType "application/json" -Body '{"frame_text":"sample frame bytes or fixture text"}' | Select-Object -ExpandProperty Content
 ```
 
+Register a start template through setup:
+
+```powershell
+Invoke-WebRequest http://127.0.0.1:8787/setup/templates/register -Method Post -ContentType "application/json" -Body '{"kind":"start","path":"duel-start.tpl","threshold":1.0,"confirmations":2}' | Select-Object -ExpandProperty Content
+```
+
+Register an end template through setup:
+
+```powershell
+Invoke-WebRequest http://127.0.0.1:8787/setup/templates/register -Method Post -ContentType "application/json" -Body '{"kind":"end","path":"duel-end.tpl","threshold":1.0,"confirmations":2}' | Select-Object -ExpandProperty Content
+```
+
 Screenshot capture example:
 
 ```powershell

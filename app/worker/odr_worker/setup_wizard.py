@@ -6,7 +6,16 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from .detection import TemplateConfigError, load_template_config, load_templates
+from .detection import (
+    TEMPLATE_KINDS,
+    TemplateConfig,
+    TemplateConfigError,
+    TemplateSpec,
+    default_template_config_path,
+    default_templates_dir,
+    load_template_config,
+    load_templates,
+)
 from .health import API_VERSION
 from .runtime_dirs import RuntimeDirs
 from .upload import build_upload_settings
@@ -99,6 +108,42 @@ class SetupWizardStore:
         state["updated_at"] = _utc_now_iso()
         self._save_state(state)
         return self.status()
+
+    def register_template(self, payload: dict[str, Any]) -> dict[str, object]:
+        spec, confirmations = self._template_registration_from_payload(payload)
+        config = self._load_editable_template_config()
+
+        templates = [
+            template for template in config.templates if (template.kind, template.name) != (spec.kind, spec.name)
+        ]
+        templates.append(spec)
+        start_confirmations = config.start_confirmations
+        end_confirmations = config.end_confirmations
+        if spec.kind == "duel_start":
+            start_confirmations = confirmations
+        else:
+            end_confirmations = confirmations
+
+        try:
+            _write_template_config(
+                config_path=config.config_path,
+                templates_dir=config.templates_dir,
+                start_confirmations=start_confirmations,
+                end_confirmations=end_confirmations,
+                templates=tuple(sorted(templates, key=lambda template: (template.kind, template.name))),
+            )
+        except OSError as exc:
+            raise SetupWizardError(
+                "setup_template_registration_invalid",
+                {"config": f"failed_to_write: {exc}"},
+            ) from exc
+        validated = load_template_config(self.runtime_dirs.user_data_dir)
+        load_templates(validated)
+        return {
+            "registered": spec.as_payload(),
+            "config": validated.as_payload(),
+            "validation": self._validate_templates(),
+        }
 
     def cancel(self) -> dict[str, object]:
         state = self._load_state()
@@ -202,6 +247,40 @@ class SetupWizardStore:
         code = "templates_ready" if status == "ready" else "templates_action_required"
         return _validation_payload(status, code, diagnostics, False)
 
+    def _load_editable_template_config(self) -> TemplateConfig:
+        try:
+            return load_template_config(self.runtime_dirs.user_data_dir)
+        except TemplateConfigError as exc:
+            raise SetupWizardError(
+                "setup_template_registration_invalid",
+                {"config": "must_fix_existing_config", "details": exc.details},
+            ) from exc
+
+    def _template_registration_from_payload(self, payload: dict[str, Any]) -> tuple[TemplateSpec, int]:
+        if not isinstance(payload, dict):
+            raise SetupWizardError("setup_template_registration_invalid", {"payload": "must_be_object"})
+
+        errors: dict[str, object] = {}
+        kind = _template_kind(payload.get("kind"), errors)
+        name = payload.get("name") or kind
+        if not isinstance(name, str) or not name.strip():
+            errors["name"] = "required_string"
+            name = ""
+        threshold = _threshold(payload.get("threshold", 1.0), errors)
+        confirmations = _confirmations(payload.get("confirmations", 2), errors)
+        path = _template_path(
+            payload.get("path"),
+            config_path=default_template_config_path(self.runtime_dirs.user_data_dir),
+            templates_dir=default_templates_dir(self.runtime_dirs.user_data_dir),
+            errors=errors,
+        )
+
+        if errors:
+            raise SetupWizardError("setup_template_registration_invalid", errors)
+        assert kind is not None
+        assert path is not None
+        return TemplateSpec(name=name.strip(), kind=kind, path=path, threshold=threshold), confirmations
+
 
 def _default_state() -> dict[str, object]:
     return {
@@ -261,3 +340,123 @@ def _validation_payload(
 
 def _utc_now_iso() -> str:
     return _dt.datetime.now(tz=_dt.timezone.utc).isoformat().replace("+00:00", "Z")
+
+
+def _template_kind(value: object, errors: dict[str, object]) -> str | None:
+    aliases = {
+        "start": "duel_start",
+        "duel_start": "duel_start",
+        "end": "duel_end",
+        "duel_end": "duel_end",
+    }
+    if not isinstance(value, str):
+        errors["kind"] = "must_be_start_or_end"
+        return None
+    kind = aliases.get(value.strip())
+    if kind not in TEMPLATE_KINDS:
+        errors["kind"] = "must_be_start_or_end"
+        return None
+    return kind
+
+
+def _threshold(value: object, errors: dict[str, object]) -> float:
+    try:
+        threshold = float(value)
+    except (TypeError, ValueError):
+        errors["threshold"] = "must_be_number"
+        return 1.0
+    if threshold < 0.0 or threshold > 1.0:
+        errors["threshold"] = "must_be_between_0_and_1"
+    return threshold
+
+
+def _confirmations(value: object, errors: dict[str, object]) -> int:
+    try:
+        confirmations = int(value)
+    except (TypeError, ValueError):
+        errors["confirmations"] = "must_be_integer"
+        return 2
+    if confirmations < 1:
+        errors["confirmations"] = "must_be_positive"
+    return confirmations
+
+
+def _template_path(
+    value: object,
+    *,
+    config_path: Path,
+    templates_dir: Path,
+    errors: dict[str, object],
+) -> Path | None:
+    if not isinstance(value, str) or not value.strip():
+        errors["path"] = "required_string"
+        return None
+    candidate = Path(value.strip())
+    if not candidate.is_absolute():
+        config_candidate = (config_path.parent / candidate).resolve()
+        templates_candidate = (templates_dir / candidate).resolve()
+        candidate = config_candidate if config_candidate.exists() else templates_candidate
+    candidate = candidate.resolve()
+    if not candidate.exists():
+        errors["path"] = "file_missing"
+        return None
+    if not candidate.is_file():
+        errors["path"] = "must_be_file"
+        return None
+    try:
+        if not candidate.read_bytes():
+            errors["path"] = "empty_template"
+            return None
+    except OSError:
+        errors["path"] = "failed_to_read"
+        return None
+    return candidate
+
+
+def _write_template_config(
+    *,
+    config_path: Path,
+    templates_dir: Path,
+    start_confirmations: int,
+    end_confirmations: int,
+    templates: tuple[TemplateSpec, ...],
+) -> None:
+    config_path.parent.mkdir(parents=True, exist_ok=True)
+    lines = [
+        "[detection]",
+        f"start_confirmations = {start_confirmations}",
+        f"end_confirmations = {end_confirmations}",
+        "",
+    ]
+    for template in templates:
+        lines.extend(
+            [
+                "[[templates]]",
+                f'name = "{_toml_string(template.name)}"',
+                f'kind = "{_toml_string(template.kind)}"',
+                f'path = "{_toml_string(_template_config_path(template.path, templates_dir))}"',
+                f"threshold = {template.threshold:.6g}",
+                "",
+            ]
+        )
+    tmp_path = config_path.with_suffix(".toml.tmp")
+    tmp_path.write_text("\n".join(lines), encoding="utf-8")
+    tmp_path.replace(config_path)
+
+
+def _template_config_path(path: Path, templates_dir: Path) -> str:
+    resolved = path.resolve()
+    try:
+        return resolved.relative_to(templates_dir.resolve()).as_posix()
+    except ValueError:
+        return resolved.as_posix()
+
+
+def _toml_string(value: str) -> str:
+    return (
+        value.replace("\\", "\\\\")
+        .replace('"', '\\"')
+        .replace("\n", "\\n")
+        .replace("\r", "\\r")
+        .replace("\t", "\\t")
+    )

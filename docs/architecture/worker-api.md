@@ -463,6 +463,21 @@ Purpose:
 Request:
 - `completed`: optional boolean, default `true`.
 
+### `POST /setup/templates/register`
+
+Purpose:
+- Register or update a local start/end detection template through a guided API.
+- Validate template path, threshold, and confirmation count before automatic
+  detection relies on the config.
+- Generate `user_data/config/templates.toml` in the existing detection format
+  and reload the Worker detection runtime.
+
+Request:
+- `kind`: `start`, `end`, `duel_start`, or `duel_end`.
+- `path`: existing non-empty local template path.
+- `threshold`: number from `0.0` to `1.0`.
+- `confirmations`: positive integer for the selected start/end kind.
+
 ### `POST /setup/cancel`
 
 Purpose:
@@ -477,6 +492,8 @@ Purpose:
 Error behavior:
 - Unknown setup steps return HTTP 400 with `code=setup_step_unknown`.
 - Invalid payloads return HTTP 400 with `code=setup_payload_invalid`.
+- Invalid template registration returns HTTP 400 with
+  `code=setup_template_registration_invalid`.
 - Invalid persisted setup state returns HTTP 400 with `code=setup_state_invalid`.
 
 The v1.3 setup wizard API is defined by:

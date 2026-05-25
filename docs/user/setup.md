@@ -66,6 +66,19 @@ The setup wizard validates:
 
 The repository does not distribute game assets or local template images.
 
+You can register local templates without hand-editing TOML by calling the setup
+registration endpoint after placing your own files under `user_data/templates/`:
+
+```powershell
+Invoke-WebRequest http://127.0.0.1:8787/setup/templates/register -Method Post -ContentType "application/json" -Body '{"kind":"start","path":"duel-start.tpl","threshold":1.0,"confirmations":2}' | Select-Object -ExpandProperty Content
+Invoke-WebRequest http://127.0.0.1:8787/setup/templates/register -Method Post -ContentType "application/json" -Body '{"kind":"end","path":"duel-end.tpl","threshold":1.0,"confirmations":2}' | Select-Object -ExpandProperty Content
+```
+
+The endpoint validates that the file exists, is not empty, the threshold is
+between `0.0` and `1.0`, and confirmations is a positive integer. Successful
+registration writes `user_data/config/templates.toml` in the same format used by
+the detection API.
+
 ---
 
 ## OBS Integration Setup

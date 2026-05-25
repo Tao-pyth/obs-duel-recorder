@@ -131,6 +131,58 @@ path = "start.bin"
             runtime_path["diagnostics"],
         )
 
+    def test_register_template_writes_valid_config_and_reloads_detection(self) -> None:
+        client, runtime_dirs = self._client()
+        templates_dir = runtime_dirs.user_data_dir / "templates"
+        templates_dir.mkdir(parents=True, exist_ok=True)
+        (templates_dir / "start.tpl").write_text("DUEL_START_MARKER", encoding="utf-8")
+        (templates_dir / "end.tpl").write_text("DUEL_END_MARKER", encoding="utf-8")
+
+        start = client.post(
+            "/setup/templates/register",
+            json={"kind": "start", "path": "start.tpl", "threshold": 0.75, "confirmations": 3},
+        )
+        end = client.post(
+            "/setup/templates/register",
+            json={"kind": "end", "path": "end.tpl", "threshold": 1.0, "confirmations": 2},
+        )
+        templates = client.get("/detection/templates")
+
+        self.assertEqual(start.status_code, 200)
+        self.assertEqual(start.json()["registered"]["kind"], "duel_start")
+        self.assertEqual(end.status_code, 200)
+        self.assertEqual(templates.status_code, 200)
+        self.assertTrue(templates.json()["config_loaded"])
+        self.assertEqual(templates.json()["start_confirmations"], 3)
+        self.assertEqual(templates.json()["end_confirmations"], 2)
+        self.assertEqual({item["kind"] for item in templates.json()["templates"]}, {"duel_start", "duel_end"})
+        self.assertEqual(templates.json()["errors"], [])
+
+        first = client.post("/detection/frame", json={"frame_text": "DUEL_START_MARKER"})
+        second = client.post("/detection/frame", json={"frame_text": "DUEL_START_MARKER"})
+        third = client.post("/detection/frame", json={"frame_text": "DUEL_START_MARKER"})
+        self.assertEqual(first.json()["lifecycle_state"], "potential_duel")
+        self.assertEqual(second.json()["lifecycle_state"], "potential_duel")
+        self.assertEqual(third.json()["lifecycle_state"], "active_duel")
+
+    def test_register_template_reports_invalid_inputs_before_detection_use(self) -> None:
+        client, runtime_dirs = self._client()
+        empty_template = runtime_dirs.user_data_dir / "templates" / "empty.tpl"
+        empty_template.parent.mkdir(parents=True, exist_ok=True)
+        empty_template.write_text("", encoding="utf-8")
+
+        invalid = client.post(
+            "/setup/templates/register",
+            json={"kind": "middle", "path": "empty.tpl", "threshold": 2.0, "confirmations": 0},
+        )
+
+        self.assertEqual(invalid.status_code, 400)
+        self.assertEqual(invalid.json()["code"], "setup_template_registration_invalid")
+        self.assertEqual(invalid.json()["details"]["kind"], "must_be_start_or_end")
+        self.assertEqual(invalid.json()["details"]["path"], "empty_template")
+        self.assertEqual(invalid.json()["details"]["threshold"], "must_be_between_0_and_1")
+        self.assertEqual(invalid.json()["details"]["confirmations"], "must_be_positive")
+
     def test_invalid_step_and_invalid_state_are_actionable(self) -> None:
         client, runtime_dirs = self._client()
 
