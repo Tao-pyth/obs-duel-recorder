@@ -18,7 +18,7 @@ from .detection import (
 )
 from .health import API_VERSION
 from .runtime_dirs import RuntimeDirs
-from .upload import build_upload_settings
+from .upload import build_oauth_status, build_upload_settings
 from .version import __version__
 
 
@@ -223,11 +223,14 @@ class SetupWizardStore:
 
     def _validate_oauth(self) -> dict[str, object]:
         settings = build_upload_settings(user_data_dir=self.runtime_dirs.user_data_dir)
+        auth = build_oauth_status(settings)
         diagnostics: list[dict[str, object]] = []
         if not settings.client_secret_configured:
             diagnostics.append({"code": "client_secret_missing", "path": settings.client_secret_path.as_posix()})
         if not settings.token_configured:
             diagnostics.append({"code": "token_missing", "path": settings.token_path.as_posix()})
+        if settings.token_configured and auth["token_state"] != "valid":
+            diagnostics.append({"code": "token_not_ready", "state": auth["token_state"]})
         status = "ready" if not diagnostics else "action_required"
         code = "oauth_ready" if status == "ready" else "oauth_action_required"
         return _validation_payload(status, code, diagnostics, False)

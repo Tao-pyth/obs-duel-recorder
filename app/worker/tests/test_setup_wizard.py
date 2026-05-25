@@ -96,7 +96,7 @@ class SetupWizardApiTests(unittest.TestCase):
         secrets_dir = runtime_dirs.config_dir / "secrets"
         secrets_dir.mkdir(parents=True, exist_ok=True)
         (secrets_dir / "youtube-client-secret.json").write_text("{}", encoding="utf-8")
-        (secrets_dir / "youtube-token.json").write_text("{}", encoding="utf-8")
+        (secrets_dir / "youtube-token.json").write_text('{"token":"ready-token"}', encoding="utf-8")
         templates_dir = runtime_dirs.user_data_dir / "templates"
         templates_dir.mkdir(parents=True, exist_ok=True)
         (templates_dir / "start.bin").write_text("start", encoding="utf-8")

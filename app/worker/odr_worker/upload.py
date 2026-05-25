@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import datetime as _dt
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -200,6 +201,91 @@ class GoogleYouTubeUploader:
         )
 
 
+class YouTubeOAuthWorkflow:
+    def __init__(self, settings: UploadSettings):
+        self.settings = settings
+
+    def authorization_url(self, *, redirect_uri: str) -> dict[str, object]:
+        if not self.settings.client_secret_configured:
+            raise UploadCommandError("oauth_client_secret_missing", {"path": str(self.settings.client_secret_path)})
+        try:
+            from google_auth_oauthlib.flow import Flow
+        except ImportError as exc:
+            raise UploadCommandError("oauth_dependencies_missing", {"dependency": _dependency_name(exc)}) from exc
+
+        flow = Flow.from_client_secrets_file(
+            str(self.settings.client_secret_path),
+            scopes=[self.settings.oauth_scope],
+            redirect_uri=redirect_uri,
+        )
+        auth_url, state = flow.authorization_url(
+            access_type="offline",
+            include_granted_scopes="true",
+            prompt="consent",
+        )
+        return {
+            "authorization_url": auth_url,
+            "state": state,
+            "redirect_uri": redirect_uri,
+            "scope": self.settings.oauth_scope,
+            "token_path": str(self.settings.token_path),
+        }
+
+    def exchange_code(self, *, code: str, redirect_uri: str) -> dict[str, object]:
+        if not code:
+            raise UploadCommandError("oauth_payload_invalid", {"code": "required"})
+        if not self.settings.client_secret_configured:
+            raise UploadCommandError("oauth_client_secret_missing", {"path": str(self.settings.client_secret_path)})
+        try:
+            from google_auth_oauthlib.flow import Flow
+        except ImportError as exc:
+            raise UploadCommandError("oauth_dependencies_missing", {"dependency": _dependency_name(exc)}) from exc
+
+        flow = Flow.from_client_secrets_file(
+            str(self.settings.client_secret_path),
+            scopes=[self.settings.oauth_scope],
+            redirect_uri=redirect_uri,
+        )
+        flow.fetch_token(code=code)
+        self._save_credentials(flow.credentials)
+        return build_oauth_status(self.settings)
+
+    def refresh_token(self) -> dict[str, object]:
+        if not self.settings.token_configured:
+            raise UploadCommandError("oauth_token_missing", {"path": str(self.settings.token_path)})
+        try:
+            from google.auth.transport.requests import Request
+            from google.oauth2.credentials import Credentials
+        except ImportError as exc:
+            raise UploadCommandError("oauth_dependencies_missing", {"dependency": _dependency_name(exc)}) from exc
+
+        try:
+            credentials = Credentials.from_authorized_user_file(
+                str(self.settings.token_path),
+                scopes=[self.settings.oauth_scope],
+            )
+            if not getattr(credentials, "refresh_token", None):
+                raise UploadCommandError("oauth_refresh_token_missing", {"path": str(self.settings.token_path)})
+            credentials.refresh(Request())
+            self._save_credentials(credentials)
+        except UploadCommandError:
+            raise
+        except Exception as exc:
+            raise UploadCommandError(
+                "oauth_refresh_failed",
+                redact_upload_diagnostics({"error": str(exc), "type": type(exc).__name__}),
+            ) from exc
+        return build_oauth_status(self.settings)
+
+    def _save_credentials(self, credentials: Any) -> None:
+        if not hasattr(credentials, "to_json"):
+            raise UploadCommandError("oauth_token_invalid", {"credentials": "missing_to_json"})
+        self.settings.token_path.parent.mkdir(parents=True, exist_ok=True)
+        tmp_path = self.settings.token_path.with_suffix(".json.tmp")
+        tmp_path.write_text(credentials.to_json(), encoding="utf-8")
+        tmp_path.replace(self.settings.token_path)
+
+
 class UploadStore:
     def __init__(self, *, queue_store: QueueStore, videos_dir: Path, settings: UploadSettings, metadata_store: Any = None):
         self.queue_store = queue_store
@@ -209,10 +295,15 @@ class UploadStore:
         self.mock_uploader = MockYouTubeUploader()
         self.google_uploader = GoogleYouTubeUploader(settings)
 
+    def update_settings(self, settings: UploadSettings) -> None:
+        self.settings = settings
+        self.google_uploader = GoogleYouTubeUploader(settings)
+
     def status(self) -> dict[str, object]:
         counts = self.queue_store.count_by_state()
         return {
             "settings": self.settings.as_payload(),
+            "auth": build_oauth_status(self.settings),
             "queue_counts": counts,
             "providers": {
                 "default": "mock",
@@ -356,6 +447,76 @@ def build_upload_settings(*, user_data_dir: Path, privacy_status: str = DEFAULT_
     )
 
 
+def build_oauth_status(settings: UploadSettings) -> dict[str, object]:
+    token_details = _token_details(settings.token_path)
+    token_state = token_details["state"]
+    auth_ready = settings.client_secret_configured and token_state in {"valid", "configured"}
+    return {
+        "oauth_scope": settings.oauth_scope,
+        "client_secret_configured": settings.client_secret_configured,
+        "token_configured": settings.token_configured,
+        "token_state": token_state,
+        "token_expired": token_details["expired"],
+        "token_refresh_configured": token_details["refresh_configured"],
+        "token_expires_at": token_details["expires_at"],
+        "auth_ready": auth_ready,
+        "client_secret_path": str(settings.client_secret_path),
+        "token_path": str(settings.token_path),
+    }
+
+
+def _token_details(token_path: Path) -> dict[str, object]:
+    if not token_path.exists():
+        return _token_detail_payload("missing")
+    try:
+        raw = json.loads(token_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return _token_detail_payload("invalid")
+    if not isinstance(raw, dict):
+        return _token_detail_payload("invalid")
+    expires_at = raw.get("expiry", "")
+    refresh_configured = isinstance(raw.get("refresh_token"), str) and bool(raw.get("refresh_token"))
+    expired = _is_expired(expires_at) if isinstance(expires_at, str) and expires_at else False
+    if expired and refresh_configured:
+        state = "expired_refreshable"
+    elif expired:
+        state = "expired_reauthorization_required"
+    else:
+        state = "valid" if isinstance(raw.get("token"), str) and raw.get("token") else "configured"
+    return _token_detail_payload(
+        state,
+        expired=expired,
+        refresh_configured=refresh_configured,
+        expires_at=expires_at if isinstance(expires_at, str) else "",
+    )
+
+
+def _token_detail_payload(
+    state: str,
+    *,
+    expired: bool = False,
+    refresh_configured: bool = False,
+    expires_at: str = "",
+) -> dict[str, object]:
+    return {
+        "state": state,
+        "expired": expired,
+        "refresh_configured": refresh_configured,
+        "expires_at": expires_at,
+    }
+
+
+def _is_expired(value: str) -> bool:
+    normalized = value.replace("Z", "+00:00")
+    try:
+        expires_at = _dt.datetime.fromisoformat(normalized)
+    except ValueError:
+        return False
+    if expires_at.tzinfo is None:
+        expires_at = expires_at.replace(tzinfo=_dt.timezone.utc)
+    return expires_at <= _dt.datetime.now(tz=_dt.timezone.utc)
+
+
 def _safe_google_evidence(settings: UploadSettings) -> dict[str, object]:
     return {
         "client_secret_configured": settings.client_secret_configured,
@@ -363,6 +524,11 @@ def _safe_google_evidence(settings: UploadSettings) -> dict[str, object]:
         "client_secret_path": str(settings.client_secret_path),
         "token_path": str(settings.token_path),
     }
+
+
+def _dependency_name(exc: ImportError) -> str:
+    text = str(exc)
+    return text.split("'")[1] if "'" in text else text
 
 
 def _metadata_string(metadata: dict[str, object], key: str, default: str = "") -> str:

@@ -286,7 +286,10 @@ class UploadApiTests(unittest.TestCase):
         client, runtime_dirs = self._client()
         secrets_dir = runtime_dirs.config_dir / "secrets"
         secrets_dir.mkdir(parents=True, exist_ok=True)
-        (secrets_dir / "youtube-token.json").write_text('{"refresh_token":"super-sensitive-token"}', encoding="utf-8")
+        (secrets_dir / "youtube-token.json").write_text(
+            '{"token":"super-sensitive-token","refresh_token":"super-sensitive-refresh"}',
+            encoding="utf-8",
+        )
         (secrets_dir / "youtube-client-secret.json").write_text(
             '{"client_secret":"super-sensitive-client-secret"}',
             encoding="utf-8",
@@ -301,8 +304,154 @@ class UploadApiTests(unittest.TestCase):
         self.assertEqual(settings["privacy_status"], "private")
         self.assertTrue(settings["client_secret_configured"])
         self.assertTrue(settings["token_configured"])
+        self.assertTrue(status.json()["auth"]["auth_ready"])
+        self.assertEqual(status.json()["auth"]["token_state"], "valid")
         self.assertNotIn("super-sensitive-token", str(settings))
+        self.assertNotIn("super-sensitive-refresh", str(status.json()["auth"]))
         self.assertNotIn("super-sensitive-client-secret", str(settings))
+
+    def test_oauth_status_reports_expired_refreshable_token_without_secret_values(self) -> None:
+        client, runtime_dirs = self._client()
+        secrets_dir = runtime_dirs.config_dir / "secrets"
+        secrets_dir.mkdir(parents=True, exist_ok=True)
+        (secrets_dir / "youtube-client-secret.json").write_text('{"client_secret":"secret"}', encoding="utf-8")
+        (secrets_dir / "youtube-token.json").write_text(
+            '{"token":"old-token","refresh_token":"refresh-secret","expiry":"2000-01-01T00:00:00Z"}',
+            encoding="utf-8",
+        )
+        client, _ = self._client_for_runtime(runtime_dirs)
+
+        status = client.get("/upload/status")
+
+        self.assertEqual(status.status_code, 200)
+        self.assertEqual(status.json()["auth"]["token_state"], "expired_refreshable")
+        self.assertTrue(status.json()["auth"]["token_expired"])
+        self.assertTrue(status.json()["auth"]["token_refresh_configured"])
+        self.assertNotIn("old-token", str(status.json()))
+        self.assertNotIn("refresh-secret", str(status.json()))
+
+    def test_oauth_authorization_and_code_exchange_store_token_under_secrets(self) -> None:
+        client, runtime_dirs = self._client()
+        secrets_dir = runtime_dirs.config_dir / "secrets"
+        secrets_dir.mkdir(parents=True, exist_ok=True)
+        (secrets_dir / "youtube-client-secret.json").write_text('{"client_secret":"secret"}', encoding="utf-8")
+        calls: dict[str, object] = {}
+
+        class FakeCredentials:
+            def to_json(self):
+                return '{"token":"stored-token","refresh_token":"stored-refresh","expiry":"2999-01-01T00:00:00Z"}'
+
+        class FakeFlow:
+            credentials = FakeCredentials()
+
+            @classmethod
+            def from_client_secrets_file(cls, path, scopes, redirect_uri):
+                calls["flow"] = (path, scopes, redirect_uri)
+                return cls()
+
+            def authorization_url(self, **kwargs):
+                calls["authorization_kwargs"] = kwargs
+                return "http://auth.local/authorize", "state123"
+
+            def fetch_token(self, code):
+                calls["code"] = code
+
+        modules = {
+            "google_auth_oauthlib": types.ModuleType("google_auth_oauthlib"),
+            "google_auth_oauthlib.flow": types.ModuleType("google_auth_oauthlib.flow"),
+        }
+        modules["google_auth_oauthlib"].__path__ = []
+        modules["google_auth_oauthlib.flow"].Flow = FakeFlow
+        previous = {name: sys.modules.get(name) for name in modules}
+        try:
+            sys.modules.update(modules)
+            auth = client.post(
+                "/upload/oauth/authorization-url",
+                json={"redirect_uri": "http://127.0.0.1:8787/upload/oauth/callback"},
+            )
+            exchanged = client.post(
+                "/upload/oauth/exchange-code",
+                json={"code": "code-secret", "redirect_uri": "http://127.0.0.1:8787/upload/oauth/callback"},
+            )
+            status = client.get("/upload/status")
+        finally:
+            for name, value in previous.items():
+                if value is None:
+                    sys.modules.pop(name, None)
+                else:
+                    sys.modules[name] = value
+
+        self.assertEqual(auth.status_code, 200)
+        self.assertEqual(auth.json()["authorization_url"], "http://auth.local/authorize")
+        self.assertEqual(auth.json()["state"], "state123")
+        self.assertEqual(exchanged.status_code, 200)
+        self.assertTrue(exchanged.json()["auth_ready"])
+        self.assertTrue(status.json()["auth"]["auth_ready"])
+        self.assertEqual(exchanged.json()["token_state"], "valid")
+        self.assertEqual(calls["code"], "code-secret")
+        self.assertTrue((secrets_dir / "youtube-token.json").exists())
+        self.assertNotIn("stored-token", str(exchanged.json()))
+        self.assertNotIn("stored-refresh", str(exchanged.json()))
+
+    def test_oauth_refresh_updates_token_with_fake_credentials(self) -> None:
+        client, runtime_dirs = self._client()
+        secrets_dir = runtime_dirs.config_dir / "secrets"
+        secrets_dir.mkdir(parents=True, exist_ok=True)
+        (secrets_dir / "youtube-client-secret.json").write_text('{"client_secret":"secret"}', encoding="utf-8")
+        (secrets_dir / "youtube-token.json").write_text(
+            '{"token":"old-token","refresh_token":"refresh-secret","expiry":"2000-01-01T00:00:00Z"}',
+            encoding="utf-8",
+        )
+        calls: dict[str, object] = {}
+
+        class FakeRequest:
+            pass
+
+        class FakeCredentials:
+            refresh_token = "refresh-secret"
+
+            @staticmethod
+            def from_authorized_user_file(path, scopes):
+                calls["token_path"] = path
+                calls["scopes"] = scopes
+                return FakeCredentials()
+
+            def refresh(self, request):
+                calls["refresh_request"] = type(request).__name__
+
+            def to_json(self):
+                return '{"token":"new-token","refresh_token":"refresh-secret","expiry":"2999-01-01T00:00:00Z"}'
+
+        modules = {
+            "google": types.ModuleType("google"),
+            "google.auth": types.ModuleType("google.auth"),
+            "google.auth.transport": types.ModuleType("google.auth.transport"),
+            "google.auth.transport.requests": types.ModuleType("google.auth.transport.requests"),
+            "google.oauth2": types.ModuleType("google.oauth2"),
+            "google.oauth2.credentials": types.ModuleType("google.oauth2.credentials"),
+        }
+        for package in ("google", "google.auth", "google.auth.transport", "google.oauth2"):
+            modules[package].__path__ = []
+        modules["google.auth.transport.requests"].Request = FakeRequest
+        modules["google.oauth2.credentials"].Credentials = FakeCredentials
+        previous = {name: sys.modules.get(name) for name in modules}
+        try:
+            sys.modules.update(modules)
+            refreshed = client.post("/upload/oauth/refresh")
+            status = client.get("/upload/status")
+        finally:
+            for name, value in previous.items():
+                if value is None:
+                    sys.modules.pop(name, None)
+                else:
+                    sys.modules[name] = value
+
+        self.assertEqual(refreshed.status_code, 200)
+        self.assertTrue(refreshed.json()["auth_ready"])
+        self.assertTrue(status.json()["auth"]["auth_ready"])
+        self.assertEqual(calls["refresh_request"], "FakeRequest")
+        self.assertNotIn("new-token", str(refreshed.json()))
+        self.assertIn("new-token", (secrets_dir / "youtube-token.json").read_text(encoding="utf-8"))
 
     def test_redaction_helper_redacts_nested_secret_values(self) -> None:
         from odr_worker.upload import redact_upload_diagnostics

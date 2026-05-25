@@ -55,6 +55,39 @@ Required files:
 
 The setup wizard reports only file presence and safe paths. It does not display token or client-secret contents.
 
+For production upload OAuth setup:
+
+1. Place your Google OAuth desktop client file at
+   `user_data/config/secrets/youtube-client-secret.json`.
+2. Request an authorization URL:
+
+   ```powershell
+   Invoke-WebRequest http://127.0.0.1:8787/upload/oauth/authorization-url -Method Post -ContentType "application/json" -Body '{}' | Select-Object -ExpandProperty Content
+   ```
+
+3. Open the returned URL in your browser and approve the YouTube upload scope.
+4. Let the browser return to `/upload/oauth/callback`, or exchange the code
+   manually:
+
+   ```powershell
+   Invoke-WebRequest http://127.0.0.1:8787/upload/oauth/exchange-code -Method Post -ContentType "application/json" -Body '{"code":"PASTE_CODE_HERE"}' | Select-Object -ExpandProperty Content
+   ```
+
+5. Check readiness:
+
+   ```powershell
+   Invoke-WebRequest http://127.0.0.1:8787/upload/status | Select-Object -ExpandProperty Content
+   ```
+
+Token refresh can be requested without exposing token contents:
+
+```powershell
+Invoke-WebRequest http://127.0.0.1:8787/upload/oauth/refresh -Method Post | Select-Object -ExpandProperty Content
+```
+
+Do not commit `youtube-client-secret.json`, `youtube-token.json`,
+authorization codes, or bearer tokens.
+
 ---
 
 ## Template Setup

@@ -25,6 +25,15 @@ The mock provider remains the default for tests/smoke. v1.1 adds an optional
 Google provider that is used only when requested and when runtime credentials
 and optional Google client libraries are available.
 
+OAuth setup is Worker-owned and stores tokens only under
+`user_data/config/secrets/`:
+
+- `POST /upload/oauth/authorization-url` returns a Google authorization URL.
+- `GET /upload/oauth/callback` or `POST /upload/oauth/exchange-code` exchanges
+  an authorization code and writes `youtube-token.json`.
+- `POST /upload/oauth/refresh` refreshes an existing token when the optional
+  Google auth dependencies and refresh token are available.
+
 ---
 
 ## Upload Sequence
@@ -106,6 +115,8 @@ Returns:
 - OAuth scope
 - configured privacy default
 - whether token/client-secret files exist
+- auth readiness, token state, expiration flag, and refresh availability without
+  returning token contents
 - queue counts by upload state
 - available manual actions
 
@@ -138,6 +149,27 @@ For production upload, select the optional Google provider:
 The Google provider calls YouTube `videos.insert`. Missing OAuth files, missing
 optional dependencies, auth failures, quota failures, network failures, and
 ambiguous outcomes are mapped back to stable queue states.
+
+### `POST /upload/oauth/authorization-url`
+
+Creates a Google authorization URL from the local client secret file. The
+response includes the URL, state, redirect URI, OAuth scope, and token path, but
+never includes client-secret contents.
+
+### `GET /upload/oauth/callback`
+
+Receives the browser redirect with `code` and writes the exchanged token to
+`user_data/config/secrets/youtube-token.json`.
+
+### `POST /upload/oauth/exchange-code`
+
+Manual code exchange path for tools that cannot use the browser callback.
+
+### `POST /upload/oauth/refresh`
+
+Refreshes an existing token and rewrites `youtube-token.json`. Missing optional
+dependencies, missing token files, missing refresh tokens, and refresh failures
+return stable OAuth error codes without returning secret values.
 
 Manual review actions remain on the queue command API:
 

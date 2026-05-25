@@ -324,6 +324,10 @@ Response fields:
 - `settings.privacy_status`: default `private`.
 - `settings.client_secret_configured`: boolean.
 - `settings.token_configured`: boolean.
+- `auth.auth_ready`: boolean readiness without secret values.
+- `auth.token_state`: `missing`, `invalid`, `configured`, `valid`,
+  `expired_refreshable`, or `expired_reauthorization_required`.
+- `auth.token_expired` and `auth.token_refresh_configured`: booleans.
 - `queue_counts`: counts by queue state.
 - `providers`: default provider, available provider names, and whether Google
   optional dependencies are required.
@@ -358,6 +362,38 @@ Outcome mapping:
 - `ambiguous_error` -> `need_manual_review`
 - `auth_error` -> `need_manual_review`
 - missing local file -> `discarded`
+
+### `POST /upload/oauth/authorization-url`
+
+Purpose:
+- Return a Google authorization URL using the local client secret file.
+- Keep client-secret contents out of responses.
+
+Request fields:
+- `redirect_uri`: optional; defaults to
+  `http://127.0.0.1:8787/upload/oauth/callback`.
+
+### `GET /upload/oauth/callback`
+
+Purpose:
+- Exchange browser callback `code` for a token.
+- Store token data under `user_data/config/secrets/youtube-token.json`.
+
+### `POST /upload/oauth/exchange-code`
+
+Purpose:
+- Exchange an authorization code from a tool or manual flow.
+- Store token data under `user_data/config/secrets/youtube-token.json`.
+
+Request fields:
+- `code`: authorization code.
+- `redirect_uri`: optional; must match the authorization URL redirect URI.
+
+### `POST /upload/oauth/refresh`
+
+Purpose:
+- Refresh the existing token file when a refresh token is available.
+- Return updated auth readiness without returning token contents.
 
 Manual decisions continue to use `POST /queue/items/{item_id}/command`:
 - `retry`

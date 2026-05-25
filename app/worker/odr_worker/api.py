@@ -29,7 +29,7 @@ from .screenshots import ScreenshotError, ScreenshotStore
 from .setup_wizard import SetupWizardError, SetupWizardStore
 from .statistics import StatisticsError, StatisticsStore, filters_from_query
 from .update_system import UpdateError, UpdateManager
-from .upload import UploadCommandError, UploadStore, build_upload_settings
+from .upload import UploadCommandError, UploadStore, YouTubeOAuthWorkflow, build_upload_settings
 from .version import __version__
 
 
@@ -973,12 +973,119 @@ def create_app(*, runtime_dirs: RuntimeDirs, loaded_config: LoadedWorkerConfig, 
                 message="Upload storage is unavailable",
             )
         try:
+            app.state.upload_store.update_settings(build_upload_settings(user_data_dir=runtime_dirs.user_data_dir))
             return app.state.upload_store.status()
         except QueueCommandError as exc:
             return _error_response(
                 status_code=400,
                 code=exc.code,
                 message="Upload status is invalid",
+                details=exc.details,
+            )
+
+    @app.post("/upload/oauth/authorization-url")
+    async def post_upload_oauth_authorization_url(request: Request):
+        try:
+            payload = await request.json()
+            if not isinstance(payload, dict):
+                raise ValueError
+            redirect_uri = payload.get("redirect_uri", "http://127.0.0.1:8787/upload/oauth/callback")
+            if not isinstance(redirect_uri, str) or not redirect_uri:
+                raise UploadCommandError("oauth_payload_invalid", {"redirect_uri": "required_string"})
+            workflow = YouTubeOAuthWorkflow(build_upload_settings(user_data_dir=runtime_dirs.user_data_dir))
+            return workflow.authorization_url(redirect_uri=redirect_uri)
+        except UploadCommandError as exc:
+            return _error_response(
+                status_code=400,
+                code=exc.code,
+                message="OAuth setup request is invalid",
+                details=exc.details,
+            )
+        except ValueError:
+            return _error_response(
+                status_code=400,
+                code="oauth_payload_invalid",
+                message="OAuth setup payload must be JSON object",
+            )
+
+    @app.get("/upload/oauth/callback")
+    def get_upload_oauth_callback(request: Request, code: str | None = None, error: str | None = None):
+        if error:
+            return _error_response(
+                status_code=400,
+                code="oauth_authorization_failed",
+                message="OAuth authorization failed",
+                details={"error": error},
+            )
+        if not code:
+            return _error_response(
+                status_code=400,
+                code="oauth_payload_invalid",
+                message="OAuth callback did not include a code",
+                details={"code": "required"},
+            )
+        try:
+            redirect_uri = str(request.url.replace(query=""))
+            settings = build_upload_settings(user_data_dir=runtime_dirs.user_data_dir)
+            workflow = YouTubeOAuthWorkflow(settings)
+            result = workflow.exchange_code(code=code, redirect_uri=redirect_uri)
+            if app.state.upload_store is not None:
+                app.state.upload_store.update_settings(build_upload_settings(user_data_dir=runtime_dirs.user_data_dir))
+            return result
+        except UploadCommandError as exc:
+            return _error_response(
+                status_code=400,
+                code=exc.code,
+                message="OAuth callback is invalid",
+                details=exc.details,
+            )
+
+    @app.post("/upload/oauth/exchange-code")
+    async def post_upload_oauth_exchange_code(request: Request):
+        try:
+            payload = await request.json()
+            if not isinstance(payload, dict):
+                raise ValueError
+            code = payload.get("code", "")
+            redirect_uri = payload.get("redirect_uri", "http://127.0.0.1:8787/upload/oauth/callback")
+            if not isinstance(code, str):
+                raise UploadCommandError("oauth_payload_invalid", {"code": "must_be_string"})
+            if not isinstance(redirect_uri, str) or not redirect_uri:
+                raise UploadCommandError("oauth_payload_invalid", {"redirect_uri": "required_string"})
+            settings = build_upload_settings(user_data_dir=runtime_dirs.user_data_dir)
+            workflow = YouTubeOAuthWorkflow(settings)
+            result = workflow.exchange_code(code=code, redirect_uri=redirect_uri)
+            if app.state.upload_store is not None:
+                app.state.upload_store.update_settings(build_upload_settings(user_data_dir=runtime_dirs.user_data_dir))
+            return result
+        except UploadCommandError as exc:
+            return _error_response(
+                status_code=400,
+                code=exc.code,
+                message="OAuth code exchange is invalid",
+                details=exc.details,
+            )
+        except ValueError:
+            return _error_response(
+                status_code=400,
+                code="oauth_payload_invalid",
+                message="OAuth code exchange payload must be JSON object",
+            )
+
+    @app.post("/upload/oauth/refresh")
+    def post_upload_oauth_refresh():
+        try:
+            settings = build_upload_settings(user_data_dir=runtime_dirs.user_data_dir)
+            workflow = YouTubeOAuthWorkflow(settings)
+            result = workflow.refresh_token()
+            if app.state.upload_store is not None:
+                app.state.upload_store.update_settings(build_upload_settings(user_data_dir=runtime_dirs.user_data_dir))
+            return result
+        except UploadCommandError as exc:
+            return _error_response(
+                status_code=400,
+                code=exc.code,
+                message="OAuth token refresh is invalid",
                 details=exc.details,
             )
 

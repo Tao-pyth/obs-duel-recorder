@@ -121,6 +121,18 @@ Google upload processing example:
 Invoke-WebRequest http://127.0.0.1:8787/upload/process-next -Method Post -ContentType "application/json" -Body '{"provider":"google"}' | Select-Object -ExpandProperty Content
 ```
 
+OAuth authorization URL:
+
+```powershell
+Invoke-WebRequest http://127.0.0.1:8787/upload/oauth/authorization-url -Method Post -ContentType "application/json" -Body '{}' | Select-Object -ExpandProperty Content
+```
+
+OAuth token refresh:
+
+```powershell
+Invoke-WebRequest http://127.0.0.1:8787/upload/oauth/refresh -Method Post | Select-Object -ExpandProperty Content
+```
+
 Create match metadata:
 
 ```powershell
