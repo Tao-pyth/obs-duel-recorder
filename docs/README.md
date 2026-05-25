@@ -23,8 +23,9 @@ This directory is the documentation entry point for OBS Duel Recorder.
 - [v0.12 release readiness checklist](release/v0.12-release-readiness.md)
 - [v0.13 release readiness checklist](release/v0.13-release-readiness.md)
 - [active v1.0 first usable release readiness checklist](release/v1.0-first-usable-release-readiness.md)
-- [v1.0 release readiness checklist](release/v1.0-release-readiness.md)
-- [v1.1 release readiness checklist](release/v1.1-release-readiness.md)
+- [active v1.1 first trial usability hardening readiness checklist](release/v1.1-first-trial-usability-hardening-readiness.md)
+- [legacy v1.0 release readiness checklist](release/v1.0-release-readiness.md)
+- [legacy v1.1 release readiness checklist](release/v1.1-release-readiness.md)
 - [v1.2 release readiness checklist](release/v1.2-release-readiness.md)
 - [v1.3 release readiness checklist](release/v1.3-release-readiness.md)
 - [v1.4 release readiness checklist](release/v1.4-release-readiness.md)
@@ -32,10 +33,9 @@ This directory is the documentation entry point for OBS Duel Recorder.
 - [v2.1 release readiness checklist](release/v2.1-release-readiness.md)
 - [v2.2 release readiness checklist](release/v2.2-release-readiness.md)
 - [v2.3 release readiness checklist](release/v2.3-release-readiness.md)
-- [v0.4 release summary](release/v0.4-release-summary.md)
-- [v0.9 release summary](release/v0.9-release-summary.md)
-- [v1.0 release summary](release/v1.0-release-summary.md)
-- [v1.1 release summary](release/v1.1-release-summary.md)
+- [active v1.0 first usable release summary](release/v1.0-first-usable-release-summary.md)
+- [legacy v1.0 release summary](release/v1.0-release-summary.md)
+- [legacy v1.1 release summary](release/v1.1-release-summary.md)
 - [v1.2 release summary](release/v1.2-release-summary.md)
 - [v1.3 release summary](release/v1.3-release-summary.md)
 - [v1.4 release summary](release/v1.4-release-summary.md)
@@ -46,7 +46,8 @@ This directory is the documentation entry point for OBS Duel Recorder.
 - [v2.3 release summary](release/v2.3-release-summary.md)
 - [v0.11 release summary](release/v0.11-release-summary.md)
 - [v0.12 release summary](release/v0.12-release-summary.md)
-- [active v1.0 first usable release summary](release/v1.0-first-usable-release-summary.md)
+- [v0.4 release summary](release/v0.4-release-summary.md)
+- [v0.9 release summary](release/v0.9-release-summary.md)
 - [v0.1 Repository Foundation acceptance checklist](requirements/v0.1-acceptance.md)
 - [v0.3 SQLite Foundation acceptance checklist](requirements/v0.3-sqlite-foundation-acceptance.md)
 - [v0.4 OBS Plugin Skeleton acceptance checklist](requirements/v0.4-obs-plugin-skeleton-acceptance.md)
@@ -59,8 +60,9 @@ This directory is the documentation entry point for OBS Duel Recorder.
 - [v0.12 Release Packaging Automation acceptance checklist](requirements/v0.12-release-packaging-automation-acceptance.md)
 - [v0.13 Practical Distribution Readiness acceptance checklist](requirements/v0.13-practical-distribution-readiness-acceptance.md)
 - [active v1.0 First Usable OBS Plugin Release acceptance checklist](requirements/v1.0-first-usable-release-acceptance.md)
-- [v1.0 YouTube Upload MVP acceptance checklist](requirements/v1.0-youtube-upload-mvp-acceptance.md)
-- [v1.1 Match Metadata acceptance checklist](requirements/v1.1-match-metadata-acceptance.md)
+- [active v1.1 First Trial Usability Hardening acceptance checklist](requirements/v1.1-first-trial-usability-hardening-acceptance.md)
+- [legacy v1.0 YouTube Upload MVP acceptance checklist](requirements/v1.0-youtube-upload-mvp-acceptance.md)
+- [legacy v1.1 Match Metadata acceptance checklist](requirements/v1.1-match-metadata-acceptance.md)
 - [v1.2 Export System acceptance checklist](requirements/v1.2-export-system-acceptance.md)
 - [v1.3 Setup Wizard acceptance checklist](requirements/v1.3-setup-wizard-acceptance.md)
 - [v1.4 Update System acceptance checklist](requirements/v1.4-update-system-acceptance.md)
@@ -120,7 +122,7 @@ python scripts/build_docs_site.py --root . --output build/docs-site
 
 Notes:
 - Markdown links: checks `README*.md` and `docs/**/*.md`.
-- JP user docs coverage: checks English ↔ Japanese topic coverage.
+- JP user docs coverage: checks English <-> Japanese topic coverage.
 - Pages artifact: builds generated documentation under `build/docs-site/`.
 
 ## Documentation Rules
