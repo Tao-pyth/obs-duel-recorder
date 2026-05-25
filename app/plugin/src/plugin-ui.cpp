@@ -10,6 +10,8 @@
 #include <QDialog>
 #include <QDialogButtonBox>
 #include <QFormLayout>
+#include <QFrame>
+#include <QGroupBox>
 #include <QHBoxLayout>
 #include <QInputDialog>
 #include <QLabel>
@@ -224,8 +226,91 @@ QLabel *add_row(QFormLayout *layout, const char *name)
 	auto *value = new QLabel;
 	value->setTextInteractionFlags(Qt::TextSelectableByMouse);
 	value->setWordWrap(true);
+	value->setStyleSheet("color: #1f2933;");
 	layout->addRow(QString::fromUtf8(name), value);
 	return value;
+}
+
+QLabel *make_value_label()
+{
+	auto *value = new QLabel;
+	value->setTextInteractionFlags(Qt::TextSelectableByMouse);
+	value->setWordWrap(true);
+	value->setStyleSheet("color: #1f2933; font-size: 12px;");
+	return value;
+}
+
+QLabel *add_card_value(QVBoxLayout *layout, const char *name)
+{
+	auto *label = new QLabel(QString::fromUtf8(name));
+	label->setStyleSheet("color: #52616b; font-size: 11px; font-weight: 600;");
+	auto *value = make_value_label();
+	layout->addWidget(label);
+	layout->addWidget(value);
+	return value;
+}
+
+QFrame *make_card(const char *background, const char *border)
+{
+	auto *card = new QFrame;
+	card->setFrameShape(QFrame::NoFrame);
+	card->setStyleSheet(QString::fromUtf8(
+		"QFrame { background: %1; border: 1px solid %2; border-radius: 8px; } "
+		"QLabel { border: 0; background: transparent; }")
+				    .arg(QString::fromUtf8(background), QString::fromUtf8(border)));
+	auto *layout = new QVBoxLayout(card);
+	layout->setContentsMargins(12, 10, 12, 10);
+	layout->setSpacing(6);
+	return card;
+}
+
+QLabel *add_card_title(QVBoxLayout *layout, const char *title, const char *color)
+{
+	auto *label = new QLabel(QString::fromUtf8(title));
+	label->setStyleSheet(QString::fromUtf8("color: %1; font-size: 14px; font-weight: 700;")
+				     .arg(QString::fromUtf8(color)));
+	layout->addWidget(label);
+	return label;
+}
+
+void style_button(QPushButton *button, const char *background, const char *foreground)
+{
+	button->setStyleSheet(QString::fromUtf8(
+		"QPushButton { background: %1; color: %2; border: 0; border-radius: 6px; "
+		"padding: 6px 10px; font-weight: 600; } "
+		"QPushButton:disabled { background: #d8dee7; color: #7b8794; }")
+				      .arg(QString::fromUtf8(background), QString::fromUtf8(foreground)));
+}
+
+QString state_badge_style(WorkerDiagnosticState state)
+{
+	const char *background = "#d8dee7";
+	const char *foreground = "#1f2933";
+	switch (state) {
+	case WorkerDiagnosticState::running:
+		background = "#2ec4b6";
+		foreground = "#073b3a";
+		break;
+	case WorkerDiagnosticState::starting:
+		background = "#ffd166";
+		foreground = "#573d00";
+		break;
+	case WorkerDiagnosticState::not_started:
+		background = "#edf2ff";
+		foreground = "#304c89";
+		break;
+	case WorkerDiagnosticState::unhealthy:
+	case WorkerDiagnosticState::config_error:
+	case WorkerDiagnosticState::runtime_dir_error:
+	case WorkerDiagnosticState::api_incompatible:
+	case WorkerDiagnosticState::crashed:
+		background = "#f05d5e";
+		foreground = "#ffffff";
+		break;
+	}
+	return QString::fromUtf8(
+		       "background: %1; color: %2; border-radius: 10px; padding: 4px 8px; font-weight: 700;")
+		.arg(QString::fromUtf8(background), QString::fromUtf8(foreground));
 }
 
 } // namespace
@@ -249,40 +334,57 @@ void PluginUiController::register_ui()
 
 	dock_widget_ = new QWidget;
 	dock_widget_->setMinimumWidth(320);
+	dock_widget_->setStyleSheet("QWidget { background: #f7f9fc; }");
 
 	auto *root = new QVBoxLayout(dock_widget_);
-	root->setContentsMargins(10, 10, 10, 10);
-	root->setSpacing(8);
+	root->setContentsMargins(12, 12, 12, 12);
+	root->setSpacing(10);
 
-	auto *form = new QFormLayout;
-	form->setFieldGrowthPolicy(QFormLayout::AllNonFixedFieldsGrow);
-	state_value_ = add_row(form, "State");
-	setup_value_ = add_row(form, "Setup");
-	recording_value_ = add_row(form, "Recording");
-	output_value_ = add_row(form, "Output");
-	queue_value_ = add_row(form, "Queue");
-	review_item_value_ = add_row(form, "Review item");
-	endpoint_value_ = add_row(form, "Endpoint");
-	user_data_value_ = add_row(form, "User data");
-	worker_path_value_ = add_row(form, "Worker path");
-	logs_value_ = add_row(form, "Logs");
-	ownership_value_ = add_row(form, "Ownership");
-	detail_value_ = add_row(form, "Detail");
-	action_value_ = add_row(form, "Action");
-	root->addLayout(form);
+	auto *header = make_card("#274c77", "#274c77");
+	auto *header_layout = qobject_cast<QVBoxLayout *>(header->layout());
+	auto *title = new QLabel("OBS Duel Recorder");
+	title->setStyleSheet("color: #ffffff; font-size: 18px; font-weight: 700;");
+	header_layout->addWidget(title);
+	state_value_ = new QLabel;
+	state_value_->setTextInteractionFlags(Qt::TextSelectableByMouse);
+	header_layout->addWidget(state_value_);
+	root->addWidget(header);
+
+	auto *setup_card = make_card("#e8f7f4", "#84d9cf");
+	auto *setup_layout = qobject_cast<QVBoxLayout *>(setup_card->layout());
+	add_card_title(setup_layout, "Setup", "#0f4c5c");
+	setup_value_ = add_card_value(setup_layout, "Readiness");
+	action_value_ = add_card_value(setup_layout, "Next action");
 
 	auto *settings_button = new QPushButton("Settings");
 	QObject::connect(settings_button, &QPushButton::clicked, [this]() { show_settings_dialog(); });
-	root->addWidget(settings_button);
+	style_button(settings_button, "#2ec4b6", "#073b3a");
+	setup_layout->addWidget(settings_button);
+	root->addWidget(setup_card);
+
+	auto *recording_card = make_card("#fff3df", "#ffd08a");
+	auto *recording_layout = qobject_cast<QVBoxLayout *>(recording_card->layout());
+	add_card_title(recording_layout, "Recording", "#7c4700");
+	recording_value_ = add_card_value(recording_layout, "State");
+	output_value_ = add_card_value(recording_layout, "Output");
 
 	auto *recording_controls = new QHBoxLayout;
 	start_button_ = new QPushButton("Start Recording");
 	stop_button_ = new QPushButton("Stop Recording");
 	QObject::connect(start_button_, &QPushButton::clicked, [this]() { request_manual_start(); });
 	QObject::connect(stop_button_, &QPushButton::clicked, [this]() { request_manual_stop(); });
+	style_button(start_button_, "#ff9f1c", "#3d2400");
+	style_button(stop_button_, "#f05d5e", "#ffffff");
 	recording_controls->addWidget(start_button_);
 	recording_controls->addWidget(stop_button_);
-	root->addLayout(recording_controls);
+	recording_layout->addLayout(recording_controls);
+	root->addWidget(recording_card);
+
+	auto *upload_card = make_card("#edf2ff", "#b6c7ff");
+	auto *upload_layout = qobject_cast<QVBoxLayout *>(upload_card->layout());
+	add_card_title(upload_layout, "Upload Review", "#304c89");
+	queue_value_ = add_card_value(upload_layout, "Queue");
+	review_item_value_ = add_card_value(upload_layout, "Review item");
 
 	auto *upload_controls = new QHBoxLayout;
 	retry_upload_button_ = new QPushButton("Retry Upload");
@@ -291,19 +393,50 @@ void PluginUiController::register_ui()
 	QObject::connect(retry_upload_button_, &QPushButton::clicked, [this]() { request_upload_retry(); });
 	QObject::connect(discard_upload_button_, &QPushButton::clicked, [this]() { request_upload_discard(); });
 	QObject::connect(mark_uploaded_button_, &QPushButton::clicked, [this]() { request_upload_mark_uploaded(); });
+	style_button(retry_upload_button_, "#5b7cfa", "#ffffff");
+	style_button(discard_upload_button_, "#6b7280", "#ffffff");
+	style_button(mark_uploaded_button_, "#2ec4b6", "#073b3a");
 	upload_controls->addWidget(retry_upload_button_);
 	upload_controls->addWidget(discard_upload_button_);
 	upload_controls->addWidget(mark_uploaded_button_);
-	root->addLayout(upload_controls);
+	upload_layout->addLayout(upload_controls);
+	root->addWidget(upload_card);
+
+	auto *metadata_card = make_card("#fff7fb", "#ffb3d1");
+	auto *metadata_layout = qobject_cast<QVBoxLayout *>(metadata_card->layout());
+	add_card_title(metadata_layout, "Metadata", "#8a2d5d");
+	auto *metadata_note = new QLabel("Review match fields and generated upload text before publishing.");
+	metadata_note->setWordWrap(true);
+	metadata_note->setStyleSheet("color: #5c3650; font-size: 12px;");
+	metadata_layout->addWidget(metadata_note);
 
 	edit_metadata_button_ = new QPushButton("Edit Metadata");
 	preview_metadata_button_ = new QPushButton("Preview Upload Metadata");
 	QObject::connect(edit_metadata_button_, &QPushButton::clicked, [this]() { request_edit_metadata(); });
 	QObject::connect(preview_metadata_button_, &QPushButton::clicked, [this]() { request_preview_upload_metadata(); });
+	style_button(edit_metadata_button_, "#d45087", "#ffffff");
+	style_button(preview_metadata_button_, "#8a2d5d", "#ffffff");
 	auto *metadata_controls = new QHBoxLayout;
 	metadata_controls->addWidget(edit_metadata_button_);
 	metadata_controls->addWidget(preview_metadata_button_);
-	root->addLayout(metadata_controls);
+	metadata_layout->addLayout(metadata_controls);
+	root->addWidget(metadata_card);
+
+	auto *diagnostics = new QGroupBox("Diagnostics");
+	diagnostics->setStyleSheet(
+		"QGroupBox { color: #354f52; font-weight: 700; border: 1px solid #cdd8df; "
+		"border-radius: 8px; margin-top: 8px; padding: 8px; background: #f2f6f8; } "
+		"QGroupBox::title { subcontrol-origin: margin; left: 8px; padding: 0 4px; } "
+		"QLabel { background: transparent; }");
+	auto *diagnostics_form = new QFormLayout(diagnostics);
+	diagnostics_form->setFieldGrowthPolicy(QFormLayout::AllNonFixedFieldsGrow);
+	endpoint_value_ = add_row(diagnostics_form, "Endpoint");
+	user_data_value_ = add_row(diagnostics_form, "User data");
+	worker_path_value_ = add_row(diagnostics_form, "Worker path");
+	logs_value_ = add_row(diagnostics_form, "Logs");
+	ownership_value_ = add_row(diagnostics_form, "Ownership");
+	detail_value_ = add_row(diagnostics_form, "Detail");
+	root->addWidget(diagnostics);
 	root->addStretch(1);
 
 	if (!obs_frontend_add_dock_by_id(kDockId, "OBS Duel Recorder", dock_widget_)) {
@@ -348,6 +481,7 @@ void PluginUiController::refresh()
 						 snapshot.expected_worker_path;
 
 	state_value_->setText(QString::fromUtf8(state_name(snapshot.state)));
+	state_value_->setStyleSheet(state_badge_style(snapshot.state));
 	setup_value_->setText(qstr_utf8(setup_summary(snapshot)));
 	recording_value_->setText(qstr_utf8(recording_summary(snapshot)));
 	output_value_->setText(qstr_utf8(recording_output_summary(snapshot)));
