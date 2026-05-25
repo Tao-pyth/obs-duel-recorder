@@ -325,6 +325,8 @@ Response fields:
 - `settings.client_secret_configured`: boolean.
 - `settings.token_configured`: boolean.
 - `queue_counts`: counts by queue state.
+- `providers`: default provider, available provider names, and whether Google
+  optional dependencies are required.
 - `manual_actions`: `retry`, `discard`, and `mark_uploaded`.
 
 ### `POST /upload/process-next`
@@ -340,6 +342,14 @@ v1.0 test/smoke request fields:
 - `youtube_url`: optional; derived from `youtube_video_id` when omitted.
 - `next_attempt_at`: optional for retry/quota outcomes.
 - `manual_review_evidence`: optional object; redacted before persistence.
+
+v1.1 provider selection:
+- `provider`: optional, `mock` by default. `google` selects the optional
+  production YouTube provider.
+- `provider=google` uses YouTube `videos.insert` through optional Google client
+  libraries and runtime OAuth files.
+- Missing OAuth files, missing optional dependencies, Google auth failures, and
+  ambiguous Google responses move the item to `need_manual_review`.
 
 Outcome mapping:
 - `success` -> `uploaded`

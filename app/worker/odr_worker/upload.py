@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -11,6 +12,7 @@ YOUTUBE_UPLOAD_SCOPE = "https://www.googleapis.com/auth/youtube.upload"
 DEFAULT_PRIVACY_STATUS = "private"
 ALLOWED_PRIVACY_STATUSES = {"private", "unlisted"}
 MOCK_RESULTS = {"success", "network_error", "quota_exceeded", "ambiguous_error", "auth_error"}
+UPLOAD_PROVIDERS = {"mock", "google"}
 SECRET_KEYS = {
     "access_token",
     "authorization_code",
@@ -104,19 +106,119 @@ class MockYouTubeUploader:
         raise UploadCommandError("upload_payload_invalid", {"mock_result": "unknown_result"})
 
 
+class GoogleYouTubeUploader:
+    """Optional production uploader backed by the official Google client libraries."""
+
+    def __init__(self, settings: UploadSettings):
+        self.settings = settings
+
+    def upload(self, item: QueueItem, payload: dict[str, Any]) -> UploadOutcome:
+        if not self.settings.client_secret_configured or not self.settings.token_configured:
+            return UploadOutcome(
+                outcome="auth_error",
+                error_code="upload_oauth_missing",
+                error_message="YouTube OAuth client secret or token file is missing",
+                evidence=_safe_google_evidence(self.settings),
+            )
+
+        try:
+            from google.oauth2.credentials import Credentials
+            from googleapiclient.discovery import build
+            from googleapiclient.errors import HttpError
+            from googleapiclient.http import MediaFileUpload
+        except ImportError as exc:
+            return UploadOutcome(
+                outcome="auth_error",
+                error_code="google_dependencies_missing",
+                error_message="Google upload dependencies are not installed",
+                evidence={"missing_dependency": str(exc).split("'")[1] if "'" in str(exc) else str(exc)},
+            )
+
+        video_path = Path(_string(payload, "resolved_video_path", item.video_path))
+        metadata = payload.get("upload_metadata", {})
+        if not isinstance(metadata, dict):
+            metadata = {}
+        privacy_status = _string(payload, "privacy_status", self.settings.privacy_status)
+        if privacy_status not in ALLOWED_PRIVACY_STATUSES:
+            raise UploadCommandError(
+                "upload_privacy_invalid",
+                {"privacy_status": privacy_status, "allowed": sorted(ALLOWED_PRIVACY_STATUSES)},
+            )
+
+        try:
+            credentials = Credentials.from_authorized_user_file(
+                str(self.settings.token_path),
+                scopes=[self.settings.oauth_scope],
+            )
+            service = build("youtube", "v3", credentials=credentials)
+            request = service.videos().insert(
+                part="snippet,status",
+                body={
+                    "snippet": {
+                        "title": _metadata_string(metadata, "title", video_path.stem),
+                        "description": _metadata_string(metadata, "description"),
+                    },
+                    "status": {"privacyStatus": privacy_status},
+                },
+                media_body=MediaFileUpload(str(video_path), resumable=True),
+            )
+            response = _execute_google_upload(request)
+        except HttpError as exc:
+            status = int(getattr(getattr(exc, "resp", None), "status", 0) or 0)
+            content = getattr(exc, "content", b"")
+            if isinstance(content, bytes):
+                content = content.decode("utf-8", errors="replace")
+            return _google_failure_outcome(status=status, content=str(content))
+        except OSError as exc:
+            return UploadOutcome(
+                outcome="network_error",
+                error_code="google_upload_io_error",
+                error_message=str(exc),
+            )
+        except Exception as exc:
+            return UploadOutcome(
+                outcome="ambiguous_error",
+                error_code="google_upload_unknown",
+                error_message=str(exc),
+                evidence=redact_upload_diagnostics({"exception": type(exc).__name__, "message": str(exc)}),
+            )
+
+        if not isinstance(response, dict) or not isinstance(response.get("id"), str) or not response["id"]:
+            return UploadOutcome(
+                outcome="ambiguous_error",
+                error_code="google_upload_response_invalid",
+                error_message="YouTube upload response did not include a video id",
+                evidence=redact_upload_diagnostics(response),
+            )
+
+        video_id = response["id"]
+        return UploadOutcome(
+            outcome="success",
+            youtube_video_id=video_id,
+            youtube_url=_youtube_url(video_id),
+            evidence={"provider": "google"},
+        )
+
+
 class UploadStore:
     def __init__(self, *, queue_store: QueueStore, videos_dir: Path, settings: UploadSettings, metadata_store: Any = None):
         self.queue_store = queue_store
         self.videos_dir = videos_dir
         self.settings = settings
         self.metadata_store = metadata_store
-        self.uploader = MockYouTubeUploader()
+        self.mock_uploader = MockYouTubeUploader()
+        self.google_uploader = GoogleYouTubeUploader(settings)
 
     def status(self) -> dict[str, object]:
         counts = self.queue_store.count_by_state()
         return {
             "settings": self.settings.as_payload(),
             "queue_counts": counts,
+            "providers": {
+                "default": "mock",
+                "available": sorted(UPLOAD_PROVIDERS),
+                "google_optional_dependencies_required": True,
+            },
             "manual_actions": ["retry", "discard", "mark_uploaded"],
         }
 
@@ -124,15 +226,18 @@ class UploadStore:
         payload = payload or {}
         if not isinstance(payload, dict):
             raise UploadCommandError("upload_payload_invalid", {"payload": "must_be_object"})
-        mock_result = _string(payload, "mock_result", "success")
-        if mock_result not in MOCK_RESULTS:
+        provider = _string(payload, "provider", "mock")
+        if provider not in UPLOAD_PROVIDERS:
+            raise UploadCommandError("upload_payload_invalid", {"provider": "unsupported_provider"})
+        if provider == "mock" and _string(payload, "mock_result", "success") not in MOCK_RESULTS:
             raise UploadCommandError("upload_payload_invalid", {"mock_result": "unknown_result"})
 
         item = self._next_ready_item()
         if item is None:
             return {"processed": False, "reason": "no_ready_upload_items"}
 
-        if not self._video_exists(item.video_path):
+        video_path = self._resolve_video_path(item.video_path)
+        if not self._video_exists(video_path):
             discarded = self.queue_store.apply_command(
                 item.id,
                 {
@@ -148,17 +253,26 @@ class UploadStore:
             }
 
         uploading = self.queue_store.apply_command(item.id, {"action": "start_upload"})
-        outcome = self.uploader.upload(uploading, payload)
+        upload_metadata = self._upload_metadata(uploading)
+        upload_payload = dict(payload)
+        upload_payload["resolved_video_path"] = str(video_path)
+        if upload_metadata is not None:
+            upload_payload["upload_metadata"] = upload_metadata
+        outcome = self._uploader(provider).upload(uploading, upload_payload)
         final_item = self._apply_outcome(uploading, outcome)
         result = {
             "processed": True,
             "outcome": outcome.outcome,
             "item": final_item.as_payload(),
         }
-        upload_metadata = self._upload_metadata(final_item)
         if upload_metadata is not None:
             result["upload_metadata"] = upload_metadata
         return result
+
+    def _uploader(self, provider: str):
+        if provider == "google":
+            return self.google_uploader
+        return self.mock_uploader
 
     def _upload_metadata(self, item: QueueItem) -> dict[str, object] | None:
         if self.metadata_store is None or item.match_id is None:
@@ -168,12 +282,13 @@ class UploadStore:
     def _next_ready_item(self) -> QueueItem | None:
         return self.queue_store.next_ready_item()
 
-    def _video_exists(self, video_path: str) -> bool:
-        if not video_path:
-            return False
+    def _resolve_video_path(self, video_path: str) -> Path:
         path = Path(video_path)
         if not path.is_absolute():
             path = self.videos_dir / path
+        return path
+
+    def _video_exists(self, path: Path) -> bool:
         return path.exists() and path.is_file()
 
     def _apply_outcome(self, item: QueueItem, outcome: UploadOutcome) -> QueueItem:
@@ -239,6 +354,79 @@ def build_upload_settings(*, user_data_dir: Path, privacy_status: str = DEFAULT_
         client_secret_configured=client_secret_path.exists(),
         token_configured=token_path.exists(),
     )
+
+
+def _safe_google_evidence(settings: UploadSettings) -> dict[str, object]:
+    return {
+        "client_secret_configured": settings.client_secret_configured,
+        "token_configured": settings.token_configured,
+        "client_secret_path": str(settings.client_secret_path),
+        "token_path": str(settings.token_path),
+    }
+
+
+def _metadata_string(metadata: dict[str, object], key: str, default: str = "") -> str:
+    value = metadata.get(key, default)
+    return value if isinstance(value, str) else default
+
+
+def _google_failure_outcome(*, status: int, content: str) -> UploadOutcome:
+    reason, message = _google_error_details(content)
+    if reason in {"quotaExceeded", "dailyLimitExceeded", "userRateLimitExceeded"} or status == 429:
+        return UploadOutcome(
+            outcome="quota_exceeded",
+            error_code=reason or "quota_exceeded",
+            error_message=message or "YouTube quota exceeded",
+            evidence={"http_status": status, "reason": reason},
+        )
+    if status in {401, 403}:
+        return UploadOutcome(
+            outcome="auth_error",
+            error_code=reason or "google_auth_error",
+            error_message=message or "YouTube authorization failed",
+            evidence={"http_status": status, "reason": reason},
+        )
+    if status == 408 or status >= 500:
+        return UploadOutcome(
+            outcome="network_error",
+            error_code=reason or "google_retryable_error",
+            error_message=message or "Retryable YouTube upload failure",
+        )
+    return UploadOutcome(
+        outcome="ambiguous_error",
+        error_code=reason or "google_upload_ambiguous",
+        error_message=message or "YouTube upload outcome is unknown",
+        evidence=redact_upload_diagnostics({"http_status": status, "content": content}),
+    )
+
+
+def _execute_google_upload(request: Any) -> object:
+    if hasattr(request, "next_chunk"):
+        response = None
+        while response is None:
+            _, response = request.next_chunk()
+        return response
+    return request.execute()
+
+
+def _google_error_details(content: str) -> tuple[str, str]:
+    try:
+        parsed = json.loads(content)
+    except json.JSONDecodeError:
+        return "", content
+    if not isinstance(parsed, dict):
+        return "", content
+    error = parsed.get("error")
+    if not isinstance(error, dict):
+        return "", content
+    message = error.get("message", "")
+    reason = ""
+    errors = error.get("errors", [])
+    if isinstance(errors, list) and errors and isinstance(errors[0], dict):
+        raw_reason = errors[0].get("reason", "")
+        if isinstance(raw_reason, str):
+            reason = raw_reason
+    return reason, message if isinstance(message, str) else ""
 
 
 def redact_upload_diagnostics(value: object) -> object:

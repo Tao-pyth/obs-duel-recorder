@@ -9,6 +9,15 @@ The upload system must support deterministic tests and production YouTube upload
 
 The Worker API should preserve the existing upload boundary while allowing provider selection through configuration or runtime capability detection.
 
+`POST /upload/process-next` selects the provider with:
+
+```json
+{"provider": "google"}
+```
+
+The default remains `mock`, so CI and local smoke flows continue to work without
+Google credentials or network access.
+
 ## Optional Dependencies
 
 The Google provider may use:
@@ -17,6 +26,10 @@ The Google provider may use:
 - `google-auth-httplib2`
 
 These dependencies should remain optional so non-upload workflows and CI fixtures do not require Google credentials or network access.
+
+If the Google provider is selected but OAuth files or optional dependencies are
+missing, the queue item moves to `need_manual_review` with stable redacted
+evidence instead of crashing the Worker.
 
 ## Failure Classification
 
@@ -30,6 +43,14 @@ Google API failures should map to stable Worker outcomes:
 | ambiguous | response unknown after possible upload side effect | `need_manual_review` |
 
 Diagnostics must not include OAuth tokens, client secrets, authorization codes, or bearer strings.
+
+The production provider calls YouTube `videos.insert` with:
+
+- `part=snippet,status`
+- metadata title/description from the Worker upload metadata renderer when a
+  queue item is linked to a match
+- configured privacy status, defaulting to `private`
+- media loaded from the queue item's local video path
 
 ## Preflight
 

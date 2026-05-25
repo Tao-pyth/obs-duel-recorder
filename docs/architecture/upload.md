@@ -21,7 +21,9 @@ The Worker may report whether those files exist, but it must not return token or
 
 Default privacy is `private`. `unlisted` is allowed only by explicit setting. `public` is not part of the default v1.0 path.
 
-v1.0 does not add a Google API dependency. The Worker exposes the upload orchestration boundary and a deterministic local uploader for tests/smoke. A later PR can replace that boundary with a real `videos.insert` client without changing queue semantics.
+The mock provider remains the default for tests/smoke. v1.1 adds an optional
+Google provider that is used only when requested and when runtime credentials
+and optional Google client libraries are available.
 
 ---
 
@@ -126,6 +128,16 @@ Supported mock outcomes:
 - `quota_exceeded`
 - `ambiguous_error`
 - `auth_error`
+
+For production upload, select the optional Google provider:
+
+```json
+{"provider": "google"}
+```
+
+The Google provider calls YouTube `videos.insert`. Missing OAuth files, missing
+optional dependencies, auth failures, quota failures, network failures, and
+ambiguous outcomes are mapped back to stable queue states.
 
 Manual review actions remain on the queue command API:
 

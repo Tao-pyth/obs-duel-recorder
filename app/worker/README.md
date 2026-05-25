@@ -115,6 +115,12 @@ Mock upload processing example:
 Invoke-WebRequest http://127.0.0.1:8787/upload/process-next -Method Post -ContentType "application/json" -Body '{"mock_result":"success","youtube_video_id":"abc123"}' | Select-Object -ExpandProperty Content
 ```
 
+Google upload processing example:
+
+```powershell
+Invoke-WebRequest http://127.0.0.1:8787/upload/process-next -Method Post -ContentType "application/json" -Body '{"provider":"google"}' | Select-Object -ExpandProperty Content
+```
+
 Create match metadata:
 
 ```powershell
