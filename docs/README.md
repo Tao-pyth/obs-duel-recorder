@@ -25,6 +25,7 @@ This directory is the documentation entry point for OBS Duel Recorder.
 - [v1.0 first usable release readiness checklist](release/v1.0-first-usable-release-readiness.md)
 - [v1.1.0 first trial usability hardening readiness checklist](release/v1.1-first-trial-usability-hardening-readiness.md)
 - [active v1.1.1 usability UI and documentation hardening readiness checklist](release/v1.1.1-usability-ui-documentation-hardening-readiness.md)
+- [active v1.1.1 verification matrix](release/v1.1.1-verification-matrix.md)
 - [legacy v1.0 release readiness checklist](release/v1.0-release-readiness.md)
 - [legacy v1.1 release readiness checklist](release/v1.1-release-readiness.md)
 - [v1.2 release readiness checklist](release/v1.2-release-readiness.md)

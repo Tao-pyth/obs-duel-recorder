@@ -99,6 +99,7 @@ Goals:
 - Version tracking issue: `#440` - `[v1.1.1] Usability UI and documentation hardening release tracking`
 - Acceptance checklist: `docs/requirements/v1.1.1-usability-ui-documentation-hardening-acceptance.md`
 - Release readiness checklist: `docs/release/v1.1.1-usability-ui-documentation-hardening-readiness.md`
+- Verification matrix: `docs/release/v1.1.1-verification-matrix.md`
 - Release policy: `docs/release.md`
 - Previous hardening target: `#415` / `v1.1.0` - First Trial Usability Hardening
 - Target version: `v1.1.1`
