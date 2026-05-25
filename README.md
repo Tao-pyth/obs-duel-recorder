@@ -85,7 +85,7 @@ Planned roadmap capabilities for `v1.1`:
 - practical automatic recording setup and template testing
 - production YouTube upload provider, OAuth setup, and manual-review controls
 - match metadata editing and upload metadata preview UI
-- ZIP install/update assistant and installer/MSI decision
+- ZIP install/update assistant and installer/MSI deferral decision
 
 ---
 

@@ -237,6 +237,11 @@ The version tracking issue may contain the working release summary, but finalize
 - Verification: final package validation passed; packaged `update.bat validate --from-version v0.13.0` passed; packaged `update.bat apply --from-version v0.13.0` passed twice; `user_data/` sentinel files were preserved; SQLite backup was created under `user_data/data/db/backups/`
 - Legacy conflict: existing `v1.0.0` is preserved and must not be moved, deleted, or overwritten
 - Next version tracking issue: #415
+- Next-version handoff: #415 tracks `v1.1.0` First Trial Usability Hardening,
+  including install diagnostics, recording visibility, first-run setup,
+  recording-to-queue handoff, automatic recording setup, production upload,
+  metadata UI, ZIP install/update assistance, installer/MSI deferral, and
+  release-record synchronization.
 - Status: released user-ready OBS Plugin package
 
 ### Legacy tag v1.0.0 - YouTube Upload MVP

@@ -63,6 +63,12 @@ auditability. The target version remains `v1.1.0`, but the final publication tag
 must be chosen and recorded before release without moving, deleting, or
 overwriting the legacy tag.
 
+Until that non-overwrite publication decision is recorded in the v1.1 readiness
+and release-history records, agents must not create or move a `v1.1.0` tag. If
+the chosen publication tag is not `v1.1.0`, the release records must explain the
+target version, actual tag name, target commit SHA, and reason for the
+non-conflicting tag.
+
 ## Version Terms
 
 Use separate terms for released and in-development versions:
