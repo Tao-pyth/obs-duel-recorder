@@ -15,6 +15,7 @@ Architecture documents describe technical behavior, responsibility boundaries, a
 - [Update System](update-system.md)
 - [Image Recognition](image-recognition.md)
 - [Packaging](packaging.md)
+- [Automatic Error Reporting](automatic-error-reporting.md)
 - [Statistics](statistics.md)
 - [Runtime Optimization](runtime-optimization.md)
 - [Upload Provider](upload-provider.md)

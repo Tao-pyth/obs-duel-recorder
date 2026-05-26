@@ -80,12 +80,15 @@ credentials.json
 # =========================================
 tmp/
 temp/
+.codex/
 *.tmp
 
 # =========================================
 # Release Artifacts
 # =========================================
 release/
+!docs/release/
+!docs/release/*.md
 artifacts/
 *.zip
 *.7z

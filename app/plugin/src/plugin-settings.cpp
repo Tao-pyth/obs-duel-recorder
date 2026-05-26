@@ -23,6 +23,7 @@ constexpr const char *kOverlayKey = "overlay";
 constexpr const char *kOverlaySourcesKey = "sources";
 constexpr const char *kOverlayDefaultsKey = "defaults";
 constexpr const char *kDefaultDockTheme = "classic";
+constexpr const char *kDefaultUiLanguage = "en";
 
 std::wstring from_utf8(const char *value)
 {
@@ -171,11 +172,17 @@ void apply_defaults(obs_data_t *data)
 	obs_data_set_default_string(data, "user_data_dir", to_utf8(default_user_data_dir()).c_str());
 	obs_data_set_default_bool(data, "restart_worker_on_change", true);
 	obs_data_set_default_string(data, "dock_theme", kDefaultDockTheme);
+	obs_data_set_default_string(data, "ui_language", kDefaultUiLanguage);
 }
 
 bool is_valid_dock_theme(const std::string &theme)
 {
 	return theme == "classic" || theme == "forest" || theme == "bright";
+}
+
+bool is_valid_ui_language(const std::string &language)
+{
+	return language == "en" || language == "ja";
 }
 
 void apply_overlay_sources_defaults(obs_data_t *sources)
@@ -332,6 +339,10 @@ PluginSettings load_plugin_settings()
 	if (!is_valid_dock_theme(settings.dock_theme)) {
 		settings.dock_theme = kDefaultDockTheme;
 	}
+	settings.ui_language = obs_data_get_string(data, "ui_language");
+	if (!is_valid_ui_language(settings.ui_language)) {
+		settings.ui_language = kDefaultUiLanguage;
+	}
 	settings.overlay = load_overlay_settings(data);
 
 	obs_data_release(data);
@@ -353,6 +364,8 @@ bool save_plugin_settings(const PluginSettings &settings)
 	obs_data_set_bool(data, "restart_worker_on_change", settings.restart_worker_on_change);
 	obs_data_set_string(data, "dock_theme",
 			    is_valid_dock_theme(settings.dock_theme) ? settings.dock_theme.c_str() : kDefaultDockTheme);
+	obs_data_set_string(data, "ui_language",
+			    is_valid_ui_language(settings.ui_language) ? settings.ui_language.c_str() : kDefaultUiLanguage);
 	save_overlay_settings(data, settings.overlay);
 
 	const bool saved = obs_data_save_json_safe(data, to_utf8(settings.settings_path).c_str(), "tmp", "bak");

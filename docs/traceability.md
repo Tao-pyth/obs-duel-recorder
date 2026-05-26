@@ -117,6 +117,26 @@ Goals:
   - `docs/requirements/requirements.md` -> Setup Rules / Packaging Rules / Detection Rules / Runtime Rules / Upload Rules / Match Data
   - `AGENTS.md` -> Runtime Directory Rules / Responsibility Separation
 
+### v1.1.2 - Recovery Reporting, Distribution, UI, And i18n Update
+
+- Roadmap: `docs/roadmap.md` -> **v1.1.2 - Recovery Reporting, Distribution, UI, And i18n Update**
+- Version tracking issue: `#457` - `[v1.1.2] Recovery reporting, distribution fix, Dock compactness, and i18n update tracking`
+- Acceptance checklist: `docs/requirements/v1.1.2-recovery-reporting-distribution-ui-i18n-acceptance.md`
+- Release readiness checklist: `docs/release/v1.1.2-recovery-reporting-distribution-ui-i18n-readiness.md`
+- Release summary: `docs/release/v1.1.2-release-summary.md`
+- Automatic error reporting contract: `docs/architecture/automatic-error-reporting.md`
+- Packaging architecture contract: `docs/architecture/packaging.md`
+- Previous released user-ready version: `v1.1.1`
+- Target version: `v1.1.2`
+- Required child issues:
+  - Automatic error report operation: `#453`
+  - Distribution package Worker executable correction: `#454`
+  - Dock compact navigation: `#455`
+  - Japanese/English language setting and Help note: `#456`
+- Requirements (relevant sections):
+  - `docs/requirements/requirements.md` -> Setup Rules / Packaging Rules / Detection Rules / Runtime Rules
+  - `AGENTS.md` -> Runtime Directory Rules / Responsibility Separation / Documentation Rules
+
 ---
 
 ## Legacy Implementation Records

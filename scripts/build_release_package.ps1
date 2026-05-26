@@ -50,7 +50,11 @@ function Copy-RequiredDirectory {
 
     New-Item -ItemType Directory -Force -Path $Destination | Out-Null
     Get-ChildItem -LiteralPath $Source -Force | ForEach-Object {
-        Copy-Item -LiteralPath $_.FullName -Destination $Destination -Recurse -Force
+        $skipGeneratedPythonCache = ($_.PSIsContainer -and $_.Name -eq "__pycache__") -or
+            (-not $_.PSIsContainer -and $_.Extension -eq ".pyc")
+        if (-not $skipGeneratedPythonCache) {
+            Copy-Item -LiteralPath $_.FullName -Destination $Destination -Recurse -Force
+        }
     }
 }
 
@@ -69,6 +73,8 @@ function Assert-NoBlockedPackageFiles {
         '\.sqlite3$',
         '\.db$',
         '\.log$',
+        '(^|\\|/)__pycache__(\\|/)',
+        '\.pyc$',
         '(^|\\|/)token\.json$',
         '(^|\\|/)credentials\.json$',
         '\.token$'
@@ -90,6 +96,45 @@ function Assert-NoBlockedPackageFiles {
             }
         }
     }
+}
+
+function Assert-PEExecutable {
+    param(
+        [string]$Path,
+        [string]$Label
+    )
+
+    if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) {
+        throw "$Label is missing: $Path"
+    }
+
+    $file = Get-Item -LiteralPath $Path
+    if ($file.Length -lt 1024) {
+        throw "$Label is too small to be a release executable: $Path ($($file.Length) bytes)"
+    }
+
+    $stream = [System.IO.File]::OpenRead($Path)
+    try {
+        $reader = New-Object System.IO.BinaryReader($stream)
+        $mz = $reader.ReadUInt16()
+        if ($mz -ne 0x5A4D) {
+            throw "$Label is not a PE executable (missing MZ header): $Path"
+        }
+        $stream.Seek(0x3C, [System.IO.SeekOrigin]::Begin) | Out-Null
+        $peOffset = $reader.ReadInt32()
+        if ($peOffset -le 0 -or $peOffset -gt ($file.Length - 4)) {
+            throw "$Label has an invalid PE header offset: $Path"
+        }
+        $stream.Seek($peOffset, [System.IO.SeekOrigin]::Begin) | Out-Null
+        $peSignature = $reader.ReadUInt32()
+        if ($peSignature -ne 0x00004550) {
+            throw "$Label is not a PE executable (missing PE signature): $Path"
+        }
+    }
+    finally {
+        $stream.Dispose()
+    }
+
 }
 
 $RepoRoot = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot "..")).Path
@@ -123,6 +168,9 @@ if (-not (Test-Path -LiteralPath $workerBundle -PathType Container)) {
 if (-not (Test-Path -LiteralPath $workerExe -PathType Leaf)) {
     throw "Worker executable is required for release packaging: $workerExe"
 }
+
+Assert-PEExecutable -Path $workerExe -Label "Worker executable"
+Assert-PEExecutable -Path $pluginDll -Label "Plugin DLL"
 
 New-Item -ItemType Directory -Force -Path $outputRoot | Out-Null
 

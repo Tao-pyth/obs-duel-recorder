@@ -28,6 +28,48 @@ if ($ExpectedVersion -notmatch '^v\d+\.\d+\.\d+$') {
     throw "ExpectedVersion must use vX.Y.Z format: $ExpectedVersion"
 }
 
+function Assert-ZipEntryIsPEExecutable {
+    param(
+        [System.IO.Compression.ZipArchive]$Zip,
+        [string]$EntryName,
+        [string]$Label
+    )
+
+    $entry = $Zip.Entries | Where-Object { ($_.FullName -replace '\\', '/') -eq $EntryName } | Select-Object -First 1
+    if ($null -eq $entry) {
+        throw "Package is missing expected executable: $EntryName"
+    }
+    if ($entry.Length -lt 1024) {
+        throw "$Label is too small to be a release executable: $EntryName ($($entry.Length) bytes)"
+    }
+
+    $entryStream = $entry.Open()
+    $stream = New-Object System.IO.MemoryStream
+    try {
+        $entryStream.CopyTo($stream)
+        $stream.Seek(0, [System.IO.SeekOrigin]::Begin) | Out-Null
+        $reader = New-Object System.IO.BinaryReader($stream)
+        $mz = $reader.ReadUInt16()
+        if ($mz -ne 0x5A4D) {
+            throw "$Label is not a PE executable (missing MZ header): $EntryName"
+        }
+        $stream.Seek(0x3C, [System.IO.SeekOrigin]::Begin) | Out-Null
+        $peOffset = $reader.ReadInt32()
+        if ($peOffset -le 0 -or $peOffset -gt ($entry.Length - 4)) {
+            throw "$Label has an invalid PE header offset: $EntryName"
+        }
+        $stream.Seek($peOffset, [System.IO.SeekOrigin]::Begin) | Out-Null
+        $peSignature = $reader.ReadUInt32()
+        if ($peSignature -ne 0x00004550) {
+            throw "$Label is not a PE executable (missing PE signature): $EntryName"
+        }
+    }
+    finally {
+        $entryStream.Dispose()
+        $stream.Dispose()
+    }
+}
+
 $zipName = Split-Path -Leaf $zipPath
 $expectedRoot = "obs-duel-recorder-$ExpectedVersion/"
 $expectedEntries = @(
@@ -61,6 +103,8 @@ $blockedPatterns = @(
     '\.sqlite3$',
     '\.db$',
     '\.log$',
+    '(^|/)__pycache__/',
+    '\.pyc$',
     '(^|/)token\.json$',
     '(^|/)credentials\.json$',
     '\.token$'
@@ -85,6 +129,9 @@ try {
             }
         }
     }
+
+    Assert-ZipEntryIsPEExecutable -Zip $zip -EntryName "${expectedRoot}app/plugin/obs-duel-recorder.dll" -Label "Plugin DLL"
+    Assert-ZipEntryIsPEExecutable -Zip $zip -EntryName "${expectedRoot}app/worker/odr-worker/odr-worker.exe" -Label "Worker executable"
 }
 finally {
     $zip.Dispose()
