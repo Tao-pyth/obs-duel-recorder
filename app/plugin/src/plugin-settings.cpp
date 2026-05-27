@@ -24,6 +24,10 @@ constexpr const char *kOverlaySourcesKey = "sources";
 constexpr const char *kOverlayDefaultsKey = "defaults";
 constexpr const char *kDefaultDockTheme = "classic";
 constexpr const char *kDefaultUiLanguage = "en";
+constexpr const char *kDefaultUploadTitleTemplate = "Duel {match_id} vs {opponent_deck} - {result}";
+constexpr const char *kDefaultUploadDescriptionTemplate =
+	"OBS Duel Recorder Archive\n\nMatch ID: {match_id}\nDeck: {deck_name}\nOpponent: {opponent_deck}\nResult: {result}\nRank: {rank}\nDP: {dp}\nStarted: {started_at}\nEnded: {ended_at}\n\nNotes:\n{memo}";
+constexpr const char *kDefaultUploadTagsTemplate = "Yu-Gi-Oh! Master Duel,{deck_name},{opponent_deck},{result}";
 
 std::wstring from_utf8(const char *value)
 {
@@ -173,6 +177,9 @@ void apply_defaults(obs_data_t *data)
 	obs_data_set_default_bool(data, "restart_worker_on_change", true);
 	obs_data_set_default_string(data, "dock_theme", kDefaultDockTheme);
 	obs_data_set_default_string(data, "ui_language", kDefaultUiLanguage);
+	obs_data_set_default_string(data, "upload_title_template", kDefaultUploadTitleTemplate);
+	obs_data_set_default_string(data, "upload_description_template", kDefaultUploadDescriptionTemplate);
+	obs_data_set_default_string(data, "upload_tags_template", kDefaultUploadTagsTemplate);
 }
 
 bool is_valid_dock_theme(const std::string &theme)
@@ -304,6 +311,45 @@ void save_overlay_settings(obs_data_t *data, const OverlaySettings &settings)
 	obs_data_release(overlay);
 }
 
+std::vector<std::string> load_string_array(obs_data_t *data, const char *key)
+{
+	std::vector<std::string> values;
+	obs_data_array_t *array = obs_data_get_array(data, key);
+	if (!array) {
+		return values;
+	}
+	const size_t count = obs_data_array_count(array);
+	for (size_t i = 0; i < count; ++i) {
+		obs_data_t *item = obs_data_array_item(array, i);
+		if (!item) {
+			continue;
+		}
+		const char *value = obs_data_get_string(item, "value");
+		if (value && value[0] != '\0') {
+			values.emplace_back(value);
+		}
+		obs_data_release(item);
+	}
+	obs_data_array_release(array);
+	return values;
+}
+
+void save_string_array(obs_data_t *data, const char *key, const std::vector<std::string> &values)
+{
+	obs_data_array_t *array = obs_data_array_create();
+	for (const std::string &value : values) {
+		if (value.empty()) {
+			continue;
+		}
+		obs_data_t *item = obs_data_create();
+		obs_data_set_string(item, "value", value.c_str());
+		obs_data_array_push_back(array, item);
+		obs_data_release(item);
+	}
+	obs_data_set_array(data, key, array);
+	obs_data_array_release(array);
+}
+
 } // namespace
 
 std::wstring default_plugin_settings_path()
@@ -343,6 +389,15 @@ PluginSettings load_plugin_settings()
 	if (!is_valid_ui_language(settings.ui_language)) {
 		settings.ui_language = kDefaultUiLanguage;
 	}
+	settings.deck_candidates = load_string_array(data, "deck_candidates");
+	settings.opponent_deck_candidates = load_string_array(data, "opponent_deck_candidates");
+	settings.last_deck_name = obs_data_get_string(data, "last_deck_name");
+	settings.last_opponent_deck = obs_data_get_string(data, "last_opponent_deck");
+	settings.last_rank = obs_data_get_string(data, "last_rank");
+	settings.last_dp = obs_data_get_string(data, "last_dp");
+	settings.upload_title_template = obs_data_get_string(data, "upload_title_template");
+	settings.upload_description_template = obs_data_get_string(data, "upload_description_template");
+	settings.upload_tags_template = obs_data_get_string(data, "upload_tags_template");
 	settings.overlay = load_overlay_settings(data);
 
 	obs_data_release(data);
@@ -366,6 +421,21 @@ bool save_plugin_settings(const PluginSettings &settings)
 			    is_valid_dock_theme(settings.dock_theme) ? settings.dock_theme.c_str() : kDefaultDockTheme);
 	obs_data_set_string(data, "ui_language",
 			    is_valid_ui_language(settings.ui_language) ? settings.ui_language.c_str() : kDefaultUiLanguage);
+	save_string_array(data, "deck_candidates", settings.deck_candidates);
+	save_string_array(data, "opponent_deck_candidates", settings.opponent_deck_candidates);
+	obs_data_set_string(data, "last_deck_name", settings.last_deck_name.c_str());
+	obs_data_set_string(data, "last_opponent_deck", settings.last_opponent_deck.c_str());
+	obs_data_set_string(data, "last_rank", settings.last_rank.c_str());
+	obs_data_set_string(data, "last_dp", settings.last_dp.c_str());
+	obs_data_set_string(data, "upload_title_template",
+			    settings.upload_title_template.empty() ? kDefaultUploadTitleTemplate :
+								    settings.upload_title_template.c_str());
+	obs_data_set_string(data, "upload_description_template",
+			    settings.upload_description_template.empty() ? kDefaultUploadDescriptionTemplate :
+									  settings.upload_description_template.c_str());
+	obs_data_set_string(data, "upload_tags_template",
+			    settings.upload_tags_template.empty() ? kDefaultUploadTagsTemplate :
+								   settings.upload_tags_template.c_str());
 	save_overlay_settings(data, settings.overlay);
 
 	const bool saved = obs_data_save_json_safe(data, to_utf8(settings.settings_path).c_str(), "tmp", "bak");

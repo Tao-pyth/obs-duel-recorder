@@ -137,6 +137,32 @@ Goals:
   - `docs/requirements/requirements.md` -> Setup Rules / Packaging Rules / Detection Rules / Runtime Rules
   - `AGENTS.md` -> Runtime Directory Rules / Responsibility Separation / Documentation Rules
 
+### v1.1.3 - Dock Workflow, Metadata, Upload, And UI State Update
+
+- Roadmap: `docs/roadmap.md` -> **v1.1.3 - Dock Workflow, Metadata, Upload, And UI State Update**
+- Version tracking issue: `#470` - `[v1.1.3] Dock workflow, metadata, upload preview, and Material UI state redesign`
+- Acceptance checklist: `docs/requirements/v1.1.3-dock-workflow-metadata-upload-ui-acceptance.md`
+- Release readiness checklist: `docs/release/v1.1.3-dock-workflow-metadata-upload-ui-readiness.md`
+- Release summary: `docs/release/v1.1.3-release-summary.md`
+- UI architecture contract: `docs/architecture/dock-workflow-ui-state.md`
+- Previous released user-ready version: `v1.1.2`
+- Target version: `v1.1.3`
+- Required child issues:
+  - Recording preview during metadata entry: `#459`
+  - Deck/opponent deck dropdown candidates: `#460`
+  - UI state design: `#461`
+  - Combined management tab and reduced popups: `#462`
+  - Metadata popup language support: `#463`
+  - Upload text template editing and preview: `#464`
+  - Direct Dock metadata editing and carry-over: `#465`
+  - Recording -> metadata -> upload flow order: `#466`
+  - Automatic setup wizard language switching: `#467`
+  - Material Design alignment: `#468`
+  - Hide raw/debug parameters behind details controls: `#469`
+- Requirements (relevant sections):
+  - `docs/requirements/requirements.md` -> Setup Rules / Upload Rules / Overlay Rules / Runtime Rules
+  - `AGENTS.md` -> Responsibility Separation / Documentation Rules / Recovery Rules
+
 ---
 
 ## Legacy Implementation Records

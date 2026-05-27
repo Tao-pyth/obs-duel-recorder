@@ -158,6 +158,7 @@ class GoogleYouTubeUploader:
                     "snippet": {
                         "title": _metadata_string(metadata, "title", video_path.stem),
                         "description": _metadata_string(metadata, "description"),
+                        "tags": _metadata_string_list(metadata, "tags"),
                     },
                     "status": {"privacyStatus": privacy_status},
                 },
@@ -534,6 +535,13 @@ def _dependency_name(exc: ImportError) -> str:
 def _metadata_string(metadata: dict[str, object], key: str, default: str = "") -> str:
     value = metadata.get(key, default)
     return value if isinstance(value, str) else default
+
+
+def _metadata_string_list(metadata: dict[str, object], key: str) -> list[str]:
+    value = metadata.get(key, [])
+    if not isinstance(value, list):
+        return []
+    return [item for item in value if isinstance(item, str) and item]
 
 
 def _google_failure_outcome(*, status: int, content: str) -> UploadOutcome:

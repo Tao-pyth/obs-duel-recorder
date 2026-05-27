@@ -77,6 +77,25 @@ std::string extract_json_number(const std::string &body, const char *key)
 	return match[1].str();
 }
 
+std::string extract_json_string_array(const std::string &body, const char *key)
+{
+	const std::regex pattern(std::string("\"") + key + "\"\\s*:\\s*\\[(.*?)\\]");
+	std::smatch match;
+	if (!std::regex_search(body, match, pattern) || match.size() < 2) {
+		return {};
+	}
+	const std::string array_body = match[1].str();
+	const std::regex item_pattern("\"((?:\\\\.|[^\"])*)\"");
+	std::ostringstream joined;
+	for (std::sregex_iterator it(array_body.begin(), array_body.end(), item_pattern), end; it != end; ++it) {
+		if (joined.tellp() > 0) {
+			joined << ", ";
+		}
+		joined << json_unescape((*it)[1].str());
+	}
+	return joined.str();
+}
+
 bool response_has_items(const std::string &body)
 {
 	const std::regex pattern("\"items\"\\s*:\\s*\\[\\s*\\{");
@@ -165,6 +184,9 @@ void populate_match_metadata(MatchMetadataPayload &match, const std::string &bod
 	match.rank = extract_json_string(body, "rank");
 	match.dp = extract_json_string(body, "dp");
 	match.memo = extract_json_string(body, "memo");
+	match.title_template = extract_json_string(body, "title_template");
+	match.description_template = extract_json_string(body, "description_template");
+	match.tags_template = extract_json_string(body, "tags_template");
 }
 
 void populate_upload_metadata_preview(UploadMetadataPreviewPayload &preview, const std::string &body)
@@ -173,6 +195,7 @@ void populate_upload_metadata_preview(UploadMetadataPreviewPayload &preview, con
 	preview.match_id = id.empty() ? 0 : std::stoi(id);
 	preview.title = extract_json_string(body, "title");
 	preview.description = extract_json_string(body, "description");
+	preview.tags = extract_json_string_array(body, "tags");
 	preview.notes = extract_json_string(body, "notes");
 	preview.warning = extract_json_string(body, "warning");
 }
@@ -714,7 +737,10 @@ MetadataUpdateResult LocalhostApiClient::update_match_metadata(const WorkerEndpo
 			   "\",\"result\":\"" + json_escape(metadata.result) +
 			   "\",\"rank\":\"" + json_escape(metadata.rank) +
 			   "\",\"dp\":\"" + json_escape(metadata.dp) +
-			   "\",\"memo\":\"" + json_escape(metadata.memo) + "\"}";
+			   "\",\"memo\":\"" + json_escape(metadata.memo) +
+			   "\",\"title_template\":\"" + json_escape(metadata.title_template) +
+			   "\",\"description_template\":\"" + json_escape(metadata.description_template) +
+			   "\",\"tags_template\":\"" + json_escape(metadata.tags_template) + "\"}";
 	const std::wstring path = L"/matches/" + std::to_wstring(metadata.id) + L"/metadata";
 	const HttpResponse response = http_put_json(endpoint, path.c_str(), body);
 	result.http_status = response.status;

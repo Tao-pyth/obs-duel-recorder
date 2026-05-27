@@ -5,7 +5,7 @@
 This roadmap uses one version sequence based on user-visible usability.
 
 - The project reached its first user-ready OBS Plugin release at `v1.0.1`.
-- The current active development target is `v1.1.2`.
+- The current active development target is `v1.1.3`.
 - Existing `v1.x` and `v2.x` tags are legacy non-product tags from before this rule.
 - The `v0.11` gate completed built OBS Plugin DLL, real OBS load smoke evidence, Dock visibility, Worker heartbeat, and basic recording control evidence.
 - The `v0.12` gate completed packaging workflow, release asset automation path, SHA256 checksum generation, and package layout validation.
@@ -13,7 +13,8 @@ This roadmap uses one version sequence based on user-visible usability.
 - The user-ready `v1.0` release was published as `v1.0.1` because legacy `v1.0.0` already exists.
 - The completed `v1.1.0` issue set was coordinated through #415 and remains the previous hardening scope.
 - The `v1.1.1` target followed #415 and completed UI, documentation, verification, packaging validation, and release-record handoff through #440.
-- The `v1.1.2` target is coordinated through #457 and covers recovery reporting documentation, release package Worker executable validation, compact Dock navigation, and Japanese/English UI language selection.
+- The `v1.1.2` target was coordinated through #457 and covers recovery reporting documentation, release package Worker executable validation, compact Dock navigation, and Japanese/English UI language selection.
+- The `v1.1.3` target is coordinated through #470 and covers Dock workflow order, direct metadata editing, upload text templates, UI state presentation, and Material-inspired color-role documentation.
 - Existing legacy tags must not be moved or overwritten. Because a legacy `v1.1.0` tag exists, v1.1.x publication decisions must be recorded before release.
 
 ---
@@ -311,6 +312,54 @@ Previous release: `v1.1.1`
 #457 closes only after #453 through #456 are complete or explicitly deferred,
 documentation matches the final behavior, and the `v1.1.2` release publication
 or an approved publication handoff is recorded.
+
+---
+
+## v1.1.3 - Dock Workflow, Metadata, Upload, And UI State Update
+
+### Goals
+
+Make the OBS Dock follow the operator's real workflow and reduce debug-heavy UI weight while keeping diagnostics recoverable.
+
+Tracking issue: #470
+
+Previous patch scope: #457 / `v1.1.2`
+
+### Planned
+
+- Record -> Metadata -> Upload -> Manage Dock navigation
+- one Manage tab for setup, settings, help, diagnostics, and automatic setup entrypoints
+- inline settings editing for normal runtime path, theme, and language changes
+- direct Dock metadata editing with localized popup fallback
+- deck and opponent deck editable dropdown candidates
+- carry-over for deck, opponent deck, rank, and DP
+- upload title, description, and tags template editing with preview
+- Worker upload metadata rendering shared by preview and actual upload
+- localized automatic setup dialog
+- short status labels with raw diagnostic details behind an explicit details control
+- Material-inspired state and color role documentation
+
+### Required Child Issues
+
+- Recording preview during metadata entry: #459
+- Deck/opponent deck dropdown candidates: #460
+- UI state design: #461
+- Combined management tab and reduced popups: #462
+- Metadata popup language support: #463
+- Upload text template editing and preview: #464
+- Direct Dock metadata editing and carry-over: #465
+- Recording -> metadata -> upload flow order: #466
+- Automatic setup wizard language switching: #467
+- Material Design alignment: #468
+- Hide raw/debug parameters behind details controls: #469
+
+### Deliverables
+
+- v1.1.3 acceptance, readiness, README, Roadmap, traceability, and release-summary records
+- Worker migration for upload description and tag templates
+- Plugin Dock workflow and inline metadata/settings updates
+- Worker and Plugin validation evidence
+- packaged and published `v1.1.3` release
 
 ---
 

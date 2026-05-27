@@ -29,6 +29,7 @@
 
 #include <sstream>
 #include <string>
+#include <vector>
 
 namespace odr::plugin {
 namespace {
@@ -151,46 +152,34 @@ std::string setup_summary(const WorkerStatusSnapshot &snapshot)
 std::string recording_summary(const WorkerStatusSnapshot &snapshot)
 {
 	if (!snapshot.recording_error.empty()) {
-		return "command failed: " + snapshot.recording_error;
+		return "Error";
 	}
 	if (!snapshot.recording_state_available) {
-		return "not available";
+		return "Unavailable";
 	}
 
 	const RecordingStatePayload &state = snapshot.recording_state;
-	std::ostringstream out;
-	out << "state=" << state.state;
-	if (!state.session_id.empty()) {
-		out << " session_id=" << state.session_id;
+	if (state.state == "recording") {
+		return "Recording";
 	}
-	if (!state.command_source.empty()) {
-		out << " source=" << state.command_source;
+	if (state.state == "completed") {
+		return "Metadata needed";
 	}
-	if (!state.last_action.empty()) {
-		out << " last_action=" << state.last_action;
+	if (state.state == "idle") {
+		return "Idle";
 	}
-	if (!state.reason.empty()) {
-		out << " reason=" << state.reason;
-	}
-	if (!state.updated_at.empty()) {
-		out << " updated_at=" << state.updated_at;
-	}
-	return out.str();
+	return state.state.empty() ? "Unknown" : state.state;
 }
 
 std::string recording_output_summary(const WorkerStatusSnapshot &snapshot)
 {
 	if (!snapshot.recording_output_path.empty()) {
-		std::string summary = "path=" + snapshot.recording_output_path;
-		if (!snapshot.recording_output_evidence.empty()) {
-			summary += " evidence=" + snapshot.recording_output_evidence;
-		}
-		return summary;
+		return "Linked";
 	}
 	if (!snapshot.recording_output_evidence.empty()) {
-		return snapshot.recording_output_evidence;
+		return "Waiting for OBS output";
 	}
-	return "not available";
+	return "Not linked";
 }
 
 std::string queue_summary(const WorkerStatusSnapshot &snapshot)
@@ -204,13 +193,8 @@ std::string queue_summary(const WorkerStatusSnapshot &snapshot)
 
 	const UploadStatusResult &queue = snapshot.upload_status;
 	std::ostringstream out;
-	out << "ready=" << queue.ready_upload
-	    << " uploading=" << queue.uploading
-	    << " uploaded=" << queue.uploaded
-	    << " failed=" << queue.upload_failed
-	    << " quota=" << queue.quota_waiting
-	    << " review=" << queue.need_manual_review
-	    << " discarded=" << queue.discarded;
+	out << "Ready " << queue.ready_upload << " / Review " << queue.need_manual_review
+	    << " / Failed " << queue.upload_failed;
 	return out.str();
 }
 
@@ -221,16 +205,7 @@ std::string review_item_summary(const WorkerStatusSnapshot &snapshot)
 	}
 	const QueueActionItemPayload &item = snapshot.queue_action_item.item;
 	std::ostringstream out;
-	out << "id=" << item.id << " state=" << item.state;
-	if (!item.manual_review_reason.empty()) {
-		out << " reason=" << item.manual_review_reason;
-	}
-	if (!item.last_error_code.empty()) {
-		out << " error=" << item.last_error_code;
-	}
-	if (!item.video_path.empty()) {
-		out << " video=" << item.video_path;
-	}
+	out << "#" << item.id << " " << item.state;
 	return out.str();
 }
 
@@ -397,6 +372,25 @@ QString state_badge_style(WorkerDiagnosticState state)
 		.arg(QString::fromUtf8(background), QString::fromUtf8(foreground));
 }
 
+void add_unique_candidate(std::vector<std::string> &values, const std::string &value)
+{
+	if (value.empty()) {
+		return;
+	}
+	if (std::find(values.begin(), values.end(), value) != values.end()) {
+		return;
+	}
+	values.insert(values.begin(), value);
+	if (values.size() > 30) {
+		values.resize(30);
+	}
+}
+
+std::string combo_text(QComboBox *combo)
+{
+	return combo ? utf8_string(combo->currentText().trimmed()) : std::string{};
+}
+
 } // namespace
 
 PluginUiController::PluginUiController(WorkerProcessManager &worker_manager)
@@ -478,8 +472,6 @@ void PluginUiController::register_ui()
 	action_value_ = add_card_value(setup_layout, language_is_japanese(ui_language_) ? "次の操作" : "Next action",
 				       &action_label_);
 	setup_tab_layout->addWidget(setup_card_);
-	setup_tab_layout->addStretch(1);
-
 	settings_button_ = new QPushButton(ui_text(ui_language_, "Open Settings", "設定を開く"));
 	help_button_ = new QPushButton(ui_text(ui_language_, "Open Help", "ヘルプを開く"));
 	automatic_setup_button_ = new QPushButton(ui_text(ui_language_, "Open Automatic Setup", "自動録画セットアップを開く"));
@@ -495,27 +487,48 @@ void PluginUiController::register_ui()
 		"Change runtime path, theme, and language. Saving restarts the Worker.",
 		"実行データ保存先、テーマ、言語を変更します。保存すると Worker を再起動します。"));
 	settings_note_->setWordWrap(true);
-	settings_tab_layout->addWidget(settings_note_);
-	settings_tab_layout->addWidget(settings_button_);
-	settings_tab_layout->addStretch(1);
+	setup_tab_layout->addWidget(settings_note_);
+
+	auto *inline_settings_form = new QFormLayout;
+	settings_host_input_ = new QLineEdit(qstr_wide(settings.endpoint.host));
+	settings_port_input_ = new QLineEdit(QString::number(settings.endpoint.port));
+	settings_user_data_input_ = new QLineEdit(qstr_wide(settings.user_data_dir));
+	settings_theme_input_ = new QComboBox;
+	settings_theme_input_->addItem("Classic", QString::fromUtf8("classic"));
+	settings_theme_input_->addItem("Forest", QString::fromUtf8("forest"));
+	settings_theme_input_->addItem("Bright", QString::fromUtf8("bright"));
+	settings_theme_input_->setCurrentIndex(std::max(0, settings_theme_input_->findData(QString::fromUtf8(settings.dock_theme.c_str()))));
+	settings_language_input_ = new QComboBox;
+	settings_language_input_->addItem("English", QString::fromUtf8("en"));
+	settings_language_input_->addItem(QString::fromUtf8("日本語"), QString::fromUtf8("ja"));
+	settings_language_input_->setCurrentIndex(std::max(0, settings_language_input_->findData(QString::fromUtf8(settings.ui_language.c_str()))));
+	inline_settings_form->addRow(ui_text(ui_language_, "Host", "ホスト"), settings_host_input_);
+	inline_settings_form->addRow(ui_text(ui_language_, "Port", "ポート"), settings_port_input_);
+	inline_settings_form->addRow(ui_text(ui_language_, "User data dir", "ユーザーデータ保存先"), settings_user_data_input_);
+	inline_settings_form->addRow(ui_text(ui_language_, "Dock theme", "Dock テーマ"), settings_theme_input_);
+	inline_settings_form->addRow(ui_text(ui_language_, "Language", "言語"), settings_language_input_);
+	setup_tab_layout->addLayout(inline_settings_form);
+	save_inline_settings_button_ = new QPushButton(ui_text(ui_language_, "Save Settings", "設定を保存"));
+	QObject::connect(save_inline_settings_button_, &QPushButton::clicked, [this]() { save_inline_settings(); });
+	style_button(save_inline_settings_button_, "#2ec4b6", "#073b3a");
+	setup_tab_layout->addWidget(save_inline_settings_button_);
+	setup_tab_layout->addWidget(settings_button_);
 
 	help_note_ = new QLabel(ui_text(
 		ui_language_,
 		"Open task-focused help for setup, recording, upload review, diagnostics, and language recovery.",
 		"セットアップ、録画、アップロード確認、診断、言語復旧のヘルプを開きます。"));
 	help_note_->setWordWrap(true);
-	help_tab_layout->addWidget(help_note_);
-	help_tab_layout->addWidget(help_button_);
-	help_tab_layout->addStretch(1);
+	setup_tab_layout->addWidget(help_note_);
+	setup_tab_layout->addWidget(help_button_);
 
 	automatic_note_ = new QLabel(ui_text(
 		ui_language_,
 		"Register local start/end templates and test detection before relying on automatic recording.",
 		"自動録画を使う前に、ローカルの開始/終了テンプレートを登録して検出テストを実行します。"));
 	automatic_note_->setWordWrap(true);
-	automatic_tab_layout->addWidget(automatic_note_);
-	automatic_tab_layout->addWidget(automatic_setup_button_);
-	automatic_tab_layout->addStretch(1);
+	setup_tab_layout->addWidget(automatic_note_);
+	setup_tab_layout->addWidget(automatic_setup_button_);
 
 	recording_card_ = make_card("#fff3df", "#ffd08a");
 	auto *recording_layout = qobject_cast<QVBoxLayout *>(recording_card_->layout());
@@ -560,7 +573,7 @@ void PluginUiController::register_ui()
 	upload_controls->addWidget(discard_upload_button_);
 	upload_controls->addWidget(mark_uploaded_button_);
 	upload_layout->addLayout(upload_controls);
-	recording_tab_layout->addWidget(upload_card_);
+	automatic_tab_layout->addWidget(upload_card_);
 
 	metadata_card_ = make_card("#fff7fb", "#ffb3d1");
 	auto *metadata_layout = qobject_cast<QVBoxLayout *>(metadata_card_->layout());
@@ -574,18 +587,84 @@ void PluginUiController::register_ui()
 	metadata_note_->setStyleSheet("color: #5c3650; font-size: 12px;");
 	metadata_layout->addWidget(metadata_note_);
 
+	metadata_match_label_ = make_value_label();
+	metadata_video_label_ = make_value_label();
+	metadata_status_label_ = make_value_label();
+	metadata_layout->addWidget(metadata_match_label_);
+	metadata_layout->addWidget(metadata_video_label_);
+
+	auto *metadata_form = new QFormLayout;
+	metadata_deck_input_ = new QComboBox;
+	metadata_deck_input_->setEditable(true);
+	for (const std::string &candidate : settings.deck_candidates) {
+		metadata_deck_input_->addItem(qstr_utf8(candidate));
+	}
+	metadata_opponent_input_ = new QComboBox;
+	metadata_opponent_input_->setEditable(true);
+	for (const std::string &candidate : settings.opponent_deck_candidates) {
+		metadata_opponent_input_->addItem(qstr_utf8(candidate));
+	}
+	metadata_result_input_ = new QLineEdit;
+	metadata_rank_input_ = new QLineEdit(qstr_utf8(settings.last_rank));
+	metadata_dp_input_ = new QLineEdit(qstr_utf8(settings.last_dp));
+	metadata_memo_input_ = new QTextEdit;
+	metadata_memo_input_->setMaximumHeight(80);
+	metadata_form->addRow(ui_text(ui_language_, "Deck", "自分のデッキ"), metadata_deck_input_);
+	metadata_form->addRow(ui_text(ui_language_, "Opponent deck", "相手のデッキ"), metadata_opponent_input_);
+	metadata_form->addRow(ui_text(ui_language_, "Result", "結果"), metadata_result_input_);
+	metadata_form->addRow(ui_text(ui_language_, "Rank", "ランク"), metadata_rank_input_);
+	metadata_form->addRow(ui_text(ui_language_, "DP", "DP"), metadata_dp_input_);
+	metadata_form->addRow(ui_text(ui_language_, "Memo", "メモ"), metadata_memo_input_);
+	metadata_layout->addLayout(metadata_form);
+
 	edit_metadata_button_ = new QPushButton(ui_text(ui_language_, "Edit Metadata", "メタデータ編集"));
 	preview_metadata_button_ = new QPushButton(ui_text(ui_language_, "Preview Upload Metadata", "アップロード文面プレビュー"));
+	reload_metadata_button_ = new QPushButton(ui_text(ui_language_, "Reload", "再読込"));
+	save_metadata_button_ = new QPushButton(ui_text(ui_language_, "Save", "保存"));
 	QObject::connect(edit_metadata_button_, &QPushButton::clicked, [this]() { request_edit_metadata(); });
 	QObject::connect(preview_metadata_button_, &QPushButton::clicked, [this]() { request_preview_upload_metadata(); });
+	QObject::connect(reload_metadata_button_, &QPushButton::clicked, [this]() { load_latest_metadata_into_dock(); });
+	QObject::connect(save_metadata_button_, &QPushButton::clicked, [this]() { save_metadata_from_dock(); });
 	style_button(edit_metadata_button_, "#d45087", "#ffffff");
 	style_button(preview_metadata_button_, "#8a2d5d", "#ffffff");
+	style_button(reload_metadata_button_, "#6b7280", "#ffffff");
+	style_button(save_metadata_button_, "#d45087", "#ffffff");
 	auto *metadata_controls = new QHBoxLayout;
+	metadata_controls->addWidget(reload_metadata_button_);
+	metadata_controls->addWidget(save_metadata_button_);
 	metadata_controls->addWidget(edit_metadata_button_);
 	metadata_controls->addWidget(preview_metadata_button_);
 	metadata_layout->addLayout(metadata_controls);
-	recording_tab_layout->addWidget(metadata_card_);
-	recording_tab_layout->addStretch(1);
+	metadata_layout->addWidget(metadata_status_label_);
+	settings_tab_layout->addWidget(metadata_card_);
+	settings_tab_layout->addStretch(1);
+
+	upload_template_card_ = make_card("#fff7fb", "#ffb3d1");
+	auto *upload_template_layout = qobject_cast<QVBoxLayout *>(upload_template_card_->layout());
+	upload_preview_title_label_ = add_card_title(upload_template_layout,
+						     language_is_japanese(ui_language_) ? "アップロード文面" : "Upload text",
+						     "#8a2d5d");
+	auto *template_form = new QFormLayout;
+	upload_title_template_input_ = new QLineEdit(qstr_utf8(settings.upload_title_template));
+	upload_description_template_input_ = new QTextEdit(qstr_utf8(settings.upload_description_template));
+	upload_description_template_input_->setMaximumHeight(110);
+	upload_tags_template_input_ = new QLineEdit(qstr_utf8(settings.upload_tags_template));
+	template_form->addRow(ui_text(ui_language_, "Title template", "タイトルテンプレート"), upload_title_template_input_);
+	template_form->addRow(ui_text(ui_language_, "Description template", "説明文テンプレート"), upload_description_template_input_);
+	template_form->addRow(ui_text(ui_language_, "Tags template", "タグテンプレート"), upload_tags_template_input_);
+	upload_template_layout->addLayout(template_form);
+	render_upload_preview_button_ = new QPushButton(ui_text(ui_language_, "Preview", "プレビュー"));
+	QObject::connect(render_upload_preview_button_, &QPushButton::clicked, [this]() { render_upload_preview_from_dock(); });
+	style_button(render_upload_preview_button_, "#8a2d5d", "#ffffff");
+	upload_template_layout->addWidget(render_upload_preview_button_);
+	upload_preview_description_ = new QTextEdit;
+	upload_preview_description_->setReadOnly(true);
+	upload_preview_description_->setMaximumHeight(130);
+	upload_preview_warning_label_ = make_value_label();
+	upload_template_layout->addWidget(upload_preview_description_);
+	upload_template_layout->addWidget(upload_preview_warning_label_);
+	automatic_tab_layout->addWidget(upload_template_card_);
+	automatic_tab_layout->addStretch(1);
 
 	diagnostics_group_ = new QGroupBox(ui_text(ui_language_, "Diagnostics", "診断"));
 	auto *diagnostics_form = new QFormLayout(diagnostics_group_);
@@ -596,15 +675,18 @@ void PluginUiController::register_ui()
 	logs_value_ = add_row(diagnostics_form, "Logs", &logs_label_);
 	ownership_value_ = add_row(diagnostics_form, "Ownership", &ownership_label_);
 	detail_value_ = add_row(diagnostics_form, "Detail", &detail_label_);
-	diagnostics_tab_layout->addWidget(diagnostics_group_);
-	diagnostics_tab_layout->addStretch(1);
+	diagnostics_details_button_ = new QPushButton(ui_text(ui_language_, "Show Details", "詳細を表示"));
+	QObject::connect(diagnostics_details_button_, &QPushButton::clicked, [this]() { toggle_diagnostics_details(); });
+	style_button(diagnostics_details_button_, "#6b7280", "#ffffff");
+	setup_tab_layout->addWidget(diagnostics_details_button_);
+	setup_tab_layout->addWidget(diagnostics_group_);
+	diagnostics_group_->setVisible(false);
+	setup_tab_layout->addStretch(1);
 
 	dock_tabs_->addTab(recording_tab, ui_text(ui_language_, "Record", "録画"));
-	dock_tabs_->addTab(setup_tab, ui_text(ui_language_, "Setup", "セットアップ"));
-	dock_tabs_->addTab(settings_tab, ui_text(ui_language_, "Settings", "設定"));
-	dock_tabs_->addTab(automatic_tab, ui_text(ui_language_, "Auto", "自動"));
-	dock_tabs_->addTab(help_tab, ui_text(ui_language_, "Help", "ヘルプ"));
-	dock_tabs_->addTab(diagnostics_tab, ui_text(ui_language_, "Diagnostics", "診断"));
+	dock_tabs_->addTab(settings_tab, ui_text(ui_language_, "Metadata", "メタデータ"));
+	dock_tabs_->addTab(automatic_tab, ui_text(ui_language_, "Upload", "アップロード"));
+	dock_tabs_->addTab(setup_tab, ui_text(ui_language_, "Manage", "管理"));
 	apply_ui_language();
 	apply_dock_theme(dock_theme_);
 
@@ -619,6 +701,7 @@ void PluginUiController::register_ui()
 	QObject::connect(refresh_timer_, &QTimer::timeout, [this]() { refresh(); });
 	refresh_timer_->start(1000);
 	refresh();
+	load_latest_metadata_into_dock();
 	blog(LOG_INFO, "%s dock registered id=%s", kLogPrefix, kDockId);
 }
 
@@ -637,6 +720,7 @@ void PluginUiController::apply_dock_theme(const std::string &theme)
 	style_card(recording_card_, palette.recording_bg, palette.recording_border);
 	style_card(upload_card_, palette.upload_bg, palette.upload_border);
 	style_card(metadata_card_, palette.metadata_bg, palette.metadata_border);
+	style_card(upload_template_card_, palette.metadata_bg, palette.metadata_border);
 	if (diagnostics_group_) {
 		diagnostics_group_->setStyleSheet(QString::fromUtf8(
 			"QGroupBox { color: #354f52; font-weight: 700; border: 1px solid %1; "
@@ -677,17 +761,30 @@ void PluginUiController::apply_dock_theme(const std::string &theme)
 	if (preview_metadata_button_) {
 		style_button(preview_metadata_button_, palette.header_bg, "#ffffff");
 	}
+	if (reload_metadata_button_) {
+		style_button(reload_metadata_button_, palette.secondary_bg, palette.secondary_fg);
+	}
+	if (save_metadata_button_) {
+		style_button(save_metadata_button_, palette.metadata_bg_button, palette.metadata_fg_button);
+	}
+	if (render_upload_preview_button_) {
+		style_button(render_upload_preview_button_, palette.header_bg, "#ffffff");
+	}
+	if (save_inline_settings_button_) {
+		style_button(save_inline_settings_button_, palette.settings_bg, palette.settings_fg);
+	}
+	if (diagnostics_details_button_) {
+		style_button(diagnostics_details_button_, palette.secondary_bg, palette.secondary_fg);
+	}
 }
 
 void PluginUiController::apply_ui_language()
 {
 	if (dock_tabs_) {
 		dock_tabs_->setTabText(0, ui_text(ui_language_, "Record", "録画"));
-		dock_tabs_->setTabText(1, ui_text(ui_language_, "Setup", "セットアップ"));
-		dock_tabs_->setTabText(2, ui_text(ui_language_, "Settings", "設定"));
-		dock_tabs_->setTabText(3, ui_text(ui_language_, "Auto", "自動"));
-		dock_tabs_->setTabText(4, ui_text(ui_language_, "Help", "ヘルプ"));
-		dock_tabs_->setTabText(5, ui_text(ui_language_, "Diagnostics", "診断"));
+		dock_tabs_->setTabText(1, ui_text(ui_language_, "Metadata", "メタデータ"));
+		dock_tabs_->setTabText(2, ui_text(ui_language_, "Upload", "アップロード"));
+		dock_tabs_->setTabText(3, ui_text(ui_language_, "Manage", "管理"));
 	}
 	if (setup_title_) {
 		setup_title_->setText(ui_text(ui_language_, "Setup", "セットアップ"));
@@ -794,6 +891,26 @@ void PluginUiController::apply_ui_language()
 	if (preview_metadata_button_) {
 		preview_metadata_button_->setText(ui_text(ui_language_, "Preview Upload Metadata", "アップロード文面プレビュー"));
 	}
+	if (reload_metadata_button_) {
+		reload_metadata_button_->setText(ui_text(ui_language_, "Reload", "再読込"));
+	}
+	if (save_metadata_button_) {
+		save_metadata_button_->setText(ui_text(ui_language_, "Save", "保存"));
+	}
+	if (render_upload_preview_button_) {
+		render_upload_preview_button_->setText(ui_text(ui_language_, "Preview", "プレビュー"));
+	}
+	if (save_inline_settings_button_) {
+		save_inline_settings_button_->setText(ui_text(ui_language_, "Save Settings", "設定を保存"));
+	}
+	if (diagnostics_details_button_) {
+		diagnostics_details_button_->setText(
+			ui_text(ui_language_, diagnostics_details_visible_ ? "Hide Details" : "Show Details",
+				diagnostics_details_visible_ ? "詳細を隠す" : "詳細を表示"));
+	}
+	if (upload_preview_title_label_) {
+		upload_preview_title_label_->setText(ui_text(ui_language_, "Upload text", "アップロード文面"));
+	}
 }
 
 void PluginUiController::unregister_ui()
@@ -860,6 +977,15 @@ void PluginUiController::refresh()
 	}
 	if (preview_metadata_button_) {
 		preview_metadata_button_->setEnabled(worker_running);
+	}
+	if (reload_metadata_button_) {
+		reload_metadata_button_->setEnabled(worker_running);
+	}
+	if (save_metadata_button_) {
+		save_metadata_button_->setEnabled(worker_running && current_match_id_ > 0);
+	}
+	if (render_upload_preview_button_) {
+		render_upload_preview_button_->setEnabled(worker_running && current_match_id_ > 0);
 	}
 	if (automatic_setup_button_) {
 		automatic_setup_button_->setEnabled(worker_running);
@@ -1085,12 +1211,12 @@ void PluginUiController::request_edit_metadata()
 		const QString message = fetched.status == MatchFetchStatus::not_found ?
 						QString::fromUtf8("No completed match metadata is available yet.") :
 						qstr_utf8(fetched.error.empty() ? "Worker metadata API is unavailable." : fetched.error);
-		QMessageBox::warning(dock_widget_, "Edit metadata", message);
+		QMessageBox::warning(dock_widget_, ui_text(ui_language_, "Edit metadata", "メタデータ編集"), message);
 		return;
 	}
 
 	QDialog dialog(dock_widget_);
-	dialog.setWindowTitle(QString::fromUtf8("Edit Match Metadata"));
+	dialog.setWindowTitle(ui_text(ui_language_, "Edit Match Metadata", "対戦メタデータ編集"));
 
 	auto *layout = new QVBoxLayout(&dialog);
 	auto *form = new QFormLayout;
@@ -1102,12 +1228,12 @@ void PluginUiController::request_edit_metadata()
 	auto *memo_input = new QTextEdit(qstr_utf8(fetched.match.memo));
 	memo_input->setAcceptRichText(false);
 
-	form->addRow("Deck", deck_input);
-	form->addRow("Opponent deck", opponent_input);
-	form->addRow("Result", result_input);
-	form->addRow("Rank", rank_input);
-	form->addRow("DP", dp_input);
-	form->addRow("Memo", memo_input);
+	form->addRow(ui_text(ui_language_, "Deck", "自分のデッキ"), deck_input);
+	form->addRow(ui_text(ui_language_, "Opponent deck", "相手のデッキ"), opponent_input);
+	form->addRow(ui_text(ui_language_, "Result", "結果"), result_input);
+	form->addRow(ui_text(ui_language_, "Rank", "ランク"), rank_input);
+	form->addRow(ui_text(ui_language_, "DP", "DP"), dp_input);
+	form->addRow(ui_text(ui_language_, "Memo", "メモ"), memo_input);
 	layout->addLayout(form);
 
 	auto *buttons = new QDialogButtonBox(QDialogButtonBox::Save | QDialogButtonBox::Cancel);
@@ -1131,7 +1257,7 @@ void PluginUiController::request_edit_metadata()
 	if (!result.accepted()) {
 		QMessageBox::warning(
 			dock_widget_,
-			"Edit metadata",
+			ui_text(ui_language_, "Edit metadata", "メタデータ編集"),
 			qstr_utf8(result.error.empty() ? "Metadata was rejected by the Worker." : result.error));
 		blog(LOG_WARNING, "%s metadata update failed status=%d http=%lu id=%d error=%s",
 		     kLogPrefix, static_cast<int>(result.status), result.http_status, updated.id, result.error.c_str());
@@ -1149,7 +1275,7 @@ void PluginUiController::request_preview_upload_metadata()
 		const QString message = fetched.status == MatchFetchStatus::not_found ?
 						QString::fromUtf8("No completed match metadata is available yet.") :
 						qstr_utf8(fetched.error.empty() ? "Worker metadata API is unavailable." : fetched.error);
-		QMessageBox::warning(dock_widget_, "Preview upload metadata", message);
+		QMessageBox::warning(dock_widget_, ui_text(ui_language_, "Preview upload metadata", "アップロード文面プレビュー"), message);
 		return;
 	}
 
@@ -1158,7 +1284,7 @@ void PluginUiController::request_preview_upload_metadata()
 	if (!preview.reachable()) {
 		QMessageBox::warning(
 			dock_widget_,
-			"Preview upload metadata",
+			ui_text(ui_language_, "Preview upload metadata", "アップロード文面プレビュー"),
 			qstr_utf8(preview.error.empty() ? "Upload metadata preview is unavailable." : preview.error));
 		blog(LOG_WARNING, "%s upload metadata preview failed status=%d http=%lu id=%d error=%s",
 		     kLogPrefix, static_cast<int>(preview.status), preview.http_status, fetched.match.id,
@@ -1167,7 +1293,7 @@ void PluginUiController::request_preview_upload_metadata()
 	}
 
 	QDialog dialog(dock_widget_);
-	dialog.setWindowTitle(QString::fromUtf8("Upload Metadata Preview"));
+	dialog.setWindowTitle(ui_text(ui_language_, "Upload Metadata Preview", "アップロード文面プレビュー"));
 
 	auto *layout = new QVBoxLayout(&dialog);
 	auto *form = new QFormLayout;
@@ -1182,8 +1308,11 @@ void PluginUiController::request_preview_upload_metadata()
 			preview.preview.warning + ". Use Edit Metadata before uploading if needed."));
 	warning->setWordWrap(true);
 
-	form->addRow("Title", title_preview);
-	form->addRow("Description", description_preview);
+	auto *tags_preview = new QLineEdit(qstr_utf8(preview.preview.tags));
+	tags_preview->setReadOnly(true);
+	form->addRow(ui_text(ui_language_, "Title", "タイトル"), title_preview);
+	form->addRow(ui_text(ui_language_, "Description", "説明文"), description_preview);
+	form->addRow(ui_text(ui_language_, "Tags", "タグ"), tags_preview);
 	layout->addLayout(form);
 	layout->addWidget(warning);
 
@@ -1193,6 +1322,193 @@ void PluginUiController::request_preview_upload_metadata()
 	dialog.exec();
 
 	blog(LOG_INFO, "%s upload metadata preview shown id=%d", kLogPrefix, preview.preview.match_id);
+}
+
+void PluginUiController::load_latest_metadata_into_dock()
+{
+	const MatchFetchResult fetched = worker_manager_.fetch_latest_match();
+	PluginSettings settings = load_plugin_settings();
+	if (!fetched.reachable()) {
+		current_match_id_ = 0;
+		if (metadata_match_label_) {
+			metadata_match_label_->setText(ui_text(ui_language_, "No completed match is available yet.",
+							       "完了した録画メタデータはまだありません。"));
+		}
+		if (metadata_status_label_) {
+			metadata_status_label_->setText(qstr_utf8(fetched.error));
+		}
+		return;
+	}
+
+	current_match_id_ = fetched.match.id;
+	if (metadata_match_label_) {
+		metadata_match_label_->setText(QString::fromUtf8("Match #%1").arg(fetched.match.id));
+	}
+	const WorkerStatusSnapshot snapshot = worker_manager_.status_snapshot();
+	const std::string video = !snapshot.recording_output_path.empty() ?
+					  snapshot.recording_output_path :
+					  (snapshot.queue_action_item_available ? snapshot.queue_action_item.item.video_path : "");
+	if (metadata_video_label_) {
+		metadata_video_label_->setText(video.empty() ?
+						       ui_text(ui_language_, "Preview: video path is not linked yet.",
+							       "プレビュー: 動画パスはまだ紐づいていません。") :
+						       ui_text(ui_language_, "Preview source: ", "確認対象: ") + qstr_utf8(video));
+	}
+	if (metadata_deck_input_) {
+		metadata_deck_input_->setCurrentText(qstr_utf8(fetched.match.deck_name.empty() ? settings.last_deck_name :
+									 fetched.match.deck_name));
+	}
+	if (metadata_opponent_input_) {
+		metadata_opponent_input_->setCurrentText(qstr_utf8(fetched.match.opponent_deck.empty() ?
+									     settings.last_opponent_deck :
+									     fetched.match.opponent_deck));
+	}
+	if (metadata_result_input_) {
+		metadata_result_input_->setText(qstr_utf8(fetched.match.result));
+	}
+	if (metadata_rank_input_) {
+		metadata_rank_input_->setText(qstr_utf8(fetched.match.rank.empty() ? settings.last_rank : fetched.match.rank));
+	}
+	if (metadata_dp_input_) {
+		metadata_dp_input_->setText(qstr_utf8(fetched.match.dp.empty() ? settings.last_dp : fetched.match.dp));
+	}
+	if (metadata_memo_input_) {
+		metadata_memo_input_->setPlainText(qstr_utf8(fetched.match.memo));
+	}
+	if (upload_title_template_input_) {
+		upload_title_template_input_->setText(qstr_utf8(fetched.match.title_template.empty() ?
+								 settings.upload_title_template :
+								 fetched.match.title_template));
+	}
+	if (upload_description_template_input_) {
+		upload_description_template_input_->setPlainText(qstr_utf8(fetched.match.description_template.empty() ?
+									  settings.upload_description_template :
+									  fetched.match.description_template));
+	}
+	if (upload_tags_template_input_) {
+		upload_tags_template_input_->setText(qstr_utf8(fetched.match.tags_template.empty() ?
+							       settings.upload_tags_template :
+							       fetched.match.tags_template));
+	}
+	if (metadata_status_label_) {
+		metadata_status_label_->setText(ui_text(ui_language_, "Loaded latest match.", "最新の対戦を読み込みました。"));
+	}
+}
+
+void PluginUiController::save_metadata_from_dock()
+{
+	if (current_match_id_ <= 0) {
+		load_latest_metadata_into_dock();
+	}
+	if (current_match_id_ <= 0) {
+		return;
+	}
+
+	PluginSettings settings = load_plugin_settings();
+	MatchMetadataPayload payload;
+	payload.id = current_match_id_;
+	payload.deck_name = combo_text(metadata_deck_input_);
+	payload.opponent_deck = combo_text(metadata_opponent_input_);
+	payload.result = metadata_result_input_ ? utf8_string(metadata_result_input_->text().trimmed()) : std::string{};
+	payload.rank = metadata_rank_input_ ? utf8_string(metadata_rank_input_->text().trimmed()) : std::string{};
+	payload.dp = metadata_dp_input_ ? utf8_string(metadata_dp_input_->text().trimmed()) : std::string{};
+	payload.memo = metadata_memo_input_ ? utf8_string(metadata_memo_input_->toPlainText().trimmed()) : std::string{};
+	payload.title_template = upload_title_template_input_ ? utf8_string(upload_title_template_input_->text()) :
+								settings.upload_title_template;
+	payload.description_template = upload_description_template_input_ ?
+					       utf8_string(upload_description_template_input_->toPlainText()) :
+					       settings.upload_description_template;
+	payload.tags_template = upload_tags_template_input_ ? utf8_string(upload_tags_template_input_->text()) :
+							      settings.upload_tags_template;
+
+	add_unique_candidate(settings.deck_candidates, payload.deck_name);
+	add_unique_candidate(settings.opponent_deck_candidates, payload.opponent_deck);
+	settings.last_deck_name = payload.deck_name;
+	settings.last_opponent_deck = payload.opponent_deck;
+	settings.last_rank = payload.rank;
+	settings.last_dp = payload.dp;
+	settings.upload_title_template = payload.title_template;
+	settings.upload_description_template = payload.description_template;
+	settings.upload_tags_template = payload.tags_template;
+	save_plugin_settings(settings);
+
+	const MetadataUpdateResult result = worker_manager_.update_match_metadata(payload);
+	if (!result.accepted()) {
+		if (metadata_status_label_) {
+			metadata_status_label_->setText(qstr_utf8(result.error.empty() ?
+								  "Metadata was rejected by the Worker." :
+								  result.error));
+		}
+		return;
+	}
+	if (metadata_status_label_) {
+		metadata_status_label_->setText(ui_text(ui_language_, "Saved. Previous deck/rank/DP values were retained.",
+							"保存しました。デッキ/ランク/DP は次回入力に引き継がれます。"));
+	}
+	render_upload_preview_from_dock();
+}
+
+void PluginUiController::render_upload_preview_from_dock()
+{
+	if (current_match_id_ <= 0) {
+		load_latest_metadata_into_dock();
+	}
+	if (current_match_id_ <= 0) {
+		return;
+	}
+
+	const UploadMetadataPreviewResult preview = worker_manager_.fetch_upload_metadata_preview(current_match_id_);
+	if (!preview.reachable()) {
+		if (upload_preview_warning_label_) {
+			upload_preview_warning_label_->setText(qstr_utf8(preview.error));
+		}
+		return;
+	}
+	if (upload_preview_title_label_) {
+		upload_preview_title_label_->setText(qstr_utf8(preview.preview.title));
+	}
+	if (upload_preview_description_) {
+		QString text = qstr_utf8(preview.preview.description);
+		if (!preview.preview.tags.empty()) {
+			text += QString::fromUtf8("\n\nTags: ") + qstr_utf8(preview.preview.tags);
+		}
+		upload_preview_description_->setPlainText(text);
+	}
+	if (upload_preview_warning_label_) {
+		upload_preview_warning_label_->setText(preview.preview.warning.empty() ?
+							       ui_text(ui_language_, "No preview warnings.",
+								       "プレビュー警告はありません。") :
+							       qstr_utf8(preview.preview.warning));
+	}
+}
+
+void PluginUiController::save_inline_settings()
+{
+	PluginSettings settings = load_plugin_settings();
+	bool ok = false;
+	const int port = settings_port_input_ ? settings_port_input_->text().toInt(&ok) : settings.endpoint.port;
+	settings.endpoint.host = settings_host_input_ ? settings_host_input_->text().toStdWString() : settings.endpoint.host;
+	settings.endpoint.port = static_cast<uint16_t>(ok && port > 0 && port <= 65535 ? port : settings.endpoint.port);
+	settings.user_data_dir = settings_user_data_input_ ? settings_user_data_input_->text().toStdWString() :
+							    settings.user_data_dir;
+	settings.dock_theme = settings_theme_input_ ? utf8_string(settings_theme_input_->currentData().toString()) :
+						      settings.dock_theme;
+	settings.ui_language = settings_language_input_ ? utf8_string(settings_language_input_->currentData().toString()) :
+							 settings.ui_language;
+	settings.restart_worker_on_change = true;
+	ui_language_ = settings.ui_language;
+	apply_ui_language();
+	apply_dock_theme(settings.dock_theme);
+	save_settings_and_restart(settings);
+}
+
+void PluginUiController::toggle_diagnostics_details()
+{
+	diagnostics_details_visible_ = !diagnostics_details_visible_;
+	if (diagnostics_group_) {
+		diagnostics_group_->setVisible(diagnostics_details_visible_);
+	}
+	apply_ui_language();
 }
 
 void PluginUiController::request_show_help()
@@ -1225,14 +1541,14 @@ void PluginUiController::request_show_help()
 void PluginUiController::request_automatic_setup()
 {
 	QDialog dialog(dock_widget_);
-	dialog.setWindowTitle("Automatic Recording Setup");
+	dialog.setWindowTitle(ui_text(ui_language_, "Automatic Recording Setup", "自動録画セットアップ"));
 
 	auto *layout = new QVBoxLayout(&dialog);
 	auto *form = new QFormLayout;
 
 	auto *kind_input = new QComboBox;
-	kind_input->addItem("Start template", QString::fromUtf8("start"));
-	kind_input->addItem("End template", QString::fromUtf8("end"));
+	kind_input->addItem(ui_text(ui_language_, "Start template", "開始テンプレート"), QString::fromUtf8("start"));
+	kind_input->addItem(ui_text(ui_language_, "End template", "終了テンプレート"), QString::fromUtf8("end"));
 	auto *path_input = new QLineEdit;
 	path_input->setPlaceholderText("C:/path/to/user_data/templates/duel-start.tpl");
 	auto *threshold_input = new QDoubleSpinBox;
@@ -1245,28 +1561,32 @@ void PluginUiController::request_automatic_setup()
 	confirmations_input->setValue(2);
 	auto *test_frame_input = new QTextEdit;
 	test_frame_input->setAcceptRichText(false);
-	test_frame_input->setPlaceholderText("Paste a local fixture string or test frame text. Do not paste secrets.");
+	test_frame_input->setPlaceholderText(ui_text(ui_language_,
+						    "Paste a local fixture string or test frame text. Do not paste secrets.",
+						    "ローカルのテスト文字列またはフレームテキストを貼り付けます。秘密情報は貼り付けないでください。"));
 	test_frame_input->setFixedHeight(84);
 
-	form->addRow("Template kind", kind_input);
-	form->addRow("Template path", path_input);
-	form->addRow("Threshold", threshold_input);
-	form->addRow("Confirmations", confirmations_input);
-	form->addRow("Test frame text", test_frame_input);
+	form->addRow(ui_text(ui_language_, "Template kind", "テンプレート種別"), kind_input);
+	form->addRow(ui_text(ui_language_, "Template path", "テンプレートパス"), path_input);
+	form->addRow(ui_text(ui_language_, "Threshold", "しきい値"), threshold_input);
+	form->addRow(ui_text(ui_language_, "Confirmations", "確認回数"), confirmations_input);
+	form->addRow(ui_text(ui_language_, "Test frame text", "テストフレーム文字列"), test_frame_input);
 	layout->addLayout(form);
 
 	auto *status = new QTextEdit;
 	status->setReadOnly(true);
 	status->setAcceptRichText(false);
-	status->setPlaceholderText("Validation, registration, and detection test results appear here.");
+	status->setPlaceholderText(ui_text(ui_language_,
+					  "Validation, registration, and detection test results appear here.",
+					  "検証、登録、検出テストの結果がここに表示されます。"));
 	status->setMinimumHeight(150);
 	layout->addWidget(status);
 
 	auto *buttons = new QHBoxLayout;
-	auto *validate_button = new QPushButton("Validate Setup");
-	auto *register_button = new QPushButton("Register Template");
-	auto *test_button = new QPushButton("Test Detection");
-	auto *close_button = new QPushButton("Close");
+	auto *validate_button = new QPushButton(ui_text(ui_language_, "Validate Setup", "セットアップ検証"));
+	auto *register_button = new QPushButton(ui_text(ui_language_, "Register Template", "テンプレート登録"));
+	auto *test_button = new QPushButton(ui_text(ui_language_, "Test Detection", "検出テスト"));
+	auto *close_button = new QPushButton(ui_text(ui_language_, "Close", "閉じる"));
 	buttons->addWidget(validate_button);
 	buttons->addWidget(register_button);
 	buttons->addWidget(test_button);
