@@ -24,7 +24,7 @@ class SqliteFoundationTests(unittest.TestCase):
 
             db_info = init_db(runtime_dirs=runtime_dirs)
             self.assertTrue(db_info.db_path.exists())
-            self.assertGreaterEqual(db_info.schema_version, 9)
+            self.assertGreaterEqual(db_info.schema_version, 10)
             self.assertEqual(
                 db_info.applied_migrations,
                 (
@@ -37,6 +37,7 @@ class SqliteFoundationTests(unittest.TestCase):
                     "0007_statistics_indexes",
                     "0008_runtime_optimization_indexes",
                     "0009_recording_match_link",
+                    "0010_upload_metadata_templates",
                 ),
             )
 
@@ -75,7 +76,7 @@ class SqliteFoundationTests(unittest.TestCase):
                 self.assertEqual(row[2], "{}")
 
                 metadata = conn.execute(
-                    "SELECT opponent_deck, memo, title_template, rank, dp, recording_session_id FROM matches WHERE id = ?;",
+                    "SELECT opponent_deck, memo, title_template, rank, dp, recording_session_id, description_template, tags_template FROM matches WHERE id = ?;",
                     (match_id,),
                 ).fetchone()
                 self.assertEqual(metadata[0], "")
@@ -84,6 +85,8 @@ class SqliteFoundationTests(unittest.TestCase):
                 self.assertEqual(metadata[3], "")
                 self.assertEqual(metadata[4], "")
                 self.assertEqual(metadata[5], "")
+                self.assertEqual(metadata[6], "")
+                self.assertEqual(metadata[7], "")
             finally:
                 conn.close()
 

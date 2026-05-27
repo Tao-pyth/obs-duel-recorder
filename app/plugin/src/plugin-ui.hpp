@@ -7,9 +7,12 @@
 
 class QLabel;
 class QPushButton;
+class QComboBox;
 class QFrame;
 class QGroupBox;
+class QLineEdit;
 class QTabWidget;
+class QTextEdit;
 class QTimer;
 class QWidget;
 
@@ -36,6 +39,11 @@ private:
 	void request_upload_mark_uploaded();
 	void request_edit_metadata();
 	void request_preview_upload_metadata();
+	void load_latest_metadata_into_dock();
+	void save_metadata_from_dock();
+	void render_upload_preview_from_dock();
+	void save_inline_settings();
+	void toggle_diagnostics_details();
 	void request_show_help();
 	void request_automatic_setup();
 	void handle_automatic_recording(const WorkerStatusSnapshot &snapshot);
@@ -69,6 +77,11 @@ private:
 	QLabel *review_item_label_ = nullptr;
 	QLabel *metadata_title_ = nullptr;
 	QLabel *metadata_note_ = nullptr;
+	QLabel *metadata_match_label_ = nullptr;
+	QLabel *metadata_video_label_ = nullptr;
+	QLabel *metadata_status_label_ = nullptr;
+	QLabel *upload_preview_title_label_ = nullptr;
+	QLabel *upload_preview_warning_label_ = nullptr;
 	QLabel *settings_note_ = nullptr;
 	QLabel *help_note_ = nullptr;
 	QLabel *automatic_note_ = nullptr;
@@ -83,8 +96,24 @@ private:
 	QFrame *recording_card_ = nullptr;
 	QFrame *upload_card_ = nullptr;
 	QFrame *metadata_card_ = nullptr;
+	QFrame *upload_template_card_ = nullptr;
 	QGroupBox *diagnostics_group_ = nullptr;
 	QTabWidget *dock_tabs_ = nullptr;
+	QComboBox *metadata_deck_input_ = nullptr;
+	QComboBox *metadata_opponent_input_ = nullptr;
+	QLineEdit *metadata_result_input_ = nullptr;
+	QLineEdit *metadata_rank_input_ = nullptr;
+	QLineEdit *metadata_dp_input_ = nullptr;
+	QTextEdit *metadata_memo_input_ = nullptr;
+	QLineEdit *upload_title_template_input_ = nullptr;
+	QTextEdit *upload_description_template_input_ = nullptr;
+	QLineEdit *upload_tags_template_input_ = nullptr;
+	QTextEdit *upload_preview_description_ = nullptr;
+	QLineEdit *settings_host_input_ = nullptr;
+	QLineEdit *settings_port_input_ = nullptr;
+	QLineEdit *settings_user_data_input_ = nullptr;
+	QComboBox *settings_theme_input_ = nullptr;
+	QComboBox *settings_language_input_ = nullptr;
 	QPushButton *settings_button_ = nullptr;
 	QPushButton *help_button_ = nullptr;
 	QPushButton *automatic_setup_button_ = nullptr;
@@ -95,9 +124,16 @@ private:
 	QPushButton *mark_uploaded_button_ = nullptr;
 	QPushButton *edit_metadata_button_ = nullptr;
 	QPushButton *preview_metadata_button_ = nullptr;
+	QPushButton *reload_metadata_button_ = nullptr;
+	QPushButton *save_metadata_button_ = nullptr;
+	QPushButton *render_upload_preview_button_ = nullptr;
+	QPushButton *save_inline_settings_button_ = nullptr;
+	QPushButton *diagnostics_details_button_ = nullptr;
 	std::string dock_theme_ = "classic";
 	std::string ui_language_ = "en";
 	OverlayStatePayload last_applied_overlay_state_;
+	int current_match_id_ = 0;
+	bool diagnostics_details_visible_ = false;
 	std::string automatic_recording_request_key_;
 	bool overlay_state_applied_ = false;
 	bool tools_menu_registered_ = false;

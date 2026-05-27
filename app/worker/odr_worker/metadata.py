@@ -8,8 +8,27 @@ from typing import Any
 
 
 DEFAULT_TITLE_TEMPLATE = "Duel {match_id} vs {opponent_deck} - {result}"
+DEFAULT_DESCRIPTION_TEMPLATE = "\n".join(
+    [
+        "OBS Duel Recorder Archive",
+        "",
+        "Match ID: {match_id}",
+        "Deck: {deck_name}",
+        "Opponent: {opponent_deck}",
+        "Result: {result}",
+        "Rank: {rank}",
+        "DP: {dp}",
+        "Started: {started_at}",
+        "Ended: {ended_at}",
+        "",
+        "Notes:",
+        "{memo}",
+    ]
+)
+DEFAULT_TAGS_TEMPLATE = "Yu-Gi-Oh! Master Duel,{deck_name},{opponent_deck},{result}"
 MAX_TITLE_LENGTH = 100
 MAX_DESCRIPTION_LENGTH = 5000
+MAX_TAGS_COUNT = 15
 FIELD_LIMITS = {
     "deck_name": 120,
     "opponent_deck": 120,
@@ -20,6 +39,8 @@ FIELD_LIMITS = {
     "started_at": 64,
     "ended_at": 64,
     "title_template": 200,
+    "description_template": 5000,
+    "tags_template": 500,
 }
 
 
@@ -45,6 +66,8 @@ class MatchMetadataRecord:
     started_at: str
     ended_at: str
     title_template: str
+    description_template: str
+    tags_template: str
 
     def as_payload(self) -> dict[str, object]:
         return {
@@ -61,6 +84,8 @@ class MatchMetadataRecord:
             "started_at": self.started_at,
             "ended_at": self.ended_at,
             "title_template": self.title_template,
+            "description_template": self.description_template,
+            "tags_template": self.tags_template,
         }
 
 
@@ -202,23 +227,34 @@ class MatchMetadataStore:
             "started_at": record.started_at or record.created_at,
             "ended_at": record.ended_at or "unknown",
             "created_at": record.created_at,
+            "memo": record.memo,
         }
         template = record.title_template or DEFAULT_TITLE_TEMPLATE
-        title = _truncate(template.format_map(_SafeDict(values)), MAX_TITLE_LENGTH)
-        description = _description(record, values)
+        description_template = record.description_template or DEFAULT_DESCRIPTION_TEMPLATE
+        tags_template = record.tags_template or DEFAULT_TAGS_TEMPLATE
+        title = _truncate(_render_template(template, values), MAX_TITLE_LENGTH)
+        description = _truncate(_render_template(description_template, values), MAX_DESCRIPTION_LENGTH)
+        tags = _tags(_render_template(tags_template, values))
         missing_fields = [
             field
             for field in ("deck_name", "opponent_deck", "result", "rank", "dp")
             if not getattr(record, field)
         ]
+        warnings = _upload_warnings(
+            missing_fields=missing_fields,
+            title=title,
+            description=description,
+            tags=tags,
+        )
         return {
             "match_id": record.id,
             "title": title,
             "description": description,
+            "tags": tags,
             "notes": record.memo,
             "variables": sorted(values.keys()),
             "missing_fields": missing_fields,
-            "warning": _missing_metadata_warning(missing_fields),
+            "warning": "\n".join(warnings),
         }
 
     def _get(self, conn: sqlite3.Connection, match_id: int) -> MatchMetadataRecord:
@@ -270,25 +306,45 @@ def _record_from_row(row: sqlite3.Row) -> MatchMetadataRecord:
         started_at=str(row["started_at"]),
         ended_at=str(row["ended_at"]),
         title_template=str(row["title_template"]),
+        description_template=str(row["description_template"]),
+        tags_template=str(row["tags_template"]),
     )
 
 
-def _description(record: MatchMetadataRecord, values: dict[str, str]) -> str:
-    lines = [
-        "OBS Duel Recorder Archive",
-        "",
-        f"Match ID: {record.id}",
-        f"Deck: {values['deck_name']}",
-        f"Opponent: {values['opponent_deck']}",
-        f"Result: {values['result']}",
-        f"Rank: {values['rank']}",
-        f"DP: {values['dp']}",
-        f"Started: {values['started_at']}",
-        f"Ended: {values['ended_at']}",
-    ]
-    if record.memo:
-        lines.extend(["", "Notes:", record.memo])
-    return _truncate("\n".join(lines), MAX_DESCRIPTION_LENGTH)
+def _render_template(template: str, values: dict[str, str]) -> str:
+    return template.format_map(_SafeDict(values))
+
+
+def _tags(value: str) -> list[str]:
+    tags: list[str] = []
+    seen: set[str] = set()
+    for item in value.replace("\n", ",").split(","):
+        tag = item.strip()
+        if not tag or tag.lower() in seen:
+            continue
+        tags.append(tag)
+        seen.add(tag.lower())
+    return tags[:MAX_TAGS_COUNT]
+
+
+def _upload_warnings(
+    *,
+    missing_fields: list[str],
+    title: str,
+    description: str,
+    tags: list[str],
+) -> list[str]:
+    warnings: list[str] = []
+    missing_warning = _missing_metadata_warning(missing_fields)
+    if missing_warning:
+        warnings.append(missing_warning)
+    if len(title) >= MAX_TITLE_LENGTH:
+        warnings.append(f"Title was truncated to {MAX_TITLE_LENGTH} characters")
+    if len(description) >= MAX_DESCRIPTION_LENGTH:
+        warnings.append(f"Description was truncated to {MAX_DESCRIPTION_LENGTH} characters")
+    if len(tags) >= MAX_TAGS_COUNT:
+        warnings.append(f"Tags were limited to {MAX_TAGS_COUNT} entries")
+    return warnings
 
 
 def _missing_metadata_warning(missing_fields: list[str]) -> str:

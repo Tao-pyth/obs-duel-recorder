@@ -19,7 +19,7 @@ The project is designed around an OBS Plugin + Python Worker architecture.
 Important versioning note:
 - Project versions are assigned only by user-visible usability.
 - The first user-ready OBS Plugin release is `v1.0.1`.
-- The `v1.1.2` target is Recovery Reporting, Distribution, UI, and i18n Update, coordinated through #457 after `v1.1.1`.
+- The `v1.1.3` target is Dock Workflow, Metadata, Upload, and UI State Update, coordinated through #470 after `v1.1.2`.
 - Existing `v1.x` and `v2.x` tags are legacy non-product tags from before this rule. They are not part of the active version sequence and are not proof of a usable OBS plugin release.
 - Existing legacy tags must not be moved or overwritten. Because a legacy `v1.1.0` tag exists, v1.1.x publication decisions must be recorded before release.
 
@@ -34,10 +34,10 @@ Latest release status:
 - Latest completed version gate: `v1.0` - First Usable OBS Plugin Release
 
 Current development target:
-- `v1.1.2` - Recovery Reporting, Distribution, UI, and i18n Update
+- `v1.1.3` - Dock Workflow, Metadata, Upload, and UI State Update
 
 Next roadmap target:
-- pending planning after `v1.1.2`
+- pending planning after `v1.1.3`
 
 ---
 
@@ -103,6 +103,16 @@ Active v1.1.2 issue set:
 - Japanese/English language selection from Settings
 - Help recovery note that explains language changes in the opposite language
 
+Active v1.1.3 issue set:
+- Record -> Metadata -> Upload -> Manage Dock workflow
+- direct Dock metadata editing with deck/opponent dropdown candidates
+- carry-over for deck, opponent deck, rank, and DP
+- editable upload title, description, and tag templates with preview
+- Worker-rendered upload metadata shared by preview and upload processing
+- localized metadata and automatic setup fallback dialogs
+- short UI state labels with raw diagnostics hidden behind detail controls
+- Material-inspired UI state and color role documentation
+
 ---
 
 ## Architecture
@@ -154,7 +164,7 @@ obs-duel-recorder/
 - Status: first usable OBS Plugin release published with ZIP and SHA256 assets
 - Latest completed version gate: [#401](https://github.com/Tao-pyth/obs-duel-recorder/issues/401)
 - Latest completed hardening issue set: [#440](https://github.com/Tao-pyth/obs-duel-recorder/issues/440)
-- Current development target: [#457](https://github.com/Tao-pyth/obs-duel-recorder/issues/457) / `v1.1.2`
+- Current development target: [#470](https://github.com/Tao-pyth/obs-duel-recorder/issues/470) / `v1.1.3`
 - Release record: [docs/release-history.md](docs/release-history.md)
 
 ### Completed Legacy Implementation Work
@@ -175,6 +185,7 @@ obs-duel-recorder/
 - `v1.1` - First Trial Usability Hardening
 - `v1.1.1` - Usability UI and Documentation Hardening
 - `v1.1.2` - Recovery Reporting, Distribution, UI, and i18n Update
+- `v1.1.3` - Dock Workflow, Metadata, Upload, and UI State Update
 
 ---
 
@@ -192,6 +203,9 @@ Key documents:
 - [v1.1.1 release readiness checklist](docs/release/v1.1.1-usability-ui-documentation-hardening-readiness.md)
 - [v1.1.2 acceptance checklist](docs/requirements/v1.1.2-recovery-reporting-distribution-ui-i18n-acceptance.md)
 - [v1.1.2 release readiness checklist](docs/release/v1.1.2-recovery-reporting-distribution-ui-i18n-readiness.md)
+- [v1.1.3 acceptance checklist](docs/requirements/v1.1.3-dock-workflow-metadata-upload-ui-acceptance.md)
+- [v1.1.3 release readiness checklist](docs/release/v1.1.3-dock-workflow-metadata-upload-ui-readiness.md)
+- [Dock workflow and UI state architecture](docs/architecture/dock-workflow-ui-state.md)
 - [Architecture docs](docs/architecture/)
 - [User docs (language selector / 日本語)](docs/user/index.md)
 - [Japanese user docs](docs/user/ja/index.md)

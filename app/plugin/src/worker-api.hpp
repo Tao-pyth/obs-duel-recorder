@@ -214,6 +214,9 @@ struct MatchMetadataPayload {
 	std::string rank;
 	std::string dp;
 	std::string memo;
+	std::string title_template;
+	std::string description_template;
+	std::string tags_template;
 };
 
 struct MatchFetchResult {
@@ -246,6 +249,7 @@ struct UploadMetadataPreviewPayload {
 	int match_id = 0;
 	std::string title;
 	std::string description;
+	std::string tags;
 	std::string notes;
 	std::string warning;
 };

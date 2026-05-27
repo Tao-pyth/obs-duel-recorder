@@ -107,6 +107,29 @@ class MatchMetadataApiTests(unittest.TestCase):
         self.assertEqual(metadata.json()["missing_fields"], ["rank", "dp"])
         self.assertEqual(metadata.json()["warning"], "Missing metadata fields: rank, dp")
 
+    def test_upload_metadata_templates_include_description_and_tags(self) -> None:
+        client, _ = self._client()
+        match_id = client.post(
+            "/matches",
+            json={
+                "deck_name": "Labrynth",
+                "opponent_deck": "Branded",
+                "result": "win",
+                "description_template": "Deck={deck_name}\nOpponent={opponent_deck}\nMemo={memo}",
+                "tags_template": "Master Duel,{deck_name},{opponent_deck},{deck_name}",
+                "memo": "Uploaded after review.",
+            },
+        ).json()["id"]
+
+        metadata = client.get(f"/matches/{match_id}/upload-metadata")
+
+        self.assertEqual(metadata.status_code, 200)
+        self.assertEqual(
+            metadata.json()["description"],
+            "Deck=Labrynth\nOpponent=Branded\nMemo=Uploaded after review.",
+        )
+        self.assertEqual(metadata.json()["tags"], ["Master Duel", "Labrynth", "Branded"])
+
     def test_title_generation_uses_fallbacks_and_length_limit(self) -> None:
         client, _ = self._client()
         match_id = client.post(

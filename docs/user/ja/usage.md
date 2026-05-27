@@ -18,11 +18,26 @@
 
 ## 手動操作
 
-OBS Dock から手動 Start/Stop を使えます。失敗時は `/recording/state` と Dock の diagnostic state を確認してください。
+OBS Dock から手動 Start/Stop を使えます。
+
+v1.1.3 以降の Dock は通常の流れに合わせて並びます。
+
+- `Record`: 録画状態、出力の紐づき、手動開始/停止
+- `Metadata`: 最新対戦の deck/opponent deck、result、rank、DP、memo の直接編集
+- `Upload`: アップロードキュー操作、タイトル/説明文/タグテンプレート、プレビュー
+- `Manage`: セットアップ状態、設定、ヘルプ、自動録画セットアップ、詳細診断
+
+失敗時は Manage の詳細診断、または `/recording/state` を確認してください。
 
 ## Match metadata
 
-match metadata には deck name、opponent deck、result、rank、DP、memo、title template を保存できます。YouTube upload metadata はこの情報から生成されます。
+match metadata には deck name、opponent deck、result、rank、DP、memo、title template、description template、tags template を保存できます。
+
+Deck と opponent deck は手入力できるプルダウンです。保存した値は候補として残り、OBS や Worker を再起動しても再利用できます。
+
+Deck、opponent deck、rank、DP は次の match が空欄の場合に前回保存値を引き継ぎます。必要に応じて直接書き換えられます。
+
+YouTube upload metadata は Worker が同じテンプレートから生成します。Upload タブのプレビューでタイトル、説明文、タグ、警告を確認してからアップロードしてください。
 
 ## 認識候補
 
