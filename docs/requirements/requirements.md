@@ -100,6 +100,7 @@ The system separates responsibilities into:
 - Setup validation must report actionable diagnostics for runtime path, OBS integration, OAuth, and templates.
 - OAuth validation must never return token or client-secret contents.
 - Local template setup must not distribute or commit game assets.
+- User-facing Plugin UI language selection must be stored in settings and recoverable through Help text if the user selects an unfamiliar language.
 
 ---
 
@@ -121,6 +122,7 @@ The system separates responsibilities into:
 - Release packaging should be produced as a GitHub Actions ZIP artifact.
 - The ZIP layout must include the Plugin DLL, Worker package, `update.bat`, and minimal user/developer docs needed for install/update.
 - A user-ready release ZIP must include a Worker executable path that normal users can run without manually installing Python, pip, or a virtual environment.
+- Release package validation must reject bundled Plugin or Worker binaries that are not Windows PE files or are CI/package-layout fixtures.
 - Source-based Worker execution may remain available as a developer fallback, but user-facing install/update flows must prefer the bundled Worker executable when present.
 - `update.bat` and Plugin Worker launch behavior must prefer the bundled Worker executable for packaged releases.
 - `user_data/`, logs, databases, screenshots, videos, OAuth files, and generated runtime exports must never be included in release ZIPs.

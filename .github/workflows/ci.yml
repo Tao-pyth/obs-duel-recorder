@@ -44,9 +44,9 @@ jobs:
         shell: powershell
         run: |
           New-Item -ItemType Directory -Force -Path build/plugin/Release | Out-Null
-          Set-Content -LiteralPath build/plugin/Release/obs-duel-recorder.dll -Value "ci fixture dll for package layout validation" -Encoding ASCII
+          Add-Type -TypeDefinition 'public class OdrPluginFixture { public static int Main(string[] args) { return 0; } }' -OutputAssembly build/plugin/Release/obs-duel-recorder.dll -OutputType Library
           New-Item -ItemType Directory -Force -Path build/worker/odr-worker | Out-Null
-          Set-Content -LiteralPath build/worker/odr-worker/odr-worker.exe -Value "ci fixture worker exe for package layout validation" -Encoding ASCII
+          Add-Type -TypeDefinition 'public class OdrWorkerFixture { public static int Main(string[] args) { return 0; } }' -OutputAssembly build/worker/odr-worker/odr-worker.exe -OutputType ConsoleApplication
           powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build_release_package.ps1 -Version v0.13.0 -PluginDllPath build/plugin/Release/obs-duel-recorder.dll -WorkerBundlePath build/worker/odr-worker -OutputDir build/release -Clean
 
   worker-tests:

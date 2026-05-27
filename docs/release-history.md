@@ -271,6 +271,29 @@ The version tracking issue may contain the working release summary, but finalize
 - Publication decision: publish final GitHub Release assets from this terminal after establishing the CMake, Visual Studio Build Tools, Qt, and OBS build environment.
 - Status: released user-ready OBS Plugin package
 
+### v1.1.2 - Recovery Reporting, Distribution, UI, And i18n
+
+- Version tracking issue: #457
+- Acceptance checklist: `docs/requirements/v1.1.2-recovery-reporting-distribution-ui-i18n-acceptance.md`
+- Release readiness checklist: `docs/release/v1.1.2-recovery-reporting-distribution-ui-i18n-readiness.md`
+- Release summary: `docs/release/v1.1.2-release-summary.md`
+- Tag: `v1.1.2`
+- Tag target: pending final merged commit
+- Release candidate built at: `2026-05-27`
+- Major child issues: #453, #454, #455, #456
+- Final ZIP evidence: `obs-duel-recorder-v1.1.2.zip`
+- Final ZIP SHA256: `7BD3190BEC62EBE2CF75DB96C64B7E516020BBDB7DBA1DD315297D853BD34939`
+- Rebuilt Plugin DLL SHA256: `CF6E925320877E395281FB2B8C64E983F8FB2D07E54601E2A0DB33EB13ECA650`
+- Rebuilt Worker EXE SHA256: `2BC232AE91BFEC5A0973C7EEC90DC18016532CF49A8331E4240305F99302DE65`
+- Validation evidence: Worker unit tests passed; Markdown link validation
+  passed; Japanese user docs coverage passed; documentation site build passed;
+  final release package validation passed; text Plugin/Worker fixture package
+  inputs were rejected; installed OBS smoke reached Worker API `2.3` / Worker
+  version `2.3.0` without `windows_error=216`.
+- GitHub Release: pending publication after final merge/tag.
+- Status: release candidate validated locally; publication pending final merged
+  commit and GitHub Release upload.
+
 ### Legacy tag v1.0.0 - YouTube Upload MVP
 
 - Version tracking issue: #318

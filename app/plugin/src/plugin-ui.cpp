@@ -20,6 +20,7 @@
 #include <QLineEdit>
 #include <QMessageBox>
 #include <QPushButton>
+#include <QTabWidget>
 #include <QTextEdit>
 #include <QSpinBox>
 #include <QTimer>
@@ -49,6 +50,16 @@ std::string utf8_string(const QString &value)
 {
 	const QByteArray bytes = value.toUtf8();
 	return std::string(bytes.constData(), static_cast<size_t>(bytes.size()));
+}
+
+bool language_is_japanese(const std::string &language)
+{
+	return language == "ja";
+}
+
+QString ui_text(const std::string &language, const char *english, const char *japanese)
+{
+	return QString::fromUtf8(language_is_japanese(language) ? japanese : english);
 }
 
 const char *state_name(WorkerDiagnosticState state)
@@ -223,13 +234,17 @@ std::string review_item_summary(const WorkerStatusSnapshot &snapshot)
 	return out.str();
 }
 
-QLabel *add_row(QFormLayout *layout, const char *name)
+QLabel *add_row(QFormLayout *layout, const char *name, QLabel **name_label = nullptr)
 {
+	auto *label = new QLabel(QString::fromUtf8(name));
+	if (name_label != nullptr) {
+		*name_label = label;
+	}
 	auto *value = new QLabel;
 	value->setTextInteractionFlags(Qt::TextSelectableByMouse);
 	value->setWordWrap(true);
 	value->setStyleSheet("color: #1f2933;");
-	layout->addRow(QString::fromUtf8(name), value);
+	layout->addRow(label, value);
 	return value;
 }
 
@@ -309,9 +324,12 @@ QLabel *make_value_label()
 	return value;
 }
 
-QLabel *add_card_value(QVBoxLayout *layout, const char *name)
+QLabel *add_card_value(QVBoxLayout *layout, const char *name, QLabel **name_label = nullptr)
 {
 	auto *label = new QLabel(QString::fromUtf8(name));
+	if (name_label != nullptr) {
+		*name_label = label;
+	}
 	label->setStyleSheet("color: #52616b; font-size: 11px; font-weight: 600;");
 	auto *value = make_value_label();
 	layout->addWidget(label);
@@ -402,6 +420,7 @@ void PluginUiController::register_ui()
 	dock_widget_->setMinimumWidth(320);
 	PluginSettings settings = load_plugin_settings();
 	dock_theme_ = settings.dock_theme;
+	ui_language_ = settings.ui_language;
 
 	auto *root = new QVBoxLayout(dock_widget_);
 	root->setContentsMargins(12, 12, 12, 12);
@@ -417,37 +436,99 @@ void PluginUiController::register_ui()
 	header_layout->addWidget(state_value_);
 	root->addWidget(header_card_);
 
+	dock_tabs_ = new QTabWidget;
+	dock_tabs_->setDocumentMode(true);
+	root->addWidget(dock_tabs_);
+
+	auto *recording_tab = new QWidget;
+	auto *recording_tab_layout = new QVBoxLayout(recording_tab);
+	recording_tab_layout->setContentsMargins(0, 0, 0, 0);
+	recording_tab_layout->setSpacing(10);
+
+	auto *setup_tab = new QWidget;
+	auto *setup_tab_layout = new QVBoxLayout(setup_tab);
+	setup_tab_layout->setContentsMargins(0, 0, 0, 0);
+	setup_tab_layout->setSpacing(10);
+
+	auto *diagnostics_tab = new QWidget;
+	auto *diagnostics_tab_layout = new QVBoxLayout(diagnostics_tab);
+	diagnostics_tab_layout->setContentsMargins(0, 0, 0, 0);
+	diagnostics_tab_layout->setSpacing(10);
+
+	auto *settings_tab = new QWidget;
+	auto *settings_tab_layout = new QVBoxLayout(settings_tab);
+	settings_tab_layout->setContentsMargins(0, 0, 0, 0);
+	settings_tab_layout->setSpacing(10);
+
+	auto *help_tab = new QWidget;
+	auto *help_tab_layout = new QVBoxLayout(help_tab);
+	help_tab_layout->setContentsMargins(0, 0, 0, 0);
+	help_tab_layout->setSpacing(10);
+
+	auto *automatic_tab = new QWidget;
+	auto *automatic_tab_layout = new QVBoxLayout(automatic_tab);
+	automatic_tab_layout->setContentsMargins(0, 0, 0, 0);
+	automatic_tab_layout->setSpacing(10);
+
 	setup_card_ = make_card("#e8f7f4", "#84d9cf");
 	auto *setup_layout = qobject_cast<QVBoxLayout *>(setup_card_->layout());
-	add_card_title(setup_layout, "Setup", "#0f4c5c");
-	setup_value_ = add_card_value(setup_layout, "Readiness");
-	action_value_ = add_card_value(setup_layout, "Next action");
+	setup_title_ = add_card_title(setup_layout, language_is_japanese(ui_language_) ? "セットアップ" : "Setup", "#0f4c5c");
+	setup_value_ = add_card_value(setup_layout, language_is_japanese(ui_language_) ? "準備状態" : "Readiness",
+				      &setup_label_);
+	action_value_ = add_card_value(setup_layout, language_is_japanese(ui_language_) ? "次の操作" : "Next action",
+				       &action_label_);
+	setup_tab_layout->addWidget(setup_card_);
+	setup_tab_layout->addStretch(1);
 
-	settings_button_ = new QPushButton("Settings");
-	help_button_ = new QPushButton("Help");
-	automatic_setup_button_ = new QPushButton("Automatic Setup");
+	settings_button_ = new QPushButton(ui_text(ui_language_, "Open Settings", "設定を開く"));
+	help_button_ = new QPushButton(ui_text(ui_language_, "Open Help", "ヘルプを開く"));
+	automatic_setup_button_ = new QPushButton(ui_text(ui_language_, "Open Automatic Setup", "自動録画セットアップを開く"));
 	QObject::connect(settings_button_, &QPushButton::clicked, [this]() { show_settings_dialog(); });
 	QObject::connect(help_button_, &QPushButton::clicked, [this]() { request_show_help(); });
 	QObject::connect(automatic_setup_button_, &QPushButton::clicked, [this]() { request_automatic_setup(); });
 	style_button(settings_button_, "#2ec4b6", "#073b3a");
 	style_button(help_button_, "#52796f", "#ffffff");
 	style_button(automatic_setup_button_, "#52796f", "#ffffff");
-	auto *setup_controls = new QHBoxLayout;
-	setup_controls->addWidget(settings_button_);
-	setup_controls->addWidget(help_button_);
-	setup_controls->addWidget(automatic_setup_button_);
-	setup_layout->addLayout(setup_controls);
-	root->addWidget(setup_card_);
+
+	settings_note_ = new QLabel(ui_text(
+		ui_language_,
+		"Change runtime path, theme, and language. Saving restarts the Worker.",
+		"実行データ保存先、テーマ、言語を変更します。保存すると Worker を再起動します。"));
+	settings_note_->setWordWrap(true);
+	settings_tab_layout->addWidget(settings_note_);
+	settings_tab_layout->addWidget(settings_button_);
+	settings_tab_layout->addStretch(1);
+
+	help_note_ = new QLabel(ui_text(
+		ui_language_,
+		"Open task-focused help for setup, recording, upload review, diagnostics, and language recovery.",
+		"セットアップ、録画、アップロード確認、診断、言語復旧のヘルプを開きます。"));
+	help_note_->setWordWrap(true);
+	help_tab_layout->addWidget(help_note_);
+	help_tab_layout->addWidget(help_button_);
+	help_tab_layout->addStretch(1);
+
+	automatic_note_ = new QLabel(ui_text(
+		ui_language_,
+		"Register local start/end templates and test detection before relying on automatic recording.",
+		"自動録画を使う前に、ローカルの開始/終了テンプレートを登録して検出テストを実行します。"));
+	automatic_note_->setWordWrap(true);
+	automatic_tab_layout->addWidget(automatic_note_);
+	automatic_tab_layout->addWidget(automatic_setup_button_);
+	automatic_tab_layout->addStretch(1);
 
 	recording_card_ = make_card("#fff3df", "#ffd08a");
 	auto *recording_layout = qobject_cast<QVBoxLayout *>(recording_card_->layout());
-	add_card_title(recording_layout, "Recording", "#7c4700");
-	recording_value_ = add_card_value(recording_layout, "State");
-	output_value_ = add_card_value(recording_layout, "Output");
+	recording_title_ = add_card_title(recording_layout, language_is_japanese(ui_language_) ? "録画" : "Recording",
+					  "#7c4700");
+	recording_value_ = add_card_value(recording_layout, language_is_japanese(ui_language_) ? "状態" : "State",
+					  &recording_label_);
+	output_value_ = add_card_value(recording_layout, language_is_japanese(ui_language_) ? "出力" : "Output",
+				       &output_label_);
 
 	auto *recording_controls = new QHBoxLayout;
-	start_button_ = new QPushButton("Start Recording");
-	stop_button_ = new QPushButton("Stop Recording");
+	start_button_ = new QPushButton(ui_text(ui_language_, "Start Recording", "録画開始"));
+	stop_button_ = new QPushButton(ui_text(ui_language_, "Stop Recording", "録画停止"));
 	QObject::connect(start_button_, &QPushButton::clicked, [this]() { request_manual_start(); });
 	QObject::connect(stop_button_, &QPushButton::clicked, [this]() { request_manual_stop(); });
 	style_button(start_button_, "#ff9f1c", "#3d2400");
@@ -455,18 +536,20 @@ void PluginUiController::register_ui()
 	recording_controls->addWidget(start_button_);
 	recording_controls->addWidget(stop_button_);
 	recording_layout->addLayout(recording_controls);
-	root->addWidget(recording_card_);
+	recording_tab_layout->addWidget(recording_card_);
 
 	upload_card_ = make_card("#edf2ff", "#b6c7ff");
 	auto *upload_layout = qobject_cast<QVBoxLayout *>(upload_card_->layout());
-	add_card_title(upload_layout, "Upload Review", "#304c89");
-	queue_value_ = add_card_value(upload_layout, "Queue");
-	review_item_value_ = add_card_value(upload_layout, "Review item");
+	upload_title_ = add_card_title(upload_layout, language_is_japanese(ui_language_) ? "アップロード確認" : "Upload Review",
+				       "#304c89");
+	queue_value_ = add_card_value(upload_layout, language_is_japanese(ui_language_) ? "キュー" : "Queue", &queue_label_);
+	review_item_value_ = add_card_value(upload_layout, language_is_japanese(ui_language_) ? "確認項目" : "Review item",
+					    &review_item_label_);
 
 	auto *upload_controls = new QHBoxLayout;
-	retry_upload_button_ = new QPushButton("Retry Upload");
-	discard_upload_button_ = new QPushButton("Discard Upload");
-	mark_uploaded_button_ = new QPushButton("Mark Uploaded");
+	retry_upload_button_ = new QPushButton(ui_text(ui_language_, "Retry Upload", "再試行"));
+	discard_upload_button_ = new QPushButton(ui_text(ui_language_, "Discard Upload", "破棄"));
+	mark_uploaded_button_ = new QPushButton(ui_text(ui_language_, "Mark Uploaded", "アップロード済みにする"));
 	QObject::connect(retry_upload_button_, &QPushButton::clicked, [this]() { request_upload_retry(); });
 	QObject::connect(discard_upload_button_, &QPushButton::clicked, [this]() { request_upload_discard(); });
 	QObject::connect(mark_uploaded_button_, &QPushButton::clicked, [this]() { request_upload_mark_uploaded(); });
@@ -477,18 +560,22 @@ void PluginUiController::register_ui()
 	upload_controls->addWidget(discard_upload_button_);
 	upload_controls->addWidget(mark_uploaded_button_);
 	upload_layout->addLayout(upload_controls);
-	root->addWidget(upload_card_);
+	recording_tab_layout->addWidget(upload_card_);
 
 	metadata_card_ = make_card("#fff7fb", "#ffb3d1");
 	auto *metadata_layout = qobject_cast<QVBoxLayout *>(metadata_card_->layout());
-	add_card_title(metadata_layout, "Metadata", "#8a2d5d");
-	auto *metadata_note = new QLabel("Review match fields and generated upload text before publishing.");
-	metadata_note->setWordWrap(true);
-	metadata_note->setStyleSheet("color: #5c3650; font-size: 12px;");
-	metadata_layout->addWidget(metadata_note);
+	metadata_title_ = add_card_title(metadata_layout, language_is_japanese(ui_language_) ? "メタデータ" : "Metadata",
+					 "#8a2d5d");
+	metadata_note_ = new QLabel(ui_text(
+		ui_language_,
+		"Review match fields and generated upload text before publishing.",
+		"公開前に対戦情報と生成されたアップロード文面を確認します。"));
+	metadata_note_->setWordWrap(true);
+	metadata_note_->setStyleSheet("color: #5c3650; font-size: 12px;");
+	metadata_layout->addWidget(metadata_note_);
 
-	edit_metadata_button_ = new QPushButton("Edit Metadata");
-	preview_metadata_button_ = new QPushButton("Preview Upload Metadata");
+	edit_metadata_button_ = new QPushButton(ui_text(ui_language_, "Edit Metadata", "メタデータ編集"));
+	preview_metadata_button_ = new QPushButton(ui_text(ui_language_, "Preview Upload Metadata", "アップロード文面プレビュー"));
 	QObject::connect(edit_metadata_button_, &QPushButton::clicked, [this]() { request_edit_metadata(); });
 	QObject::connect(preview_metadata_button_, &QPushButton::clicked, [this]() { request_preview_upload_metadata(); });
 	style_button(edit_metadata_button_, "#d45087", "#ffffff");
@@ -497,19 +584,28 @@ void PluginUiController::register_ui()
 	metadata_controls->addWidget(edit_metadata_button_);
 	metadata_controls->addWidget(preview_metadata_button_);
 	metadata_layout->addLayout(metadata_controls);
-	root->addWidget(metadata_card_);
+	recording_tab_layout->addWidget(metadata_card_);
+	recording_tab_layout->addStretch(1);
 
-	diagnostics_group_ = new QGroupBox("Diagnostics");
+	diagnostics_group_ = new QGroupBox(ui_text(ui_language_, "Diagnostics", "診断"));
 	auto *diagnostics_form = new QFormLayout(diagnostics_group_);
 	diagnostics_form->setFieldGrowthPolicy(QFormLayout::AllNonFixedFieldsGrow);
-	endpoint_value_ = add_row(diagnostics_form, "Endpoint");
-	user_data_value_ = add_row(diagnostics_form, "User data");
-	worker_path_value_ = add_row(diagnostics_form, "Worker path");
-	logs_value_ = add_row(diagnostics_form, "Logs");
-	ownership_value_ = add_row(diagnostics_form, "Ownership");
-	detail_value_ = add_row(diagnostics_form, "Detail");
-	root->addWidget(diagnostics_group_);
-	root->addStretch(1);
+	endpoint_value_ = add_row(diagnostics_form, "Endpoint", &endpoint_label_);
+	user_data_value_ = add_row(diagnostics_form, "User data", &user_data_label_);
+	worker_path_value_ = add_row(diagnostics_form, "Worker path", &worker_path_label_);
+	logs_value_ = add_row(diagnostics_form, "Logs", &logs_label_);
+	ownership_value_ = add_row(diagnostics_form, "Ownership", &ownership_label_);
+	detail_value_ = add_row(diagnostics_form, "Detail", &detail_label_);
+	diagnostics_tab_layout->addWidget(diagnostics_group_);
+	diagnostics_tab_layout->addStretch(1);
+
+	dock_tabs_->addTab(recording_tab, ui_text(ui_language_, "Record", "録画"));
+	dock_tabs_->addTab(setup_tab, ui_text(ui_language_, "Setup", "セットアップ"));
+	dock_tabs_->addTab(settings_tab, ui_text(ui_language_, "Settings", "設定"));
+	dock_tabs_->addTab(automatic_tab, ui_text(ui_language_, "Auto", "自動"));
+	dock_tabs_->addTab(help_tab, ui_text(ui_language_, "Help", "ヘルプ"));
+	dock_tabs_->addTab(diagnostics_tab, ui_text(ui_language_, "Diagnostics", "診断"));
+	apply_ui_language();
 	apply_dock_theme(dock_theme_);
 
 	if (!obs_frontend_add_dock_by_id(kDockId, "OBS Duel Recorder", dock_widget_)) {
@@ -580,6 +676,123 @@ void PluginUiController::apply_dock_theme(const std::string &theme)
 	}
 	if (preview_metadata_button_) {
 		style_button(preview_metadata_button_, palette.header_bg, "#ffffff");
+	}
+}
+
+void PluginUiController::apply_ui_language()
+{
+	if (dock_tabs_) {
+		dock_tabs_->setTabText(0, ui_text(ui_language_, "Record", "録画"));
+		dock_tabs_->setTabText(1, ui_text(ui_language_, "Setup", "セットアップ"));
+		dock_tabs_->setTabText(2, ui_text(ui_language_, "Settings", "設定"));
+		dock_tabs_->setTabText(3, ui_text(ui_language_, "Auto", "自動"));
+		dock_tabs_->setTabText(4, ui_text(ui_language_, "Help", "ヘルプ"));
+		dock_tabs_->setTabText(5, ui_text(ui_language_, "Diagnostics", "診断"));
+	}
+	if (setup_title_) {
+		setup_title_->setText(ui_text(ui_language_, "Setup", "セットアップ"));
+	}
+	if (setup_label_) {
+		setup_label_->setText(ui_text(ui_language_, "Readiness", "準備状態"));
+	}
+	if (action_label_) {
+		action_label_->setText(ui_text(ui_language_, "Next action", "次の操作"));
+	}
+	if (recording_title_) {
+		recording_title_->setText(ui_text(ui_language_, "Recording", "録画"));
+	}
+	if (recording_label_) {
+		recording_label_->setText(ui_text(ui_language_, "State", "状態"));
+	}
+	if (output_label_) {
+		output_label_->setText(ui_text(ui_language_, "Output", "出力"));
+	}
+	if (upload_title_) {
+		upload_title_->setText(ui_text(ui_language_, "Upload Review", "アップロード確認"));
+	}
+	if (queue_label_) {
+		queue_label_->setText(ui_text(ui_language_, "Queue", "キュー"));
+	}
+	if (review_item_label_) {
+		review_item_label_->setText(ui_text(ui_language_, "Review item", "確認項目"));
+	}
+	if (metadata_title_) {
+		metadata_title_->setText(ui_text(ui_language_, "Metadata", "メタデータ"));
+	}
+	if (metadata_note_) {
+		metadata_note_->setText(ui_text(
+			ui_language_,
+			"Review match fields and generated upload text before publishing.",
+			"公開前に対戦情報と生成されたアップロード文面を確認します。"));
+	}
+	if (settings_note_) {
+		settings_note_->setText(ui_text(
+			ui_language_,
+			"Change runtime path, theme, and language. Saving restarts the Worker.",
+			"実行データ保存先、テーマ、言語を変更します。保存すると Worker を再起動します。"));
+	}
+	if (help_note_) {
+		help_note_->setText(ui_text(
+			ui_language_,
+			"Open task-focused help for setup, recording, upload review, diagnostics, and language recovery.",
+			"セットアップ、録画、アップロード確認、診断、言語復旧のヘルプを開きます。"));
+	}
+	if (automatic_note_) {
+		automatic_note_->setText(ui_text(
+			ui_language_,
+			"Register local start/end templates and test detection before relying on automatic recording.",
+			"自動録画を使う前に、ローカルの開始/終了テンプレートを登録して検出テストを実行します。"));
+	}
+	if (diagnostics_group_) {
+		diagnostics_group_->setTitle(ui_text(ui_language_, "Diagnostics", "診断"));
+	}
+	if (endpoint_label_) {
+		endpoint_label_->setText(ui_text(ui_language_, "Endpoint", "エンドポイント"));
+	}
+	if (user_data_label_) {
+		user_data_label_->setText(ui_text(ui_language_, "User data", "ユーザーデータ"));
+	}
+	if (worker_path_label_) {
+		worker_path_label_->setText(ui_text(ui_language_, "Worker path", "Worker パス"));
+	}
+	if (logs_label_) {
+		logs_label_->setText(ui_text(ui_language_, "Logs", "ログ"));
+	}
+	if (ownership_label_) {
+		ownership_label_->setText(ui_text(ui_language_, "Ownership", "所有状態"));
+	}
+	if (detail_label_) {
+		detail_label_->setText(ui_text(ui_language_, "Detail", "詳細"));
+	}
+	if (settings_button_) {
+		settings_button_->setText(ui_text(ui_language_, "Open Settings", "設定を開く"));
+	}
+	if (help_button_) {
+		help_button_->setText(ui_text(ui_language_, "Open Help", "ヘルプを開く"));
+	}
+	if (automatic_setup_button_) {
+		automatic_setup_button_->setText(ui_text(ui_language_, "Open Automatic Setup", "自動録画セットアップを開く"));
+	}
+	if (start_button_) {
+		start_button_->setText(ui_text(ui_language_, "Start Recording", "録画開始"));
+	}
+	if (stop_button_) {
+		stop_button_->setText(ui_text(ui_language_, "Stop Recording", "録画停止"));
+	}
+	if (retry_upload_button_) {
+		retry_upload_button_->setText(ui_text(ui_language_, "Retry Upload", "再試行"));
+	}
+	if (discard_upload_button_) {
+		discard_upload_button_->setText(ui_text(ui_language_, "Discard Upload", "破棄"));
+	}
+	if (mark_uploaded_button_) {
+		mark_uploaded_button_->setText(ui_text(ui_language_, "Mark Uploaded", "アップロード済みにする"));
+	}
+	if (edit_metadata_button_) {
+		edit_metadata_button_->setText(ui_text(ui_language_, "Edit Metadata", "メタデータ編集"));
+	}
+	if (preview_metadata_button_) {
+		preview_metadata_button_->setText(ui_text(ui_language_, "Preview Upload Metadata", "アップロード文面プレビュー"));
 	}
 }
 
@@ -681,7 +894,7 @@ void PluginUiController::show_settings_dialog()
 	PluginSettings settings = load_plugin_settings();
 
 	QDialog dialog(dock_widget_);
-	dialog.setWindowTitle("OBS Duel Recorder Settings");
+	dialog.setWindowTitle(ui_text(ui_language_, "OBS Duel Recorder Settings", "OBS Duel Recorder 設定"));
 
 	auto *layout = new QVBoxLayout(&dialog);
 	auto *form = new QFormLayout;
@@ -697,18 +910,27 @@ void PluginUiController::show_settings_dialog()
 	theme_input->addItem("Bright", QString::fromUtf8("bright"));
 	const int theme_index = theme_input->findData(QString::fromUtf8(settings.dock_theme.c_str()));
 	theme_input->setCurrentIndex(theme_index >= 0 ? theme_index : 0);
+	auto *language_input = new QComboBox;
+	language_input->addItem("English", QString::fromUtf8("en"));
+	language_input->addItem(QString::fromUtf8("日本語"), QString::fromUtf8("ja"));
+	const int language_index = language_input->findData(QString::fromUtf8(settings.ui_language.c_str()));
+	language_input->setCurrentIndex(language_index >= 0 ? language_index : 0);
 	auto *settings_path = new QLabel(qstr_wide(settings.settings_path));
 	settings_path->setTextInteractionFlags(Qt::TextSelectableByMouse);
 	settings_path->setWordWrap(true);
 
-	form->addRow("Host", host_input);
-	form->addRow("Port", port_input);
-	form->addRow("User data dir", user_data_input);
-	form->addRow("Dock theme", theme_input);
-	form->addRow("Settings file", settings_path);
+	form->addRow(ui_text(ui_language_, "Host", "ホスト"), host_input);
+	form->addRow(ui_text(ui_language_, "Port", "ポート"), port_input);
+	form->addRow(ui_text(ui_language_, "User data dir", "ユーザーデータ保存先"), user_data_input);
+	form->addRow(ui_text(ui_language_, "Dock theme", "Dock テーマ"), theme_input);
+	form->addRow(ui_text(ui_language_, "Language", "言語"), language_input);
+	form->addRow(ui_text(ui_language_, "Settings file", "設定ファイル"), settings_path);
 	layout->addLayout(form);
 
-	auto *note = new QLabel("Saving restarts the Worker with the persisted settings.");
+	auto *note = new QLabel(ui_text(
+		ui_language_,
+		"Saving restarts the Worker with the persisted settings. Use Language here to switch English/Japanese.",
+		"保存すると設定を反映して Worker を再起動します。ここにある言語から日本語/英語を切り替えます。"));
 	note->setWordWrap(true);
 	layout->addWidget(note);
 
@@ -725,7 +947,10 @@ void PluginUiController::show_settings_dialog()
 	settings.endpoint.port = static_cast<uint16_t>(port_input->value());
 	settings.user_data_dir = user_data_input->text().toStdWString();
 	settings.dock_theme = utf8_string(theme_input->currentData().toString());
+	settings.ui_language = utf8_string(language_input->currentData().toString());
 	settings.restart_worker_on_change = true;
+	ui_language_ = settings.ui_language;
+	apply_ui_language();
 	apply_dock_theme(settings.dock_theme);
 	save_settings_and_restart(settings);
 }
@@ -972,16 +1197,29 @@ void PluginUiController::request_preview_upload_metadata()
 
 void PluginUiController::request_show_help()
 {
-	QMessageBox::information(
-		dock_widget_,
-		"OBS Duel Recorder Help",
+	const bool ja = language_is_japanese(ui_language_);
+	const QString message = ja ?
+		QString::fromUtf8(
+			"セットアップ: 設定を開き、実行データ保存先を確認して保存します。Worker 状態が running になれば準備完了です。\n\n"
+			"手動録画: Worker が running の状態で、録画開始と録画停止を使います。出力証跡は録画タブで確認します。\n\n"
+			"自動録画: 自動タブからローカルの開始/終了テンプレートを登録し、検出テストを実行してから使います。\n\n"
+			"メタデータ: 録画完了後にメタデータ編集を使います。認識結果は適用または編集するまで候補として扱います。\n\n"
+			"アップロード確認: 実際の YouTube アップロード前に文面をプレビューします。再試行や破棄はキュー項目を確認してから使います。\n\n"
+			"診断: エンドポイント、ユーザーデータ、Worker パス、ログ、所有状態、詳細は診断タブで確認します。ログは設定済みのユーザーデータ保存先に残ります。\n\n"
+			"Language can be changed from Settings.")
+		:
 		QString::fromUtf8(
 			"Setup: open Settings, confirm the runtime data directory, then save. Worker status should become running.\n\n"
-			"Manual recording: use Start Recording and Stop Recording after Worker status is running. Check the Recording card for output evidence.\n\n"
-			"Automatic recording: open Automatic Setup, register local start/end templates, run detection tests, and confirm threshold and confirmation count before enabling it.\n\n"
+			"Manual recording: use Start Recording and Stop Recording after Worker status is running. Check the Recording tab for output evidence.\n\n"
+			"Automatic recording: open the Auto tab, register local start/end templates, run detection tests, and confirm threshold and confirmation count before enabling it.\n\n"
 			"Metadata: use Edit Metadata after a completed recording. Recognition results are suggestions until you apply or edit them.\n\n"
 			"Upload review: preview upload metadata before real YouTube upload. Use retry or discard only after checking the queue item.\n\n"
-			"Diagnostics: use the Diagnostics section for endpoint, user data, Worker path, logs, ownership, and last detail. Logs stay under the configured user data directory."));
+			"Diagnostics: use the Diagnostics tab for endpoint, user data, Worker path, logs, ownership, and last detail. Logs stay under the configured user data directory.\n\n"
+			"言語は Settings から変更できます。");
+	QMessageBox::information(
+		dock_widget_,
+		ui_text(ui_language_, "OBS Duel Recorder Help", "OBS Duel Recorder ヘルプ"),
+		message);
 }
 
 void PluginUiController::request_automatic_setup()

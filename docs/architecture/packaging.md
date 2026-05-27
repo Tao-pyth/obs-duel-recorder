@@ -108,6 +108,13 @@ normally created by `scripts/build_worker_exe.ps1` under
 packaged releases; source-based Worker execution is kept as a developer
 fallback.
 
+As of `v1.1.2`, release packaging and package validation reject Plugin and
+Worker binaries that are only text fixtures or otherwise not Windows PE files.
+This specifically prevents a package from passing validation when
+`app/plugin/obs-duel-recorder.dll` or
+`app/worker/odr-worker/odr-worker.exe` contains CI layout placeholder text
+instead of the built Plugin DLL or PyInstaller-built Worker executable.
+
 The release ZIP includes `install.bat`,
 `scripts/install_release_package.ps1`, `verify-install.bat`, and
 `scripts/verify_obs_install_layout.ps1` so packaged users can install/update

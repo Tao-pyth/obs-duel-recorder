@@ -5,7 +5,7 @@
 This roadmap uses one version sequence based on user-visible usability.
 
 - The project reached its first user-ready OBS Plugin release at `v1.0.1`.
-- The current active development target is pending planning after `v1.1.1`.
+- The current active development target is `v1.1.2`.
 - Existing `v1.x` and `v2.x` tags are legacy non-product tags from before this rule.
 - The `v0.11` gate completed built OBS Plugin DLL, real OBS load smoke evidence, Dock visibility, Worker heartbeat, and basic recording control evidence.
 - The `v0.12` gate completed packaging workflow, release asset automation path, SHA256 checksum generation, and package layout validation.
@@ -13,6 +13,7 @@ This roadmap uses one version sequence based on user-visible usability.
 - The user-ready `v1.0` release was published as `v1.0.1` because legacy `v1.0.0` already exists.
 - The completed `v1.1.0` issue set was coordinated through #415 and remains the previous hardening scope.
 - The `v1.1.1` target followed #415 and completed UI, documentation, verification, packaging validation, and release-record handoff through #440.
+- The `v1.1.2` target is coordinated through #457 and covers recovery reporting documentation, release package Worker executable validation, compact Dock navigation, and Japanese/English UI language selection.
 - Existing legacy tags must not be moved or overwritten. Because a legacy `v1.1.0` tag exists, v1.1.x publication decisions must be recorded before release.
 
 ---
@@ -258,6 +259,58 @@ Previous hardening scope: #415 / `v1.1.0`
 ### Release Note
 
 The completed version is `v1.1.1`. #440 closes after #441 through #451 are complete, release assets or approved publication blockers are recorded, and the final tag/publication decision is documented without moving or overwriting legacy tags. Final public asset publication is handed off to #452 because this workstation cannot rebuild the Plugin DLL.
+
+---
+
+## v1.1.2 - Recovery Reporting, Distribution, UI, And i18n Update
+
+### Goals
+
+Complete the next patch update by correcting the Worker executable packaging
+validation gap and improving the post-`v1.1.1` Dock usability path.
+
+Tracking issue: #457
+
+Previous release: `v1.1.1`
+
+### Planned
+
+- define and document automatic error report GitHub Issue operation without
+  distributing GitHub tokens
+- reject CI fixture or non-PE `odr-worker.exe` files during package build and
+  package validation
+- reorganize the OBS Dock with tab navigation so Setup, Settings, Help,
+  Automatic Setup, and Diagnostics do not all occupy the Dock at once
+- add Japanese/English language selection from Settings
+- add Help recovery text that explains language changes in the opposite
+  language from the current UI selection
+- update README, Roadmap, traceability, user docs, release readiness, release
+  summary, and release history for the final `v1.1.2` behavior
+- build, validate, and publish the `v1.1.2` release package
+
+### Required Child Issues
+
+- #453 - automatic error report GitHub Issue operation specification
+- #454 - distribution package includes CI fixture Worker executable
+- #455 - compact Dock navigation
+- #456 - Japanese/English language setting and Help note
+
+### Deliverables
+
+- automatic error reporting architecture contract
+- release package validation that proves the Worker executable is a real PE
+  executable
+- compact tabbed Dock layout
+- persisted `en` / `ja` UI language setting
+- cross-language Help recovery note
+- updated release and user documentation
+- `v1.1.2` release assets, checksum, and release record
+
+### Release Note
+
+#457 closes only after #453 through #456 are complete or explicitly deferred,
+documentation matches the final behavior, and the `v1.1.2` release publication
+or an approved publication handoff is recorded.
 
 ---
 
