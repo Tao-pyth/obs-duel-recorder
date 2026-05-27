@@ -30,11 +30,11 @@ See [Release and tag policy](docs/release.md).
 ## Current Development
 
 Latest release status:
-- Released user-ready version: `v1.0.1` - First Usable OBS Plugin Release
-- Latest completed version gate: `v1.0` - First Usable OBS Plugin Release
+- Released user-ready version: `v1.1.3` - Dock Workflow, Metadata, Upload, and UI State Update
+- Latest completed version gate: `v1.1.3` - Dock Workflow, Metadata, Upload, and UI State Update
 
 Current development target:
-- `v1.1.3` - Dock Workflow, Metadata, Upload, and UI State Update
+- pending planning after `v1.1.3`
 
 Next roadmap target:
 - pending planning after `v1.1.3`
@@ -103,7 +103,7 @@ Active v1.1.2 issue set:
 - Japanese/English language selection from Settings
 - Help recovery note that explains language changes in the opposite language
 
-Active v1.1.3 issue set:
+Completed v1.1.3 issue set:
 - Record -> Metadata -> Upload -> Manage Dock workflow
 - direct Dock metadata editing with deck/opponent dropdown candidates
 - carry-over for deck, opponent deck, rank, and DP
@@ -164,7 +164,7 @@ obs-duel-recorder/
 - Status: first usable OBS Plugin release published with ZIP and SHA256 assets
 - Latest completed version gate: [#401](https://github.com/Tao-pyth/obs-duel-recorder/issues/401)
 - Latest completed hardening issue set: [#440](https://github.com/Tao-pyth/obs-duel-recorder/issues/440)
-- Current development target: [#470](https://github.com/Tao-pyth/obs-duel-recorder/issues/470) / `v1.1.3`
+- Latest completed patch target: [#470](https://github.com/Tao-pyth/obs-duel-recorder/issues/470) / `v1.1.3`
 - Release record: [docs/release-history.md](docs/release-history.md)
 
 ### Completed Legacy Implementation Work

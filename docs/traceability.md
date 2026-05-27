@@ -147,6 +147,8 @@ Goals:
 - UI architecture contract: `docs/architecture/dock-workflow-ui-state.md`
 - Previous released user-ready version: `v1.1.2`
 - Target version: `v1.1.3`
+- Release URL: `https://github.com/Tao-pyth/obs-duel-recorder/releases/tag/v1.1.3`
+- Release PR: `#471`
 - Required child issues:
   - Recording preview during metadata entry: `#459`
   - Deck/opponent deck dropdown candidates: `#460`

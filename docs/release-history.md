@@ -293,6 +293,32 @@ The version tracking issue may contain the working release summary, but finalize
   version `2.3.0` without `windows_error=216`.
 - Status: released user-ready OBS Plugin package
 
+### v1.1.3 - Dock Workflow, Metadata, Upload, And UI State Update
+
+- Version tracking issue: #470
+- Acceptance checklist: `docs/requirements/v1.1.3-dock-workflow-metadata-upload-ui-acceptance.md`
+- Release readiness checklist: `docs/release/v1.1.3-dock-workflow-metadata-upload-ui-readiness.md`
+- Release summary: `docs/release/v1.1.3-release-summary.md`
+- OBS smoke: `docs/release/v1.1.3-obs-smoke.md`
+- Tag: `v1.1.3`
+- Tag target: `249fe93a6630faa134d36b347f8ecabbd023e837`
+- Release finalized at: `2026-05-28`
+- GitHub Release: `https://github.com/Tao-pyth/obs-duel-recorder/releases/tag/v1.1.3`
+- Major child issues: #459, #460, #461, #462, #463, #464, #465, #466, #467, #468, #469
+- Major PR: #471
+- Final ZIP evidence: `obs-duel-recorder-v1.1.3.zip`
+- Final ZIP SHA256: `E40D6D399AD1F26B5E25703645654FF65283BC94A57E670699AE720D066EE261`
+- Rebuilt Plugin DLL SHA256: `7E7564345CB2449C505867BA3B058E1AE787917C7EE100A3B243DE269453942E`
+- Rebuilt Worker EXE SHA256: `51EDF40BEFBEBCF303FFF8B072B0458EABE364D68DF7C0B6CB6447D947BDC32C`
+- Validation evidence: PR #471 CI passed; Worker unit tests passed locally
+  and in CI; Markdown link validation passed locally and in CI; Japanese user
+  docs coverage passed; documentation site build passed; Worker executable
+  build passed locally and in CI; final release package validation passed;
+  Worker EXE smoke reached Worker API `2.3` / Worker version `2.3.0` /
+  schema version `10`; OBS Studio x64 smoke using a workspace copy of the
+  installed OBS tree reached the Plugin-started Worker health endpoint.
+- Status: released user-ready OBS Plugin package
+
 ### Legacy tag v1.0.0 - YouTube Upload MVP
 
 - Version tracking issue: #318
