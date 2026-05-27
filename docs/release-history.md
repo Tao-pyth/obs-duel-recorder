@@ -278,8 +278,9 @@ The version tracking issue may contain the working release summary, but finalize
 - Release readiness checklist: `docs/release/v1.1.2-recovery-reporting-distribution-ui-i18n-readiness.md`
 - Release summary: `docs/release/v1.1.2-release-summary.md`
 - Tag: `v1.1.2`
-- Tag target: pending final merged commit
-- Release candidate built at: `2026-05-27`
+- Tag target: `ef23b347f1964ade4025b41867e81ed41d1c7513`
+- Release finalized at: `2026-05-27`
+- GitHub Release: `https://github.com/Tao-pyth/obs-duel-recorder/releases/tag/v1.1.2`
 - Major child issues: #453, #454, #455, #456
 - Final ZIP evidence: `obs-duel-recorder-v1.1.2.zip`
 - Final ZIP SHA256: `7BD3190BEC62EBE2CF75DB96C64B7E516020BBDB7DBA1DD315297D853BD34939`
@@ -290,9 +291,7 @@ The version tracking issue may contain the working release summary, but finalize
   final release package validation passed; text Plugin/Worker fixture package
   inputs were rejected; installed OBS smoke reached Worker API `2.3` / Worker
   version `2.3.0` without `windows_error=216`.
-- GitHub Release: pending publication after final merge/tag.
-- Status: release candidate validated locally; publication pending final merged
-  commit and GitHub Release upload.
+- Status: released user-ready OBS Plugin package
 
 ### Legacy tag v1.0.0 - YouTube Upload MVP
 
