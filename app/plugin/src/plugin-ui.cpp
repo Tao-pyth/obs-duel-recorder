@@ -1199,6 +1199,15 @@ void PluginUiController::refresh()
 		automatic_setup_button_->setEnabled(worker_running);
 	}
 
+	if (worker_running) {
+		if (!metadata_loaded_after_worker_ready_) {
+			metadata_loaded_after_worker_ready_ = true;
+			load_latest_metadata_into_dock();
+		}
+	} else {
+		metadata_loaded_after_worker_ready_ = false;
+	}
+
 	handle_automatic_recording(snapshot);
 	handle_automatic_detection_feed(snapshot);
 

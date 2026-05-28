@@ -154,6 +154,7 @@ private:
 	OverlayStatePayload last_applied_overlay_state_;
 	int current_match_id_ = 0;
 	int metadata_preview_frame_index_ = 1;
+	bool metadata_loaded_after_worker_ready_ = false;
 	bool diagnostics_details_visible_ = false;
 	std::string automatic_recording_request_key_;
 	long long last_detection_frame_sent_ms_ = 0;

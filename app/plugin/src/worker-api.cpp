@@ -264,7 +264,7 @@ HttpResponse http_request(const WorkerEndpoint &endpoint, const wchar_t *method,
 		return response;
 	}
 
-	WinHttpSetTimeouts(session, 1000, 1000, 1000, 1000);
+	WinHttpSetTimeouts(session, 1000, 1000, 3000, 5000);
 
 	HINTERNET connection = WinHttpConnect(session, endpoint.host.c_str(), endpoint.port, 0);
 	if (!connection) {
