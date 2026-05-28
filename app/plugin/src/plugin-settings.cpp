@@ -28,6 +28,7 @@ constexpr const char *kDefaultUploadTitleTemplate = "Duel {match_id} vs {opponen
 constexpr const char *kDefaultUploadDescriptionTemplate =
 	"OBS Duel Recorder Archive\n\nMatch ID: {match_id}\nDeck: {deck_name}\nOpponent: {opponent_deck}\nResult: {result}\nRank: {rank}\nDP: {dp}\nStarted: {started_at}\nEnded: {ended_at}\n\nNotes:\n{memo}";
 constexpr const char *kDefaultUploadTagsTemplate = "Yu-Gi-Oh! Master Duel,{deck_name},{opponent_deck},{result}";
+constexpr int kDefaultAutomaticDetectionIntervalMs = 5000;
 
 std::wstring from_utf8(const char *value)
 {
@@ -180,6 +181,8 @@ void apply_defaults(obs_data_t *data)
 	obs_data_set_default_string(data, "upload_title_template", kDefaultUploadTitleTemplate);
 	obs_data_set_default_string(data, "upload_description_template", kDefaultUploadDescriptionTemplate);
 	obs_data_set_default_string(data, "upload_tags_template", kDefaultUploadTagsTemplate);
+	obs_data_set_default_bool(data, "automatic_detection_enabled", false);
+	obs_data_set_default_int(data, "automatic_detection_interval_ms", kDefaultAutomaticDetectionIntervalMs);
 }
 
 bool is_valid_dock_theme(const std::string &theme)
@@ -398,6 +401,10 @@ PluginSettings load_plugin_settings()
 	settings.upload_title_template = obs_data_get_string(data, "upload_title_template");
 	settings.upload_description_template = obs_data_get_string(data, "upload_description_template");
 	settings.upload_tags_template = obs_data_get_string(data, "upload_tags_template");
+	settings.automatic_detection_enabled = obs_data_get_bool(data, "automatic_detection_enabled");
+	const long long interval = obs_data_get_int(data, "automatic_detection_interval_ms");
+	settings.automatic_detection_interval_ms =
+		static_cast<int>(std::clamp<long long>(interval, 1000, 60000));
 	settings.overlay = load_overlay_settings(data);
 
 	obs_data_release(data);
@@ -436,6 +443,9 @@ bool save_plugin_settings(const PluginSettings &settings)
 	obs_data_set_string(data, "upload_tags_template",
 			    settings.upload_tags_template.empty() ? kDefaultUploadTagsTemplate :
 								   settings.upload_tags_template.c_str());
+	obs_data_set_bool(data, "automatic_detection_enabled", settings.automatic_detection_enabled);
+	obs_data_set_int(data, "automatic_detection_interval_ms",
+			 std::clamp(settings.automatic_detection_interval_ms, 1000, 60000));
 	save_overlay_settings(data, settings.overlay);
 
 	const bool saved = obs_data_save_json_safe(data, to_utf8(settings.settings_path).c_str(), "tmp", "bak");

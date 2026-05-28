@@ -5,7 +5,7 @@
 This roadmap uses one version sequence based on user-visible usability.
 
 - The project reached its first user-ready OBS Plugin release at `v1.0.1`.
-- The latest completed active development target is `v1.1.3`; the next target is pending planning.
+- The latest completed active development target is `v1.1.3`; the next target is `v1.1.4`.
 - Existing `v1.x` and `v2.x` tags are legacy non-product tags from before this rule.
 - The `v0.11` gate completed built OBS Plugin DLL, real OBS load smoke evidence, Dock visibility, Worker heartbeat, and basic recording control evidence.
 - The `v0.12` gate completed packaging workflow, release asset automation path, SHA256 checksum generation, and package layout validation.
@@ -360,6 +360,63 @@ Previous patch scope: #457 / `v1.1.2`
 - Plugin Dock workflow and inline metadata/settings updates
 - Worker and Plugin validation evidence
 - packaged and published `v1.1.3` release
+
+---
+
+## v1.1.4 - Consolidated Dock, YouTube, And Automatic Recording Update
+
+### Goals
+
+Apply the full #473-#504 issue range as one patch release focused on operator
+clarity, upload safety, and practical automatic recording setup.
+
+Tracking issue: #473
+
+Previous release: `v1.1.3`
+
+### Planned
+
+- consolidate the Dock into the agreed Record / Upload / Manage structure
+- apply a coherent light-green UI palette with documented role-based color use
+- add consistent icon and tooltip treatment for major Dock actions
+- keep raw/debug-heavy status behind explicit details controls
+- show metadata editing and target-video thumbnail/preview in the Record tab
+- show upload queue, upload text preview, and YouTube/OAuth readiness in the
+  Upload tab
+- keep setup, settings, automatic setup, and diagnostics under Manage
+- define Worker/API contracts for YouTube readiness, OAuth setup, quota waiting,
+  manual review, metadata preview/privacy, and redacted diagnostics
+- replace developer-oriented automatic setup with a guided current-screen
+  capture flow
+- store captured templates under `user_data/` and keep image matching in the
+  Worker
+- add bounded frame feed behavior for automatic detection
+- document the final architecture, user workflow, readiness gates, and real OBS
+  validation evidence
+- package, validate, tag, and publish `v1.1.4`
+
+### Required Child Issues
+
+- Dock UI and validation: #474, #475, #476, #477, #478, #479, #480, #496
+- YouTube readiness: #484, #489, #490, #491, #492, #493, #494, #495
+- Guided automatic recording: #497, #498, #499, #500, #501, #502, #503, #504
+- Supporting backlog parents in scope: #481, #482, #483, #485, #486, #487, #488
+
+### Deliverables
+
+- v1.1.4 acceptance and readiness records
+- updated Dock UI architecture and user-facing workflow documentation
+- Plugin Dock UI implementation matching the agreed tab structure
+- Worker/API updates for upload readiness and automatic recording support
+- Worker and Plugin validation evidence
+- real OBS smoke evidence
+- packaged and published `v1.1.4` release
+
+### Release Note
+
+#473 closes only after the #473-#504 scope is complete or explicitly deferred
+with maintainer approval, documentation matches the implemented behavior, and
+the `v1.1.4` release is published.
 
 ---
 

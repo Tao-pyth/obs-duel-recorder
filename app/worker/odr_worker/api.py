@@ -30,6 +30,7 @@ from .setup_wizard import SetupWizardError, SetupWizardStore
 from .statistics import StatisticsError, StatisticsStore, filters_from_query
 from .update_system import UpdateError, UpdateManager
 from .upload import UploadCommandError, UploadStore, YouTubeOAuthWorkflow, build_upload_settings
+from .video_preview import build_video_preview_payload
 from .version import __version__
 
 
@@ -224,6 +225,29 @@ def create_app(*, runtime_dirs: RuntimeDirs, loaded_config: LoadedWorkerConfig, 
                 status_code=400,
                 code="setup_template_registration_invalid",
                 message="Template registration payload must be JSON object",
+            )
+
+    @app.post("/setup/templates/capture")
+    async def post_setup_template_capture(request: Request):
+        try:
+            payload = await request.json()
+            if not isinstance(payload, dict):
+                raise ValueError
+            result = app.state.setup_store.register_captured_template(payload)
+            _load_detection_runtime(app, runtime_dirs)
+            return result
+        except SetupWizardError as exc:
+            return _error_response(
+                status_code=400,
+                code=exc.code,
+                message="Template capture request is invalid",
+                details=exc.details,
+            )
+        except ValueError:
+            return _error_response(
+                status_code=400,
+                code="setup_template_capture_invalid",
+                message="Template capture payload must be JSON object",
             )
 
     @app.post("/setup/cancel")
@@ -681,12 +705,41 @@ def create_app(*, runtime_dirs: RuntimeDirs, loaded_config: LoadedWorkerConfig, 
                 message="Match metadata storage is unavailable",
             )
         try:
-            return app.state.metadata_store.render_upload_metadata(match_id)
+            preview = app.state.metadata_store.render_upload_metadata(match_id)
+            if app.state.upload_store is not None:
+                preview["privacy_status"] = app.state.upload_store.settings.privacy_status
+            return preview
         except MetadataError as exc:
             return _error_response(
                 status_code=404 if exc.code == "match_not_found" else 400,
                 code=exc.code,
                 message="Match upload metadata is invalid",
+                details=exc.details,
+            )
+
+    @app.get("/matches/{match_id}/video-preview")
+    def get_match_video_preview(match_id: int, frame: int = 1):
+        if app.state.metadata_store is None or app.state.queue_store is None:
+            return _error_response(
+                status_code=503,
+                code="metadata_unavailable",
+                message="Match metadata storage is unavailable",
+            )
+        try:
+            app.state.metadata_store.get_match(match_id)
+            queue_item = app.state.queue_store.get_item_for_match(match_id)
+            if queue_item is None:
+                return build_video_preview_payload(video_path="", videos_dir=runtime_dirs.videos_dir, frame=frame)
+            return build_video_preview_payload(
+                video_path=queue_item.video_path,
+                videos_dir=runtime_dirs.videos_dir,
+                frame=frame,
+            )
+        except MetadataError as exc:
+            return _error_response(
+                status_code=404 if exc.code == "match_not_found" else 400,
+                code=exc.code,
+                message="Match video preview is invalid",
                 details=exc.details,
             )
 

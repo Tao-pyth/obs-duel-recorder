@@ -39,6 +39,8 @@ struct PluginSettings {
 	std::string upload_tags_template = "Yu-Gi-Oh! Master Duel,{deck_name},{opponent_deck},{result}";
 	std::wstring user_data_dir;
 	std::wstring settings_path;
+	bool automatic_detection_enabled = false;
+	int automatic_detection_interval_ms = 5000;
 	bool restart_worker_on_change = true;
 };
 

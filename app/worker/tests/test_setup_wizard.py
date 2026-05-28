@@ -165,6 +165,59 @@ path = "start.bin"
         self.assertEqual(second.json()["lifecycle_state"], "potential_duel")
         self.assertEqual(third.json()["lifecycle_state"], "active_duel")
 
+    def test_capture_template_stores_runtime_file_and_registers_detection(self) -> None:
+        client, runtime_dirs = self._client()
+
+        captured = client.post(
+            "/setup/templates/capture",
+            json={
+                "kind": "start",
+                "extension": "png",
+                "content_text": "DUEL_START_CAPTURE",
+                "threshold": 1.0,
+                "confirmations": 2,
+            },
+        )
+        templates = client.get("/detection/templates")
+
+        self.assertEqual(captured.status_code, 200)
+        body = captured.json()
+        self.assertEqual(body["captured"]["kind"], "duel_start")
+        self.assertEqual(body["captured"]["relative_path"], "duel-start.png")
+        self.assertFalse(body["captured"]["overwritten"])
+        self.assertEqual(body["registered"]["name"], "duel-start")
+        self.assertTrue((runtime_dirs.user_data_dir / "templates" / "duel-start.png").exists())
+        self.assertEqual(templates.status_code, 200)
+        self.assertTrue(templates.json()["config_loaded"])
+        self.assertEqual(templates.json()["start_confirmations"], 2)
+
+        first = client.post("/detection/frame", json={"frame_text": "DUEL_START_CAPTURE"})
+        second = client.post("/detection/frame", json={"frame_text": "DUEL_START_CAPTURE"})
+        self.assertEqual(first.json()["lifecycle_state"], "potential_duel")
+        self.assertEqual(second.json()["lifecycle_state"], "active_duel")
+
+    def test_capture_template_reports_invalid_payloads(self) -> None:
+        client, _runtime_dirs = self._client()
+
+        invalid = client.post(
+            "/setup/templates/capture",
+            json={
+                "kind": "middle",
+                "extension": "gif",
+                "content_base64": "not base64",
+                "threshold": 2.0,
+                "confirmations": 0,
+            },
+        )
+
+        self.assertEqual(invalid.status_code, 400)
+        self.assertEqual(invalid.json()["code"], "setup_template_capture_invalid")
+        self.assertEqual(invalid.json()["details"]["kind"], "must_be_start_or_end")
+        self.assertEqual(invalid.json()["details"]["extension"], "invalid_extension")
+        self.assertEqual(invalid.json()["details"]["content_base64"], "must_be_base64")
+        self.assertEqual(invalid.json()["details"]["threshold"], "must_be_between_0_and_1")
+        self.assertEqual(invalid.json()["details"]["confirmations"], "must_be_positive")
+
     def test_register_template_reports_invalid_inputs_before_detection_use(self) -> None:
         client, runtime_dirs = self._client()
         empty_template = runtime_dirs.user_data_dir / "templates" / "empty.tpl"

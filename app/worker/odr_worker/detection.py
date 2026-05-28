@@ -1,8 +1,12 @@
 from __future__ import annotations
 
+import base64
+import binascii
 import dataclasses
 import datetime as _dt
+import struct
 import tomllib
+import zlib
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -12,6 +16,8 @@ from .recording import RecordingCommandError, RecordingState, apply_recording_co
 
 TEMPLATE_KINDS = {"duel_start", "duel_end"}
 LIFECYCLE_STATES = {"no_duel", "potential_duel", "active_duel", "ended_duel"}
+PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
+MAX_IMAGE_COMPARISONS = 25_000_000
 
 
 class TemplateConfigError(ValueError):
@@ -40,6 +46,13 @@ class TemplateSpec:
 class LoadedTemplate:
     spec: TemplateSpec
     content: bytes
+
+
+@dataclass(frozen=True)
+class PngImage:
+    width: int
+    height: int
+    pixels: tuple[int, ...]
 
 
 @dataclass(frozen=True)
@@ -172,8 +185,13 @@ def load_templates(config: TemplateConfig) -> tuple[LoadedTemplate, ...]:
 
 def match_templates(templates: tuple[LoadedTemplate, ...], frame: bytes) -> list[TemplateMatch]:
     matches: list[TemplateMatch] = []
+    frame_png = _decode_png_or_none(frame)
     for template in templates:
-        score = 1.0 if template.content in frame else 0.0
+        template_png = _decode_png_or_none(template.content) if frame_png is not None else None
+        if frame_png is not None and template_png is not None:
+            score = _image_match_score(template_png, frame_png)
+        else:
+            score = 1.0 if template.content in frame else 0.0
         matches.append(
             TemplateMatch(
                 name=template.spec.name,
@@ -302,7 +320,191 @@ def _frame_bytes(payload: Any) -> bytes:
             return bytes.fromhex(value)
         except ValueError as exc:
             raise TemplateConfigError({"frame_hex": "must_be_hex"}) from exc
-    raise TemplateConfigError({"frame": "frame_text_or_frame_hex_required"})
+    if "frame_base64" in payload:
+        value = payload["frame_base64"]
+        if not isinstance(value, str):
+            raise TemplateConfigError({"frame_base64": "must_be_string"})
+        try:
+            return base64.b64decode(value, validate=True)
+        except (binascii.Error, ValueError) as exc:
+            raise TemplateConfigError({"frame_base64": "must_be_base64"}) from exc
+    raise TemplateConfigError({"frame": "frame_text_frame_hex_or_frame_base64_required"})
+
+
+def _decode_png_or_none(content: bytes) -> PngImage | None:
+    try:
+        return _decode_png(content)
+    except ValueError:
+        return None
+
+
+def _decode_png(content: bytes) -> PngImage:
+    if not content.startswith(PNG_SIGNATURE):
+        raise ValueError("not_png")
+
+    pos = len(PNG_SIGNATURE)
+    width = height = bit_depth = color_type = interlace = None
+    idat_parts: list[bytes] = []
+
+    while pos + 8 <= len(content):
+        length = struct.unpack(">I", content[pos : pos + 4])[0]
+        chunk_type = content[pos + 4 : pos + 8]
+        pos += 8
+        chunk_end = pos + length
+        crc_end = chunk_end + 4
+        if crc_end > len(content):
+            raise ValueError("truncated_png_chunk")
+        chunk = content[pos:chunk_end]
+        pos = crc_end
+
+        if chunk_type == b"IHDR":
+            if length != 13:
+                raise ValueError("invalid_ihdr")
+            width, height, bit_depth, color_type, _, _, interlace = struct.unpack(">IIBBBBB", chunk)
+        elif chunk_type == b"IDAT":
+            idat_parts.append(chunk)
+        elif chunk_type == b"IEND":
+            break
+
+    if width is None or height is None or bit_depth is None or color_type is None or interlace is None:
+        raise ValueError("missing_ihdr")
+    if width < 1 or height < 1:
+        raise ValueError("invalid_png_size")
+    if bit_depth != 8:
+        raise ValueError("unsupported_png_bit_depth")
+    if color_type not in {0, 2, 6}:
+        raise ValueError("unsupported_png_color_type")
+    if interlace != 0:
+        raise ValueError("unsupported_png_interlace")
+    if not idat_parts:
+        raise ValueError("missing_idat")
+
+    channels = {0: 1, 2: 3, 6: 4}[color_type]
+    row_size = width * channels
+    expected_size = height * (row_size + 1)
+    try:
+        raw = zlib.decompress(b"".join(idat_parts))
+    except zlib.error as exc:
+        raise ValueError("invalid_png_compression") from exc
+    if len(raw) != expected_size:
+        raise ValueError("invalid_png_data_size")
+
+    pixels: list[int] = []
+    previous = bytearray(row_size)
+    offset = 0
+    for _ in range(height):
+        filter_type = raw[offset]
+        offset += 1
+        row = bytearray(raw[offset : offset + row_size])
+        offset += row_size
+        _unfilter_png_row(row=row, previous=previous, filter_type=filter_type, channels=channels)
+        pixels.extend(_png_row_to_luma(row=row, color_type=color_type, width=width))
+        previous = row
+
+    return PngImage(width=width, height=height, pixels=tuple(pixels))
+
+
+def _unfilter_png_row(*, row: bytearray, previous: bytearray, filter_type: int, channels: int) -> None:
+    if filter_type == 0:
+        return
+    if filter_type == 1:
+        for index, value in enumerate(row):
+            left = row[index - channels] if index >= channels else 0
+            row[index] = (value + left) & 0xFF
+        return
+    if filter_type == 2:
+        for index, value in enumerate(row):
+            row[index] = (value + previous[index]) & 0xFF
+        return
+    if filter_type == 3:
+        for index, value in enumerate(row):
+            left = row[index - channels] if index >= channels else 0
+            up = previous[index]
+            row[index] = (value + ((left + up) // 2)) & 0xFF
+        return
+    if filter_type == 4:
+        for index, value in enumerate(row):
+            left = row[index - channels] if index >= channels else 0
+            up = previous[index]
+            upper_left = previous[index - channels] if index >= channels else 0
+            row[index] = (value + _paeth_predictor(left, up, upper_left)) & 0xFF
+        return
+    raise ValueError("unsupported_png_filter")
+
+
+def _paeth_predictor(left: int, up: int, upper_left: int) -> int:
+    estimate = left + up - upper_left
+    left_distance = abs(estimate - left)
+    up_distance = abs(estimate - up)
+    upper_left_distance = abs(estimate - upper_left)
+    if left_distance <= up_distance and left_distance <= upper_left_distance:
+        return left
+    if up_distance <= upper_left_distance:
+        return up
+    return upper_left
+
+
+def _png_row_to_luma(*, row: bytearray, color_type: int, width: int) -> list[int]:
+    if color_type == 0:
+        return list(row)
+
+    channels = 3 if color_type == 2 else 4
+    values: list[int] = []
+    for x in range(width):
+        index = x * channels
+        red = row[index]
+        green = row[index + 1]
+        blue = row[index + 2]
+        values.append((red * 299 + green * 587 + blue * 114) // 1000)
+    return values
+
+
+def _image_match_score(template: PngImage, frame: PngImage) -> float:
+    if template.width > frame.width or template.height > frame.height:
+        return 0.0
+
+    positions_x = frame.width - template.width + 1
+    positions_y = frame.height - template.height + 1
+    comparisons = positions_x * positions_y * template.width * template.height
+    step = 1
+    if comparisons > MAX_IMAGE_COMPARISONS:
+        step = max(1, int((comparisons / MAX_IMAGE_COMPARISONS) ** 0.5))
+
+    best_diff = template.width * template.height * 255 + 1
+    y_positions = _scan_positions(positions_y, step)
+    x_positions = _scan_positions(positions_x, step)
+    for y in y_positions:
+        for x in x_positions:
+            diff = _image_diff_at(template=template, frame=frame, x=x, y=y, best_diff=best_diff)
+            if diff < best_diff:
+                best_diff = diff
+                if best_diff == 0:
+                    return 1.0
+
+    max_diff = template.width * template.height * 255
+    return max(0.0, 1.0 - (best_diff / max_diff))
+
+
+def _scan_positions(count: int, step: int) -> range | tuple[int, ...]:
+    if step == 1 or count <= 1:
+        return range(count)
+    values = tuple(range(0, count, step))
+    last = count - 1
+    if values[-1] == last:
+        return values
+    return (*values, last)
+
+
+def _image_diff_at(*, template: PngImage, frame: PngImage, x: int, y: int, best_diff: int) -> int:
+    total = 0
+    for row in range(template.height):
+        template_offset = row * template.width
+        frame_offset = (y + row) * frame.width + x
+        for column in range(template.width):
+            total += abs(template.pixels[template_offset + column] - frame.pixels[frame_offset + column])
+        if total >= best_diff:
+            return total
+    return total
 
 
 def _optional_template_kind(payload: Any) -> str | None:

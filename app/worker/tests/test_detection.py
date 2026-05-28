@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+import base64
+import struct
 import sys
 import tempfile
 import unittest
+import zlib
 from pathlib import Path
 
 
@@ -11,7 +14,7 @@ sys.path.insert(0, str(WORKER_ROOT))
 
 
 class TemplateDetectionApiTests(unittest.TestCase):
-    def _client(self, *, config_text: str | None = None, templates: dict[str, str] | None = None):
+    def _client(self, *, config_text: str | None = None, templates: dict[str, str | bytes] | None = None):
         from fastapi.testclient import TestClient
 
         from odr_worker.api import create_app
@@ -26,7 +29,11 @@ class TemplateDetectionApiTests(unittest.TestCase):
             templates_dir = runtime_dirs.user_data_dir / "templates"
             templates_dir.mkdir(parents=True, exist_ok=True)
             for name, content in templates.items():
-                (templates_dir / name).write_text(content, encoding="utf-8")
+                target = templates_dir / name
+                if isinstance(content, bytes):
+                    target.write_bytes(content)
+                else:
+                    target.write_text(content, encoding="utf-8")
 
         if config_text is not None:
             config_path = runtime_dirs.config_dir / "templates.toml"
@@ -125,6 +132,12 @@ class TemplateDetectionApiTests(unittest.TestCase):
         self.assertEqual(resp.json()["code"], "detection_payload_invalid")
         self.assertEqual(resp.json()["details"]["frame_hex"], "must_be_hex")
 
+        base64_resp = client.post("/detection/frame", json={"frame_base64": "not base64"})
+
+        self.assertEqual(base64_resp.status_code, 400)
+        self.assertEqual(base64_resp.json()["code"], "detection_payload_invalid")
+        self.assertEqual(base64_resp.json()["details"]["frame_base64"], "must_be_base64")
+
     def test_detection_test_reports_matches_without_recording_transition(self) -> None:
         client, _ = self._configured_client()
 
@@ -166,6 +179,71 @@ class TemplateDetectionApiTests(unittest.TestCase):
         self.assertIn("template_config_missing", {item["code"] for item in result.json()["diagnostics"]})
         self.assertIn("templates_not_configured", {item["code"] for item in result.json()["diagnostics"]})
 
+    def test_png_template_test_matches_embedded_current_screen_capture(self) -> None:
+        template_png = _png_bytes(width=2, height=2, rows=[[(255, 0, 0)] * 2, [(255, 0, 0)] * 2])
+        frame_png = _png_bytes(
+            width=4,
+            height=4,
+            rows=[
+                [(0, 0, 0), (0, 0, 0), (0, 0, 0), (0, 0, 0)],
+                [(0, 0, 0), (255, 0, 0), (255, 0, 0), (0, 0, 0)],
+                [(0, 0, 0), (255, 0, 0), (255, 0, 0), (0, 0, 0)],
+                [(0, 0, 0), (0, 0, 0), (0, 0, 0), (0, 0, 0)],
+            ],
+        )
+        client, _ = self._client(
+            config_text="""
+[detection]
+start_confirmations = 2
+end_confirmations = 2
+
+[[templates]]
+name = "start"
+kind = "duel_start"
+path = "start.png"
+threshold = 1.0
+""".strip(),
+            templates={"start.png": template_png},
+        )
+
+        result = client.post(
+            "/detection/test",
+            json={"kind": "start", "frame_base64": base64.b64encode(frame_png).decode("ascii")},
+        )
+
+        self.assertEqual(result.status_code, 200)
+        self.assertTrue(result.json()["matched"])
+        self.assertEqual(result.json()["matches"][0]["score"], 1.0)
+        self.assertFalse(result.json()["state_changed"])
+
+    def test_png_template_frames_drive_detection_lifecycle(self) -> None:
+        template_png = _png_bytes(width=1, height=1, rows=[[(255, 255, 255)]])
+        frame_png = _png_bytes(width=2, height=1, rows=[[(0, 0, 0), (255, 255, 255)]])
+        client, _ = self._client(
+            config_text="""
+[detection]
+start_confirmations = 2
+end_confirmations = 2
+
+[[templates]]
+name = "start"
+kind = "duel_start"
+path = "start.png"
+threshold = 1.0
+""".strip(),
+            templates={"start.png": template_png},
+        )
+
+        payload = {"frame_base64": base64.b64encode(frame_png).decode("ascii")}
+        first = client.post("/detection/frame", json=payload)
+        second = client.post("/detection/frame", json=payload)
+
+        self.assertEqual(first.status_code, 200)
+        self.assertEqual(first.json()["lifecycle_state"], "potential_duel")
+        self.assertEqual(second.status_code, 200)
+        self.assertEqual(second.json()["lifecycle_state"], "active_duel")
+        self.assertIn("duel_started", second.json()["events"])
+
     def _configured_client(self):
         return self._client(
             config_text="""
@@ -188,6 +266,22 @@ path = "end.tpl"
                 "end.tpl": "DUEL_END_MARKER",
             },
         )
+
+
+def _png_bytes(*, width: int, height: int, rows: list[list[tuple[int, int, int]]]) -> bytes:
+    raw_rows = bytearray()
+    for row in rows:
+        raw_rows.append(0)
+        for red, green, blue in row:
+            raw_rows.extend((red, green, blue))
+
+    def chunk(kind: bytes, data: bytes) -> bytes:
+        checksum = zlib.crc32(kind)
+        checksum = zlib.crc32(data, checksum) & 0xFFFFFFFF
+        return struct.pack(">I", len(data)) + kind + data + struct.pack(">I", checksum)
+
+    ihdr = struct.pack(">IIBBBBB", width, height, 8, 2, 0, 0, 0)
+    return b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", ihdr) + chunk(b"IDAT", zlib.compress(bytes(raw_rows))) + chunk(b"IEND", b"")
 
 
 if __name__ == "__main__":

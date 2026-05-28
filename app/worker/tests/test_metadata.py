@@ -106,6 +106,7 @@ class MatchMetadataApiTests(unittest.TestCase):
         self.assertIn("opponent_deck", metadata.json()["variables"])
         self.assertEqual(metadata.json()["missing_fields"], ["rank", "dp"])
         self.assertEqual(metadata.json()["warning"], "Missing metadata fields: rank, dp")
+        self.assertEqual(metadata.json()["privacy_status"], "private")
 
     def test_upload_metadata_templates_include_description_and_tags(self) -> None:
         client, _ = self._client()
@@ -236,6 +237,7 @@ class MatchMetadataApiTests(unittest.TestCase):
         self.assertEqual(uploaded.json()["item"]["state"], "uploaded")
         self.assertEqual(uploaded.json()["upload_metadata"]["match_id"], match_id)
         self.assertIn("Tearlaments", uploaded.json()["upload_metadata"]["title"])
+        self.assertEqual(uploaded.json()["upload_metadata"]["privacy_status"], "private")
 
     def _client_for_runtime(self, runtime_dirs):
         from fastapi.testclient import TestClient

@@ -103,6 +103,59 @@ Invalid registration requests return HTTP 400 with
 Worker detection runtime so `GET /detection/templates` immediately reflects the
 generated config.
 
+### `POST /setup/templates/capture`
+
+Stores captured start/end template content under runtime storage and registers
+it with the same detection configuration used by `/setup/templates/register`.
+
+This endpoint is intended for the guided OBS Dock flow where the Plugin captures
+the current OBS screen and sends the content to the Worker.
+
+The v1.1.4 Plugin implementation uses the OBS frontend screenshot API for
+manual setup/test actions:
+
+- `Capture Start Screen` / `開始画面として取得` captures the current Program
+  screenshot and registers it as the start template.
+- `Capture End Screen` / `終了画面として取得` captures the current Program
+  screenshot and registers it as the end template.
+- `Test Current Screen` / `現在画面でテスト` captures the current Program
+  screenshot and sends it to `/detection/test` with `frame_base64` for both
+  start and end templates; this must not change detection lifecycle state or
+  OBS recording state.
+
+This screenshot path is not used for continuous automatic frame feeding because
+OBS writes screenshot files to the configured output directory. Continuous
+feeding needs a bounded in-memory capture path before it can be enabled safely.
+
+Request:
+
+```json
+{
+  "kind": "start",
+  "extension": "png",
+  "content_base64": "<base64 image bytes>",
+  "threshold": 1.0,
+  "confirmations": 2
+}
+```
+
+Rules:
+
+- `kind` accepts `start`, `end`, `duel_start`, or `duel_end`.
+- `extension` accepts `png`, `jpg`, or `jpeg`.
+- The payload must include exactly one of `content_base64` or `content_text`.
+- Captured files are written under `user_data/templates/`.
+- The current deterministic filenames are:
+  - `duel-start.png` or `duel-start.jpg`
+  - `duel-end.png` or `duel-end.jpg`
+- Captured templates are runtime data and must not be committed to git,
+  included in release packages, or written under the OBS install directory.
+- Successful capture also updates `user_data/config/templates.toml` and reloads
+  the Worker detection runtime.
+
+Invalid capture requests return HTTP 400 with
+`code=setup_template_capture_invalid`.
+
 ### `POST /setup/cancel`
 
 Records cancellation and returns the current setup state.

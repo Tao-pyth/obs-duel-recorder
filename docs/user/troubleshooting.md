@@ -2,6 +2,22 @@
 
 This page is the normal-user troubleshooting entry point. Do not post secrets, OAuth tokens, client secrets, local videos, screenshots, logs, or databases to issues or pull requests.
 
+## YouTube Upload Shows Quota Waiting
+
+`quota_waiting` means YouTube rejected the upload because quota or rate limits
+were exhausted. Wait for quota reset before retrying. Repeated immediate retry
+usually does not fix the problem and can consume more API quota.
+
+Share only `readiness_state`, `readiness_next_action`, queue counts, and redacted
+error codes when asking for support.
+
+## YouTube Upload Needs Manual Review
+
+`need_manual_review` means the Worker could not safely prove the upload result.
+Check YouTube before retrying. If the video exists, use Mark Uploaded with the
+plain YouTube video ID. If the item should not be uploaded, use Discard. Retry
+only after accepting the duplicate-upload risk.
+
 ## Settings Opens But Start And Stop Are Disabled
 
 Settings can open even when the Worker failed to start. Manual Start and Stop are enabled only after the Worker state becomes `running`.

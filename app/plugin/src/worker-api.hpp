@@ -69,6 +69,8 @@ struct UploadStatusResult {
 	unsigned long http_status = 0;
 	std::string error;
 	std::string body;
+	std::string readiness_state;
+	std::string readiness_next_action;
 	int ready_upload = 0;
 	int uploading = 0;
 	int uploaded = 0;
@@ -124,6 +126,13 @@ enum class MetadataUpdateStatus {
 };
 
 enum class UploadMetadataPreviewStatus {
+	reachable,
+	unavailable,
+	not_found,
+	invalid_response,
+};
+
+enum class VideoPreviewStatus {
 	reachable,
 	unavailable,
 	not_found,
@@ -251,6 +260,7 @@ struct UploadMetadataPreviewPayload {
 	std::string description;
 	std::string tags;
 	std::string notes;
+	std::string privacy_status;
 	std::string warning;
 };
 
@@ -267,6 +277,29 @@ struct UploadMetadataPreviewResult {
 	}
 };
 
+struct VideoPreviewPayload {
+	bool available = false;
+	int frame_index = 1;
+	int frame_count = 3;
+	std::string reason;
+	std::string video_path;
+	std::string content_type;
+	std::string content_base64;
+};
+
+struct VideoPreviewResult {
+	VideoPreviewStatus status = VideoPreviewStatus::unavailable;
+	unsigned long http_status = 0;
+	VideoPreviewPayload preview;
+	std::string error;
+	std::string body;
+
+	bool reachable() const
+	{
+		return status == VideoPreviewStatus::reachable;
+	}
+};
+
 struct WorkerActionResult {
 	WorkerActionStatus status = WorkerActionStatus::unavailable;
 	unsigned long http_status = 0;
@@ -277,6 +310,11 @@ struct WorkerActionResult {
 	{
 		return status == WorkerActionStatus::accepted;
 	}
+};
+
+struct OAuthAuthorizationUrlResult : WorkerActionResult {
+	std::string authorization_url;
+	std::string redirect_uri;
 };
 
 class LocalhostApiClient {
@@ -297,12 +335,22 @@ public:
 	MetadataUpdateResult update_match_metadata(const WorkerEndpoint &endpoint,
 						   const MatchMetadataPayload &metadata) const;
 	UploadMetadataPreviewResult fetch_upload_metadata_preview(const WorkerEndpoint &endpoint, int match_id) const;
+	VideoPreviewResult fetch_match_video_preview(const WorkerEndpoint &endpoint, int match_id, int frame_index) const;
 	WorkerActionResult fetch_setup_validation(const WorkerEndpoint &endpoint) const;
 	WorkerActionResult register_detection_template(const WorkerEndpoint &endpoint, const std::string &kind,
 						       const std::string &path, double threshold,
 						       int confirmations) const;
+	WorkerActionResult capture_detection_template(const WorkerEndpoint &endpoint, const std::string &kind,
+						      const std::string &content_base64, double threshold,
+						      int confirmations) const;
 	WorkerActionResult test_detection_template(const WorkerEndpoint &endpoint, const std::string &kind,
 						   const std::string &frame_text) const;
+	WorkerActionResult test_detection_template_base64(const WorkerEndpoint &endpoint, const std::string &kind,
+							  const std::string &frame_base64) const;
+	WorkerActionResult send_detection_frame_base64(const WorkerEndpoint &endpoint,
+						       const std::string &frame_base64) const;
+	OAuthAuthorizationUrlResult request_upload_oauth_authorization_url(const WorkerEndpoint &endpoint) const;
+	WorkerActionResult refresh_upload_oauth_token(const WorkerEndpoint &endpoint) const;
 
 private:
 	std::string expected_api_version_;

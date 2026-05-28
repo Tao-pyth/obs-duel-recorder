@@ -7,10 +7,18 @@
 #include <obs-module.h>
 
 #include <QByteArray>
+#include <QCheckBox>
+#include <QCoreApplication>
+#include <QDateTime>
+#include <QDesktopServices>
 #include <QDialog>
 #include <QDialogButtonBox>
 #include <QComboBox>
 #include <QDoubleSpinBox>
+#include <QElapsedTimer>
+#include <QEventLoop>
+#include <QFile>
+#include <QFileInfo>
 #include <QFormLayout>
 #include <QFrame>
 #include <QGroupBox>
@@ -19,11 +27,15 @@
 #include <QLabel>
 #include <QLineEdit>
 #include <QMessageBox>
+#include <QPixmap>
 #include <QPushButton>
 #include <QTabWidget>
 #include <QTextEdit>
+#include <QThread>
 #include <QSpinBox>
+#include <QStyle>
 #include <QTimer>
+#include <QUrl>
 #include <QVBoxLayout>
 #include <QWidget>
 
@@ -51,6 +63,16 @@ std::string utf8_string(const QString &value)
 {
 	const QByteArray bytes = value.toUtf8();
 	return std::string(bytes.constData(), static_cast<size_t>(bytes.size()));
+}
+
+std::string take_frontend_string(char *value)
+{
+	if (!value) {
+		return {};
+	}
+	std::string result(value);
+	bfree(value);
+	return result;
 }
 
 bool language_is_japanese(const std::string &language)
@@ -209,6 +231,27 @@ std::string review_item_summary(const WorkerStatusSnapshot &snapshot)
 	return out.str();
 }
 
+std::string youtube_summary(const WorkerStatusSnapshot &snapshot)
+{
+	if (!snapshot.upload_status_available) {
+		if (!snapshot.upload_status.error.empty()) {
+			return "upload API not available: " + snapshot.upload_status.error;
+		}
+		return "upload API not available";
+	}
+
+	std::ostringstream out;
+	if (!snapshot.upload_status.readiness_state.empty()) {
+		out << snapshot.upload_status.readiness_state;
+		if (!snapshot.upload_status.readiness_next_action.empty()) {
+			out << " / " << snapshot.upload_status.readiness_next_action;
+		}
+		return out.str();
+	}
+	out << "upload API ready / quota waiting " << snapshot.upload_status.quota_waiting;
+	return out.str();
+}
+
 QLabel *add_row(QFormLayout *layout, const char *name, QLabel **name_label = nullptr)
 {
 	auto *label = new QLabel(QString::fromUtf8(name));
@@ -255,20 +298,20 @@ struct DockThemePalette {
 const DockThemePalette &palette_for_theme(const std::string &theme)
 {
 	static const DockThemePalette classic{
-		"classic", "#f7f9fc", "#274c77", "#274c77", "#e8f7f4", "#84d9cf", "#fff3df",
-		"#ffd08a", "#edf2ff", "#b6c7ff", "#fff7fb", "#ffb3d1", "#f2f6f8", "#cdd8df",
-		"#2ec4b6", "#073b3a", "#ff9f1c", "#3d2400", "#f05d5e", "#ffffff", "#5b7cfa",
-		"#ffffff", "#6b7280", "#ffffff", "#d45087", "#ffffff"};
+		"classic", "#f6fbf7", "#1b5e20", "#1b5e20", "#edf7ed", "#c8e6c9", "#f1f8e9",
+		"#a5d6a7", "#e8f5e9", "#81c784", "#f7fbf4", "#c5e1a5", "#f3f8f2", "#c8d6c5",
+		"#2e7d32", "#ffffff", "#43a047", "#ffffff", "#c62828", "#ffffff", "#388e3c",
+		"#ffffff", "#607d66", "#ffffff", "#2e7d32", "#ffffff"};
 	static const DockThemePalette forest{
-		"forest", "#f5f8f4", "#354f52", "#354f52", "#ecf6ef", "#84a98c", "#fff4df",
-		"#f4a261", "#edf7f6", "#86c5b8", "#f7eff6", "#c9a0c8", "#eef3ef", "#cad2c5",
-		"#84a98c", "#16332b", "#f4a261", "#3a2508", "#bc4749", "#ffffff", "#52796f",
-		"#ffffff", "#6b705c", "#ffffff", "#9d4edd", "#ffffff"};
+		"forest", "#f4faf3", "#2f5d37", "#2f5d37", "#eef7ec", "#b7d7b6", "#f3faef",
+		"#9fcb9e", "#e6f3e7", "#79b882", "#f7fbf3", "#bdd7a7", "#f1f6f0", "#c5d4c2",
+		"#3f7d4a", "#ffffff", "#4f9b57", "#ffffff", "#b23b3b", "#ffffff", "#4c8f53",
+		"#ffffff", "#667a66", "#ffffff", "#3f7d4a", "#ffffff"};
 	static const DockThemePalette bright{
-		"bright", "#fbf8ff", "#5b3c88", "#5b3c88", "#eef7ff", "#bde0fe", "#fff8df",
-		"#ffd166", "#f4f0ff", "#cdb4db", "#fff0f6", "#ffafcc", "#f6f2fb", "#d7c7ef",
-		"#00b4d8", "#073b4c", "#ffd166", "#3a2a00", "#ef476f", "#ffffff", "#7b2cbf",
-		"#ffffff", "#6c757d", "#ffffff", "#ff5d8f", "#ffffff"};
+		"bright", "#f8fff8", "#246b2a", "#246b2a", "#effbed", "#cdecc7", "#f5fce8",
+		"#b9e4a6", "#e8f8ea", "#97d39d", "#f6fcf0", "#d3edb8", "#f4faf3", "#d5e5d2",
+		"#2f8f3a", "#ffffff", "#55ad5b", "#ffffff", "#d04747", "#ffffff", "#3d9b46",
+		"#ffffff", "#6b806b", "#ffffff", "#2f8f3a", "#ffffff"};
 
 	if (theme == "forest") {
 		return forest;
@@ -341,22 +384,31 @@ void style_button(QPushButton *button, const char *background, const char *foreg
 				      .arg(QString::fromUtf8(background), QString::fromUtf8(foreground)));
 }
 
+void decorate_button(QPushButton *button, QStyle::StandardPixmap icon, const QString &tooltip)
+{
+	if (!button) {
+		return;
+	}
+	button->setIcon(button->style()->standardIcon(icon));
+	button->setToolTip(tooltip);
+}
+
 QString state_badge_style(WorkerDiagnosticState state)
 {
 	const char *background = "#d8dee7";
 	const char *foreground = "#1f2933";
 	switch (state) {
 	case WorkerDiagnosticState::running:
-		background = "#2ec4b6";
-		foreground = "#073b3a";
+		background = "#2e7d32";
+		foreground = "#ffffff";
 		break;
 	case WorkerDiagnosticState::starting:
-		background = "#ffd166";
-		foreground = "#573d00";
+		background = "#c5e1a5";
+		foreground = "#1b5e20";
 		break;
 	case WorkerDiagnosticState::not_started:
-		background = "#edf2ff";
-		foreground = "#304c89";
+		background = "#e8f5e9";
+		foreground = "#1b5e20";
 		break;
 	case WorkerDiagnosticState::unhealthy:
 	case WorkerDiagnosticState::config_error:
@@ -420,7 +472,7 @@ void PluginUiController::register_ui()
 	root->setContentsMargins(12, 12, 12, 12);
 	root->setSpacing(10);
 
-	header_card_ = make_card("#274c77", "#274c77");
+	header_card_ = make_card("#1b5e20", "#1b5e20");
 	auto *header_layout = qobject_cast<QVBoxLayout *>(header_card_->layout());
 	auto *title = new QLabel("OBS Duel Recorder");
 	title->setStyleSheet("color: #ffffff; font-size: 18px; font-weight: 700;");
@@ -444,21 +496,6 @@ void PluginUiController::register_ui()
 	setup_tab_layout->setContentsMargins(0, 0, 0, 0);
 	setup_tab_layout->setSpacing(10);
 
-	auto *diagnostics_tab = new QWidget;
-	auto *diagnostics_tab_layout = new QVBoxLayout(diagnostics_tab);
-	diagnostics_tab_layout->setContentsMargins(0, 0, 0, 0);
-	diagnostics_tab_layout->setSpacing(10);
-
-	auto *settings_tab = new QWidget;
-	auto *settings_tab_layout = new QVBoxLayout(settings_tab);
-	settings_tab_layout->setContentsMargins(0, 0, 0, 0);
-	settings_tab_layout->setSpacing(10);
-
-	auto *help_tab = new QWidget;
-	auto *help_tab_layout = new QVBoxLayout(help_tab);
-	help_tab_layout->setContentsMargins(0, 0, 0, 0);
-	help_tab_layout->setSpacing(10);
-
 	auto *automatic_tab = new QWidget;
 	auto *automatic_tab_layout = new QVBoxLayout(automatic_tab);
 	automatic_tab_layout->setContentsMargins(0, 0, 0, 0);
@@ -466,21 +503,22 @@ void PluginUiController::register_ui()
 
 	setup_card_ = make_card("#e8f7f4", "#84d9cf");
 	auto *setup_layout = qobject_cast<QVBoxLayout *>(setup_card_->layout());
-	setup_title_ = add_card_title(setup_layout, language_is_japanese(ui_language_) ? "セットアップ" : "Setup", "#0f4c5c");
+	setup_title_ = add_card_title(setup_layout, language_is_japanese(ui_language_) ? "セットアップ" : "Setup", "#1b5e20");
 	setup_value_ = add_card_value(setup_layout, language_is_japanese(ui_language_) ? "準備状態" : "Readiness",
 				      &setup_label_);
 	action_value_ = add_card_value(setup_layout, language_is_japanese(ui_language_) ? "次の操作" : "Next action",
 				       &action_label_);
 	setup_tab_layout->addWidget(setup_card_);
 	settings_button_ = new QPushButton(ui_text(ui_language_, "Open Settings", "設定を開く"));
-	help_button_ = new QPushButton(ui_text(ui_language_, "Open Help", "ヘルプを開く"));
 	automatic_setup_button_ = new QPushButton(ui_text(ui_language_, "Open Automatic Setup", "自動録画セットアップを開く"));
 	QObject::connect(settings_button_, &QPushButton::clicked, [this]() { show_settings_dialog(); });
-	QObject::connect(help_button_, &QPushButton::clicked, [this]() { request_show_help(); });
 	QObject::connect(automatic_setup_button_, &QPushButton::clicked, [this]() { request_automatic_setup(); });
-	style_button(settings_button_, "#2ec4b6", "#073b3a");
-	style_button(help_button_, "#52796f", "#ffffff");
-	style_button(automatic_setup_button_, "#52796f", "#ffffff");
+	style_button(settings_button_, "#2e7d32", "#ffffff");
+	style_button(automatic_setup_button_, "#388e3c", "#ffffff");
+	decorate_button(settings_button_, QStyle::SP_FileDialogDetailedView,
+			ui_text(ui_language_, "Open runtime, theme, and language settings.", "保存先、テーマ、言語の設定を開きます。"));
+	decorate_button(automatic_setup_button_, QStyle::SP_ComputerIcon,
+			ui_text(ui_language_, "Open guided automatic recording setup.", "自動録画の設定ガイドを開きます。"));
 
 	settings_note_ = new QLabel(ui_text(
 		ui_language_,
@@ -494,33 +532,37 @@ void PluginUiController::register_ui()
 	settings_port_input_ = new QLineEdit(QString::number(settings.endpoint.port));
 	settings_user_data_input_ = new QLineEdit(qstr_wide(settings.user_data_dir));
 	settings_theme_input_ = new QComboBox;
-	settings_theme_input_->addItem("Classic", QString::fromUtf8("classic"));
-	settings_theme_input_->addItem("Forest", QString::fromUtf8("forest"));
-	settings_theme_input_->addItem("Bright", QString::fromUtf8("bright"));
+	settings_theme_input_->addItem("Light Green", QString::fromUtf8("classic"));
+	settings_theme_input_->addItem("Forest Green", QString::fromUtf8("forest"));
+	settings_theme_input_->addItem("Mint Green", QString::fromUtf8("bright"));
 	settings_theme_input_->setCurrentIndex(std::max(0, settings_theme_input_->findData(QString::fromUtf8(settings.dock_theme.c_str()))));
 	settings_language_input_ = new QComboBox;
 	settings_language_input_->addItem("English", QString::fromUtf8("en"));
 	settings_language_input_->addItem(QString::fromUtf8("日本語"), QString::fromUtf8("ja"));
 	settings_language_input_->setCurrentIndex(std::max(0, settings_language_input_->findData(QString::fromUtf8(settings.ui_language.c_str()))));
+	automatic_detection_enabled_input_ = new QCheckBox(ui_text(ui_language_, "Enable automatic detection frame feed",
+								   "自動検出フレーム送信を有効にする"));
+	automatic_detection_enabled_input_->setChecked(settings.automatic_detection_enabled);
+	automatic_detection_interval_input_ = new QSpinBox;
+	automatic_detection_interval_input_->setRange(1000, 60000);
+	automatic_detection_interval_input_->setSingleStep(1000);
+	automatic_detection_interval_input_->setSuffix(QString::fromUtf8(" ms"));
+	automatic_detection_interval_input_->setValue(settings.automatic_detection_interval_ms);
 	inline_settings_form->addRow(ui_text(ui_language_, "Host", "ホスト"), settings_host_input_);
 	inline_settings_form->addRow(ui_text(ui_language_, "Port", "ポート"), settings_port_input_);
 	inline_settings_form->addRow(ui_text(ui_language_, "User data dir", "ユーザーデータ保存先"), settings_user_data_input_);
 	inline_settings_form->addRow(ui_text(ui_language_, "Dock theme", "Dock テーマ"), settings_theme_input_);
 	inline_settings_form->addRow(ui_text(ui_language_, "Language", "言語"), settings_language_input_);
+	inline_settings_form->addRow(ui_text(ui_language_, "Automatic detection", "自動検出"), automatic_detection_enabled_input_);
+	inline_settings_form->addRow(ui_text(ui_language_, "Frame interval", "送信間隔"), automatic_detection_interval_input_);
 	setup_tab_layout->addLayout(inline_settings_form);
 	save_inline_settings_button_ = new QPushButton(ui_text(ui_language_, "Save Settings", "設定を保存"));
 	QObject::connect(save_inline_settings_button_, &QPushButton::clicked, [this]() { save_inline_settings(); });
-	style_button(save_inline_settings_button_, "#2ec4b6", "#073b3a");
+	style_button(save_inline_settings_button_, "#2e7d32", "#ffffff");
+	decorate_button(save_inline_settings_button_, QStyle::SP_DialogSaveButton,
+			ui_text(ui_language_, "Save Dock settings and restart Worker if needed.", "Dock設定を保存し、必要に応じてWorkerを再起動します。"));
 	setup_tab_layout->addWidget(save_inline_settings_button_);
 	setup_tab_layout->addWidget(settings_button_);
-
-	help_note_ = new QLabel(ui_text(
-		ui_language_,
-		"Open task-focused help for setup, recording, upload review, diagnostics, and language recovery.",
-		"セットアップ、録画、アップロード確認、診断、言語復旧のヘルプを開きます。"));
-	help_note_->setWordWrap(true);
-	setup_tab_layout->addWidget(help_note_);
-	setup_tab_layout->addWidget(help_button_);
 
 	automatic_note_ = new QLabel(ui_text(
 		ui_language_,
@@ -530,10 +572,10 @@ void PluginUiController::register_ui()
 	setup_tab_layout->addWidget(automatic_note_);
 	setup_tab_layout->addWidget(automatic_setup_button_);
 
-	recording_card_ = make_card("#fff3df", "#ffd08a");
+	recording_card_ = make_card("#f1f8e9", "#a5d6a7");
 	auto *recording_layout = qobject_cast<QVBoxLayout *>(recording_card_->layout());
 	recording_title_ = add_card_title(recording_layout, language_is_japanese(ui_language_) ? "録画" : "Recording",
-					  "#7c4700");
+					  "#1b5e20");
 	recording_value_ = add_card_value(recording_layout, language_is_japanese(ui_language_) ? "状態" : "State",
 					  &recording_label_);
 	output_value_ = add_card_value(recording_layout, language_is_japanese(ui_language_) ? "出力" : "Output",
@@ -544,20 +586,26 @@ void PluginUiController::register_ui()
 	stop_button_ = new QPushButton(ui_text(ui_language_, "Stop Recording", "録画停止"));
 	QObject::connect(start_button_, &QPushButton::clicked, [this]() { request_manual_start(); });
 	QObject::connect(stop_button_, &QPushButton::clicked, [this]() { request_manual_stop(); });
-	style_button(start_button_, "#ff9f1c", "#3d2400");
+	style_button(start_button_, "#43a047", "#ffffff");
 	style_button(stop_button_, "#f05d5e", "#ffffff");
+	decorate_button(start_button_, QStyle::SP_MediaPlay,
+			ui_text(ui_language_, "Start manual OBS recording.", "手動でOBS録画を開始します。"));
+	decorate_button(stop_button_, QStyle::SP_MediaStop,
+			ui_text(ui_language_, "Stop manual OBS recording.", "手動でOBS録画を停止します。"));
 	recording_controls->addWidget(start_button_);
 	recording_controls->addWidget(stop_button_);
 	recording_layout->addLayout(recording_controls);
 	recording_tab_layout->addWidget(recording_card_);
 
-	upload_card_ = make_card("#edf2ff", "#b6c7ff");
+	upload_card_ = make_card("#e8f5e9", "#81c784");
 	auto *upload_layout = qobject_cast<QVBoxLayout *>(upload_card_->layout());
-	upload_title_ = add_card_title(upload_layout, language_is_japanese(ui_language_) ? "アップロード確認" : "Upload Review",
-				       "#304c89");
+	upload_title_ = add_card_title(upload_layout, language_is_japanese(ui_language_) ? "アップロードキュー情報" : "Upload Queue",
+				       "#1b5e20");
 	queue_value_ = add_card_value(upload_layout, language_is_japanese(ui_language_) ? "キュー" : "Queue", &queue_label_);
 	review_item_value_ = add_card_value(upload_layout, language_is_japanese(ui_language_) ? "確認項目" : "Review item",
 					    &review_item_label_);
+	youtube_value_ = add_card_value(upload_layout, language_is_japanese(ui_language_) ? "YouTube連携" : "YouTube link",
+					&youtube_label_);
 
 	auto *upload_controls = new QHBoxLayout;
 	retry_upload_button_ = new QPushButton(ui_text(ui_language_, "Retry Upload", "再試行"));
@@ -566,25 +614,56 @@ void PluginUiController::register_ui()
 	QObject::connect(retry_upload_button_, &QPushButton::clicked, [this]() { request_upload_retry(); });
 	QObject::connect(discard_upload_button_, &QPushButton::clicked, [this]() { request_upload_discard(); });
 	QObject::connect(mark_uploaded_button_, &QPushButton::clicked, [this]() { request_upload_mark_uploaded(); });
-	style_button(retry_upload_button_, "#5b7cfa", "#ffffff");
+	style_button(retry_upload_button_, "#388e3c", "#ffffff");
 	style_button(discard_upload_button_, "#6b7280", "#ffffff");
-	style_button(mark_uploaded_button_, "#2ec4b6", "#073b3a");
+	style_button(mark_uploaded_button_, "#2e7d32", "#ffffff");
+	decorate_button(retry_upload_button_, QStyle::SP_BrowserReload,
+			ui_text(ui_language_, "Retry the current failed or manual-review upload item.", "現在の失敗または確認待ちアップロードを再試行します。"));
+	decorate_button(discard_upload_button_, QStyle::SP_DialogDiscardButton,
+			ui_text(ui_language_, "Discard the current upload queue item.", "現在のアップロードキュー項目を破棄します。"));
+	decorate_button(mark_uploaded_button_, QStyle::SP_DialogApplyButton,
+			ui_text(ui_language_, "Mark the current item uploaded after entering a YouTube video ID.", "YouTube動画IDを入力してアップロード済みにします。"));
 	upload_controls->addWidget(retry_upload_button_);
 	upload_controls->addWidget(discard_upload_button_);
 	upload_controls->addWidget(mark_uploaded_button_);
 	upload_layout->addLayout(upload_controls);
+
+	auto *oauth_controls = new QHBoxLayout;
+	oauth_authorize_button_ = new QPushButton(ui_text(ui_language_, "Authorize YouTube", "YouTube認証"));
+	oauth_refresh_button_ = new QPushButton(ui_text(ui_language_, "Refresh Token", "トークン更新"));
+	oauth_help_button_ = new QPushButton(ui_text(ui_language_, "OAuth Help", "OAuthヘルプ"));
+	QObject::connect(oauth_authorize_button_, &QPushButton::clicked,
+			 [this]() { request_upload_oauth_authorization(); });
+	QObject::connect(oauth_refresh_button_, &QPushButton::clicked, [this]() { request_upload_oauth_refresh(); });
+	QObject::connect(oauth_help_button_, &QPushButton::clicked, [this]() { request_upload_oauth_help(); });
+	style_button(oauth_authorize_button_, "#1b5e20", "#ffffff");
+	style_button(oauth_refresh_button_, "#388e3c", "#ffffff");
+	style_button(oauth_help_button_, "#6b7280", "#ffffff");
+	decorate_button(oauth_authorize_button_, QStyle::SP_ComputerIcon,
+			ui_text(ui_language_, "Open the YouTube OAuth authorization URL in your browser.",
+				"YouTube OAuth認証URLをブラウザで開きます。"));
+	decorate_button(oauth_refresh_button_, QStyle::SP_BrowserReload,
+			ui_text(ui_language_, "Refresh the stored YouTube OAuth token.",
+				"保存済みのYouTube OAuthトークンを更新します。"));
+	decorate_button(oauth_help_button_, QStyle::SP_DialogHelpButton,
+			ui_text(ui_language_, "Open the YouTube OAuth setup guide.",
+				"YouTube OAuth設定ガイドを開きます。"));
+	oauth_controls->addWidget(oauth_authorize_button_);
+	oauth_controls->addWidget(oauth_refresh_button_);
+	oauth_controls->addWidget(oauth_help_button_);
+	upload_layout->addLayout(oauth_controls);
 	automatic_tab_layout->addWidget(upload_card_);
 
-	metadata_card_ = make_card("#fff7fb", "#ffb3d1");
+	metadata_card_ = make_card("#f7fbf4", "#c5e1a5");
 	auto *metadata_layout = qobject_cast<QVBoxLayout *>(metadata_card_->layout());
 	metadata_title_ = add_card_title(metadata_layout, language_is_japanese(ui_language_) ? "メタデータ" : "Metadata",
-					 "#8a2d5d");
+					 "#1b5e20");
 	metadata_note_ = new QLabel(ui_text(
 		ui_language_,
-		"Review match fields and generated upload text before publishing.",
-		"公開前に対戦情報と生成されたアップロード文面を確認します。"));
+		"Enter or confirm match metadata for the latest recording.",
+		"最新録画のメタデータを入力または確認します。"));
 	metadata_note_->setWordWrap(true);
-	metadata_note_->setStyleSheet("color: #5c3650; font-size: 12px;");
+	metadata_note_->setStyleSheet("color: #35543a; font-size: 12px;");
 	metadata_layout->addWidget(metadata_note_);
 
 	metadata_match_label_ = make_value_label();
@@ -592,6 +671,33 @@ void PluginUiController::register_ui()
 	metadata_status_label_ = make_value_label();
 	metadata_layout->addWidget(metadata_match_label_);
 	metadata_layout->addWidget(metadata_video_label_);
+	metadata_video_preview_image_ = new QLabel(ui_text(ui_language_, "No target video preview.", "対象動画プレビューはありません。"));
+	metadata_video_preview_image_->setAlignment(Qt::AlignCenter);
+	metadata_video_preview_image_->setMinimumHeight(120);
+	metadata_video_preview_image_->setMaximumHeight(180);
+	metadata_video_preview_image_->setStyleSheet(
+		"background: #f3f8f2; border: 1px solid #c8d6c5; color: #35543a; padding: 8px;");
+	metadata_layout->addWidget(metadata_video_preview_image_);
+	auto *video_preview_controls = new QHBoxLayout;
+	video_preview_frame_1_button_ = new QPushButton("1");
+	video_preview_frame_2_button_ = new QPushButton("2");
+	video_preview_frame_3_button_ = new QPushButton("3");
+	QObject::connect(video_preview_frame_1_button_, &QPushButton::clicked, [this]() { load_target_video_preview(1); });
+	QObject::connect(video_preview_frame_2_button_, &QPushButton::clicked, [this]() { load_target_video_preview(2); });
+	QObject::connect(video_preview_frame_3_button_, &QPushButton::clicked, [this]() { load_target_video_preview(3); });
+	decorate_button(video_preview_frame_1_button_, QStyle::SP_MediaSeekBackward,
+			ui_text(ui_language_, "Show the first representative frame.", "1枚目の代表フレームを表示します。"));
+	decorate_button(video_preview_frame_2_button_, QStyle::SP_FileDialogInfoView,
+			ui_text(ui_language_, "Show the middle representative frame.", "中央の代表フレームを表示します。"));
+	decorate_button(video_preview_frame_3_button_, QStyle::SP_MediaSeekForward,
+			ui_text(ui_language_, "Show the last representative frame.", "3枚目の代表フレームを表示します。"));
+	style_button(video_preview_frame_1_button_, "#6b7280", "#ffffff");
+	style_button(video_preview_frame_2_button_, "#1b5e20", "#ffffff");
+	style_button(video_preview_frame_3_button_, "#6b7280", "#ffffff");
+	video_preview_controls->addWidget(video_preview_frame_1_button_);
+	video_preview_controls->addWidget(video_preview_frame_2_button_);
+	video_preview_controls->addWidget(video_preview_frame_3_button_);
+	metadata_layout->addLayout(video_preview_controls);
 
 	auto *metadata_form = new QFormLayout;
 	metadata_deck_input_ = new QComboBox;
@@ -625,10 +731,24 @@ void PluginUiController::register_ui()
 	QObject::connect(preview_metadata_button_, &QPushButton::clicked, [this]() { request_preview_upload_metadata(); });
 	QObject::connect(reload_metadata_button_, &QPushButton::clicked, [this]() { load_latest_metadata_into_dock(); });
 	QObject::connect(save_metadata_button_, &QPushButton::clicked, [this]() { save_metadata_from_dock(); });
-	style_button(edit_metadata_button_, "#d45087", "#ffffff");
-	style_button(preview_metadata_button_, "#8a2d5d", "#ffffff");
+	style_button(edit_metadata_button_, "#2e7d32", "#ffffff");
+	style_button(preview_metadata_button_, "#1b5e20", "#ffffff");
 	style_button(reload_metadata_button_, "#6b7280", "#ffffff");
-	style_button(save_metadata_button_, "#d45087", "#ffffff");
+	style_button(save_metadata_button_, "#2e7d32", "#ffffff");
+	decorate_button(edit_metadata_button_, QStyle::SP_FileDialogDetailedView,
+			ui_text(ui_language_, "Open metadata editing dialog.", "メタデータ編集ダイアログを開きます。"));
+	decorate_button(preview_metadata_button_, QStyle::SP_FileDialogInfoView,
+			ui_text(ui_language_, "Preview upload title, description, and tags.", "アップロードするタイトル、説明文、タグを確認します。"));
+	decorate_button(video_preview_frame_1_button_, QStyle::SP_MediaSeekBackward,
+			ui_text(ui_language_, "Show the first representative frame.", "1枚目の代表フレームを表示します。"));
+	decorate_button(video_preview_frame_2_button_, QStyle::SP_FileDialogInfoView,
+			ui_text(ui_language_, "Show the middle representative frame.", "中央の代表フレームを表示します。"));
+	decorate_button(video_preview_frame_3_button_, QStyle::SP_MediaSeekForward,
+			ui_text(ui_language_, "Show the last representative frame.", "3枚目の代表フレームを表示します。"));
+	decorate_button(reload_metadata_button_, QStyle::SP_BrowserReload,
+			ui_text(ui_language_, "Reload the latest metadata target.", "最新のメタデータ編集対象を再読み込みします。"));
+	decorate_button(save_metadata_button_, QStyle::SP_DialogSaveButton,
+			ui_text(ui_language_, "Save metadata and upload text templates.", "メタデータとアップロード文面テンプレートを保存します。"));
 	auto *metadata_controls = new QHBoxLayout;
 	metadata_controls->addWidget(reload_metadata_button_);
 	metadata_controls->addWidget(save_metadata_button_);
@@ -636,14 +756,14 @@ void PluginUiController::register_ui()
 	metadata_controls->addWidget(preview_metadata_button_);
 	metadata_layout->addLayout(metadata_controls);
 	metadata_layout->addWidget(metadata_status_label_);
-	settings_tab_layout->addWidget(metadata_card_);
-	settings_tab_layout->addStretch(1);
+	recording_tab_layout->addWidget(metadata_card_);
+	recording_tab_layout->addStretch(1);
 
-	upload_template_card_ = make_card("#fff7fb", "#ffb3d1");
+	upload_template_card_ = make_card("#f7fbf4", "#c5e1a5");
 	auto *upload_template_layout = qobject_cast<QVBoxLayout *>(upload_template_card_->layout());
 	upload_preview_title_label_ = add_card_title(upload_template_layout,
 						     language_is_japanese(ui_language_) ? "アップロード文面" : "Upload text",
-						     "#8a2d5d");
+						     "#1b5e20");
 	auto *template_form = new QFormLayout;
 	upload_title_template_input_ = new QLineEdit(qstr_utf8(settings.upload_title_template));
 	upload_description_template_input_ = new QTextEdit(qstr_utf8(settings.upload_description_template));
@@ -655,7 +775,9 @@ void PluginUiController::register_ui()
 	upload_template_layout->addLayout(template_form);
 	render_upload_preview_button_ = new QPushButton(ui_text(ui_language_, "Preview", "プレビュー"));
 	QObject::connect(render_upload_preview_button_, &QPushButton::clicked, [this]() { render_upload_preview_from_dock(); });
-	style_button(render_upload_preview_button_, "#8a2d5d", "#ffffff");
+	style_button(render_upload_preview_button_, "#1b5e20", "#ffffff");
+	decorate_button(render_upload_preview_button_, QStyle::SP_FileDialogInfoView,
+			ui_text(ui_language_, "Render the YouTube upload text preview.", "YouTubeアップロード文面のプレビューを生成します。"));
 	upload_template_layout->addWidget(render_upload_preview_button_);
 	upload_preview_description_ = new QTextEdit;
 	upload_preview_description_->setReadOnly(true);
@@ -678,13 +800,14 @@ void PluginUiController::register_ui()
 	diagnostics_details_button_ = new QPushButton(ui_text(ui_language_, "Show Details", "詳細を表示"));
 	QObject::connect(diagnostics_details_button_, &QPushButton::clicked, [this]() { toggle_diagnostics_details(); });
 	style_button(diagnostics_details_button_, "#6b7280", "#ffffff");
+	decorate_button(diagnostics_details_button_, QStyle::SP_FileDialogDetailedView,
+			ui_text(ui_language_, "Show or hide diagnostic details.", "診断の詳細表示を切り替えます。"));
 	setup_tab_layout->addWidget(diagnostics_details_button_);
 	setup_tab_layout->addWidget(diagnostics_group_);
 	diagnostics_group_->setVisible(false);
 	setup_tab_layout->addStretch(1);
 
 	dock_tabs_->addTab(recording_tab, ui_text(ui_language_, "Record", "録画"));
-	dock_tabs_->addTab(settings_tab, ui_text(ui_language_, "Metadata", "メタデータ"));
 	dock_tabs_->addTab(automatic_tab, ui_text(ui_language_, "Upload", "アップロード"));
 	dock_tabs_->addTab(setup_tab, ui_text(ui_language_, "Manage", "管理"));
 	apply_ui_language();
@@ -761,6 +884,15 @@ void PluginUiController::apply_dock_theme(const std::string &theme)
 	if (preview_metadata_button_) {
 		style_button(preview_metadata_button_, palette.header_bg, "#ffffff");
 	}
+	if (video_preview_frame_1_button_) {
+		style_button(video_preview_frame_1_button_, palette.secondary_bg, palette.secondary_fg);
+	}
+	if (video_preview_frame_2_button_) {
+		style_button(video_preview_frame_2_button_, palette.header_bg, "#ffffff");
+	}
+	if (video_preview_frame_3_button_) {
+		style_button(video_preview_frame_3_button_, palette.secondary_bg, palette.secondary_fg);
+	}
 	if (reload_metadata_button_) {
 		style_button(reload_metadata_button_, palette.secondary_bg, palette.secondary_fg);
 	}
@@ -782,9 +914,8 @@ void PluginUiController::apply_ui_language()
 {
 	if (dock_tabs_) {
 		dock_tabs_->setTabText(0, ui_text(ui_language_, "Record", "録画"));
-		dock_tabs_->setTabText(1, ui_text(ui_language_, "Metadata", "メタデータ"));
-		dock_tabs_->setTabText(2, ui_text(ui_language_, "Upload", "アップロード"));
-		dock_tabs_->setTabText(3, ui_text(ui_language_, "Manage", "管理"));
+		dock_tabs_->setTabText(1, ui_text(ui_language_, "Upload", "アップロード"));
+		dock_tabs_->setTabText(2, ui_text(ui_language_, "Manage", "管理"));
 	}
 	if (setup_title_) {
 		setup_title_->setText(ui_text(ui_language_, "Setup", "セットアップ"));
@@ -805,7 +936,7 @@ void PluginUiController::apply_ui_language()
 		output_label_->setText(ui_text(ui_language_, "Output", "出力"));
 	}
 	if (upload_title_) {
-		upload_title_->setText(ui_text(ui_language_, "Upload Review", "アップロード確認"));
+		upload_title_->setText(ui_text(ui_language_, "Upload Queue", "アップロードキュー情報"));
 	}
 	if (queue_label_) {
 		queue_label_->setText(ui_text(ui_language_, "Queue", "キュー"));
@@ -813,14 +944,17 @@ void PluginUiController::apply_ui_language()
 	if (review_item_label_) {
 		review_item_label_->setText(ui_text(ui_language_, "Review item", "確認項目"));
 	}
+	if (youtube_label_) {
+		youtube_label_->setText(ui_text(ui_language_, "YouTube link", "YouTube連携"));
+	}
 	if (metadata_title_) {
 		metadata_title_->setText(ui_text(ui_language_, "Metadata", "メタデータ"));
 	}
 	if (metadata_note_) {
 		metadata_note_->setText(ui_text(
 			ui_language_,
-			"Review match fields and generated upload text before publishing.",
-			"公開前に対戦情報と生成されたアップロード文面を確認します。"));
+			"Enter or confirm match metadata for the latest recording.",
+			"最新録画のメタデータを入力または確認します。"));
 	}
 	if (settings_note_) {
 		settings_note_->setText(ui_text(
@@ -870,6 +1004,10 @@ void PluginUiController::apply_ui_language()
 	if (automatic_setup_button_) {
 		automatic_setup_button_->setText(ui_text(ui_language_, "Open Automatic Setup", "自動録画セットアップを開く"));
 	}
+	if (automatic_detection_enabled_input_) {
+		automatic_detection_enabled_input_->setText(ui_text(ui_language_, "Enable automatic detection frame feed",
+								    "自動検出フレーム送信を有効にする"));
+	}
 	if (start_button_) {
 		start_button_->setText(ui_text(ui_language_, "Start Recording", "録画開始"));
 	}
@@ -884,6 +1022,15 @@ void PluginUiController::apply_ui_language()
 	}
 	if (mark_uploaded_button_) {
 		mark_uploaded_button_->setText(ui_text(ui_language_, "Mark Uploaded", "アップロード済みにする"));
+	}
+	if (oauth_authorize_button_) {
+		oauth_authorize_button_->setText(ui_text(ui_language_, "Authorize YouTube", "YouTube認証"));
+	}
+	if (oauth_refresh_button_) {
+		oauth_refresh_button_->setText(ui_text(ui_language_, "Refresh Token", "トークン更新"));
+	}
+	if (oauth_help_button_) {
+		oauth_help_button_->setText(ui_text(ui_language_, "OAuth Help", "OAuthヘルプ"));
 	}
 	if (edit_metadata_button_) {
 		edit_metadata_button_->setText(ui_text(ui_language_, "Edit Metadata", "メタデータ編集"));
@@ -911,6 +1058,43 @@ void PluginUiController::apply_ui_language()
 	if (upload_preview_title_label_) {
 		upload_preview_title_label_->setText(ui_text(ui_language_, "Upload text", "アップロード文面"));
 	}
+	decorate_button(settings_button_, QStyle::SP_FileDialogDetailedView,
+			ui_text(ui_language_, "Open runtime, theme, and language settings.", "保存先、テーマ、言語の設定を開きます。"));
+	decorate_button(automatic_setup_button_, QStyle::SP_ComputerIcon,
+			ui_text(ui_language_, "Open guided automatic recording setup.", "自動録画の設定ガイドを開きます。"));
+	decorate_button(start_button_, QStyle::SP_MediaPlay,
+			ui_text(ui_language_, "Start manual OBS recording.", "手動でOBS録画を開始します。"));
+	decorate_button(stop_button_, QStyle::SP_MediaStop,
+			ui_text(ui_language_, "Stop manual OBS recording.", "手動でOBS録画を停止します。"));
+	decorate_button(retry_upload_button_, QStyle::SP_BrowserReload,
+			ui_text(ui_language_, "Retry the current failed or manual-review upload item.", "現在の失敗または確認待ちアップロードを再試行します。"));
+	decorate_button(discard_upload_button_, QStyle::SP_DialogDiscardButton,
+			ui_text(ui_language_, "Discard the current upload queue item.", "現在のアップロードキュー項目を破棄します。"));
+	decorate_button(mark_uploaded_button_, QStyle::SP_DialogApplyButton,
+			ui_text(ui_language_, "Mark the current item uploaded after entering a YouTube video ID.", "YouTube動画IDを入力してアップロード済みにします。"));
+	decorate_button(oauth_authorize_button_, QStyle::SP_ComputerIcon,
+			ui_text(ui_language_, "Open the YouTube OAuth authorization URL in your browser.",
+				"YouTube OAuth認証URLをブラウザで開きます。"));
+	decorate_button(oauth_refresh_button_, QStyle::SP_BrowserReload,
+			ui_text(ui_language_, "Refresh the stored YouTube OAuth token.",
+				"保存済みのYouTube OAuthトークンを更新します。"));
+	decorate_button(oauth_help_button_, QStyle::SP_DialogHelpButton,
+			ui_text(ui_language_, "Open the YouTube OAuth setup guide.",
+				"YouTube OAuth設定ガイドを開きます。"));
+	decorate_button(edit_metadata_button_, QStyle::SP_FileDialogDetailedView,
+			ui_text(ui_language_, "Open metadata editing dialog.", "メタデータ編集ダイアログを開きます。"));
+	decorate_button(preview_metadata_button_, QStyle::SP_FileDialogInfoView,
+			ui_text(ui_language_, "Preview upload title, description, and tags.", "アップロードするタイトル、説明文、タグを確認します。"));
+	decorate_button(reload_metadata_button_, QStyle::SP_BrowserReload,
+			ui_text(ui_language_, "Reload the latest metadata target.", "最新のメタデータ編集対象を再読み込みします。"));
+	decorate_button(save_metadata_button_, QStyle::SP_DialogSaveButton,
+			ui_text(ui_language_, "Save metadata and upload text templates.", "メタデータとアップロード文面テンプレートを保存します。"));
+	decorate_button(render_upload_preview_button_, QStyle::SP_FileDialogInfoView,
+			ui_text(ui_language_, "Render the YouTube upload text preview.", "YouTubeアップロード文面のプレビューを生成します。"));
+	decorate_button(save_inline_settings_button_, QStyle::SP_DialogSaveButton,
+			ui_text(ui_language_, "Save Dock settings and restart Worker if needed.", "Dock設定を保存し、必要に応じてWorkerを再起動します。"));
+	decorate_button(diagnostics_details_button_, QStyle::SP_FileDialogDetailedView,
+			ui_text(ui_language_, "Show or hide diagnostic details.", "診断の詳細表示を切り替えます。"));
 }
 
 void PluginUiController::unregister_ui()
@@ -947,6 +1131,9 @@ void PluginUiController::refresh()
 	output_value_->setText(qstr_utf8(recording_output_summary(snapshot)));
 	queue_value_->setText(qstr_utf8(queue_summary(snapshot)));
 	review_item_value_->setText(qstr_utf8(review_item_summary(snapshot)));
+	if (youtube_value_) {
+		youtube_value_->setText(qstr_utf8(youtube_summary(snapshot)));
+	}
 	endpoint_value_->setText(qstr_utf8(endpoint));
 	user_data_value_->setText(snapshot.user_data_dir.empty() ? QString::fromUtf8("not configured") : qstr_wide(snapshot.user_data_dir));
 	worker_path_value_->setText(worker_path.empty() ? QString::fromUtf8("not available") : qstr_wide(worker_path));
@@ -955,11 +1142,14 @@ void PluginUiController::refresh()
 	detail_value_->setText(qstr_utf8(snapshot.error.empty() ? snapshot.last_probe_summary : snapshot.error));
 	action_value_->setText(QString::fromUtf8(recommended_action(snapshot.state)));
 	const bool worker_running = snapshot.state == WorkerDiagnosticState::running;
+	const bool currently_recording = snapshot.recording_state_available && snapshot.recording_state.state == "recording";
 	if (start_button_) {
 		start_button_->setEnabled(worker_running);
+		start_button_->setVisible(!currently_recording);
 	}
 	if (stop_button_) {
 		stop_button_->setEnabled(worker_running);
+		stop_button_->setVisible(currently_recording);
 	}
 	const bool queue_action_available = worker_running && snapshot.queue_action_item_available;
 	if (retry_upload_button_) {
@@ -972,11 +1162,29 @@ void PluginUiController::refresh()
 		mark_uploaded_button_->setEnabled(queue_action_available &&
 						  snapshot.queue_action_item.item.state == "need_manual_review");
 	}
+	if (oauth_authorize_button_) {
+		oauth_authorize_button_->setEnabled(worker_running);
+	}
+	if (oauth_refresh_button_) {
+		oauth_refresh_button_->setEnabled(worker_running);
+	}
+	if (oauth_help_button_) {
+		oauth_help_button_->setEnabled(true);
+	}
 	if (edit_metadata_button_) {
 		edit_metadata_button_->setEnabled(worker_running);
 	}
 	if (preview_metadata_button_) {
 		preview_metadata_button_->setEnabled(worker_running);
+	}
+	if (video_preview_frame_1_button_) {
+		video_preview_frame_1_button_->setEnabled(worker_running && current_match_id_ > 0);
+	}
+	if (video_preview_frame_2_button_) {
+		video_preview_frame_2_button_->setEnabled(worker_running && current_match_id_ > 0);
+	}
+	if (video_preview_frame_3_button_) {
+		video_preview_frame_3_button_->setEnabled(worker_running && current_match_id_ > 0);
 	}
 	if (reload_metadata_button_) {
 		reload_metadata_button_->setEnabled(worker_running);
@@ -992,6 +1200,7 @@ void PluginUiController::refresh()
 	}
 
 	handle_automatic_recording(snapshot);
+	handle_automatic_detection_feed(snapshot);
 
 	if (snapshot.overlay_state_available &&
 	    (!overlay_state_applied_ ||
@@ -1041,6 +1250,14 @@ void PluginUiController::show_settings_dialog()
 	language_input->addItem(QString::fromUtf8("日本語"), QString::fromUtf8("ja"));
 	const int language_index = language_input->findData(QString::fromUtf8(settings.ui_language.c_str()));
 	language_input->setCurrentIndex(language_index >= 0 ? language_index : 0);
+	auto *automatic_detection_enabled = new QCheckBox(ui_text(ui_language_, "Enable automatic detection frame feed",
+								 "自動検出フレーム送信を有効にする"));
+	automatic_detection_enabled->setChecked(settings.automatic_detection_enabled);
+	auto *automatic_detection_interval = new QSpinBox;
+	automatic_detection_interval->setRange(1000, 60000);
+	automatic_detection_interval->setSingleStep(1000);
+	automatic_detection_interval->setSuffix(QString::fromUtf8(" ms"));
+	automatic_detection_interval->setValue(settings.automatic_detection_interval_ms);
 	auto *settings_path = new QLabel(qstr_wide(settings.settings_path));
 	settings_path->setTextInteractionFlags(Qt::TextSelectableByMouse);
 	settings_path->setWordWrap(true);
@@ -1050,6 +1267,8 @@ void PluginUiController::show_settings_dialog()
 	form->addRow(ui_text(ui_language_, "User data dir", "ユーザーデータ保存先"), user_data_input);
 	form->addRow(ui_text(ui_language_, "Dock theme", "Dock テーマ"), theme_input);
 	form->addRow(ui_text(ui_language_, "Language", "言語"), language_input);
+	form->addRow(ui_text(ui_language_, "Automatic detection", "自動検出"), automatic_detection_enabled);
+	form->addRow(ui_text(ui_language_, "Frame interval", "送信間隔"), automatic_detection_interval);
 	form->addRow(ui_text(ui_language_, "Settings file", "設定ファイル"), settings_path);
 	layout->addLayout(form);
 
@@ -1074,6 +1293,8 @@ void PluginUiController::show_settings_dialog()
 	settings.user_data_dir = user_data_input->text().toStdWString();
 	settings.dock_theme = utf8_string(theme_input->currentData().toString());
 	settings.ui_language = utf8_string(language_input->currentData().toString());
+	settings.automatic_detection_enabled = automatic_detection_enabled->isChecked();
+	settings.automatic_detection_interval_ms = automatic_detection_interval->value();
 	settings.restart_worker_on_change = true;
 	ui_language_ = settings.ui_language;
 	apply_ui_language();
@@ -1204,6 +1425,89 @@ void PluginUiController::request_upload_mark_uploaded()
 	refresh();
 }
 
+void PluginUiController::request_upload_oauth_authorization()
+{
+	const OAuthAuthorizationUrlResult result = worker_manager_.request_upload_oauth_authorization_url();
+	if (!result.accepted()) {
+		QMessageBox::warning(
+			dock_widget_,
+			ui_text(ui_language_, "YouTube authorization", "YouTube認証"),
+			qstr_utf8(result.error.empty() ? "Worker could not create a YouTube OAuth authorization URL." :
+							result.error));
+		blog(LOG_WARNING, "%s upload oauth authorization-url failed status=%d http=%lu error=%s",
+		     kLogPrefix,
+		     static_cast<int>(result.status),
+		     result.http_status,
+		     result.error.c_str());
+		refresh();
+		return;
+	}
+
+	const QUrl authorization_url(qstr_utf8(result.authorization_url));
+	if (!QDesktopServices::openUrl(authorization_url)) {
+		QMessageBox::warning(
+			dock_widget_,
+			ui_text(ui_language_, "YouTube authorization", "YouTube認証"),
+			ui_text(ui_language_,
+				"Unable to open the browser. Copy this authorization URL:\n\n",
+				"ブラウザを開けませんでした。次の認証URLをコピーしてください:\n\n") +
+				qstr_utf8(result.authorization_url));
+		refresh();
+		return;
+	}
+
+	QString message = ui_text(ui_language_,
+				  "The authorization page was opened in your browser. Complete Google sign-in, then return to OBS and refresh the upload status.",
+				  "ブラウザで認証ページを開きました。Googleへのログインを完了してからOBSへ戻り、アップロード状態を確認してください。");
+	if (!result.redirect_uri.empty()) {
+		message += QString::fromUtf8("\n\nRedirect URI: ") + qstr_utf8(result.redirect_uri);
+	}
+	QMessageBox::information(
+		dock_widget_,
+		ui_text(ui_language_, "YouTube authorization", "YouTube認証"),
+		message);
+	refresh();
+}
+
+void PluginUiController::request_upload_oauth_refresh()
+{
+	const WorkerActionResult result = worker_manager_.refresh_upload_oauth_token();
+	if (!result.accepted()) {
+		QMessageBox::warning(
+			dock_widget_,
+			ui_text(ui_language_, "Refresh YouTube token", "YouTubeトークン更新"),
+			qstr_utf8(result.error.empty() ? "Worker could not refresh the YouTube OAuth token." :
+							result.error));
+		blog(LOG_WARNING, "%s upload oauth refresh failed status=%d http=%lu error=%s",
+		     kLogPrefix,
+		     static_cast<int>(result.status),
+		     result.http_status,
+		     result.error.c_str());
+		refresh();
+		return;
+	}
+
+	QMessageBox::information(
+		dock_widget_,
+		ui_text(ui_language_, "Refresh YouTube token", "YouTubeトークン更新"),
+		ui_text(ui_language_, "The stored YouTube OAuth token was refreshed.",
+			"保存済みのYouTube OAuthトークンを更新しました。"));
+	refresh();
+}
+
+void PluginUiController::request_upload_oauth_help()
+{
+	const QString docs_url = QString::fromUtf8(
+		"https://github.com/Tao-pyth/obs-duel-recorder/blob/main/docs/user/youtube-oauth.md");
+	if (!QDesktopServices::openUrl(QUrl(docs_url))) {
+		QMessageBox::information(
+			dock_widget_,
+			ui_text(ui_language_, "YouTube OAuth help", "YouTube OAuthヘルプ"),
+			ui_text(ui_language_, "Open this setup guide:\n\n", "次の設定ガイドを開いてください:\n\n") +
+				docs_url);
+	}
+}
+
 void PluginUiController::request_edit_metadata()
 {
 	const MatchFetchResult fetched = worker_manager_.fetch_latest_match();
@@ -1310,9 +1614,13 @@ void PluginUiController::request_preview_upload_metadata()
 
 	auto *tags_preview = new QLineEdit(qstr_utf8(preview.preview.tags));
 	tags_preview->setReadOnly(true);
+	auto *privacy_preview = new QLineEdit(qstr_utf8(preview.preview.privacy_status.empty() ? "private" :
+							      preview.preview.privacy_status));
+	privacy_preview->setReadOnly(true);
 	form->addRow(ui_text(ui_language_, "Title", "タイトル"), title_preview);
 	form->addRow(ui_text(ui_language_, "Description", "説明文"), description_preview);
 	form->addRow(ui_text(ui_language_, "Tags", "タグ"), tags_preview);
+	form->addRow(ui_text(ui_language_, "Privacy", "公開設定"), privacy_preview);
 	layout->addLayout(form);
 	layout->addWidget(warning);
 
@@ -1333,6 +1641,11 @@ void PluginUiController::load_latest_metadata_into_dock()
 		if (metadata_match_label_) {
 			metadata_match_label_->setText(ui_text(ui_language_, "No completed match is available yet.",
 							       "完了した録画メタデータはまだありません。"));
+		}
+		if (metadata_video_preview_image_) {
+			metadata_video_preview_image_->clear();
+			metadata_video_preview_image_->setText(ui_text(ui_language_, "No target video preview.",
+									 "対象動画プレビューはありません。"));
 		}
 		if (metadata_status_label_) {
 			metadata_status_label_->setText(qstr_utf8(fetched.error));
@@ -1393,6 +1706,61 @@ void PluginUiController::load_latest_metadata_into_dock()
 	if (metadata_status_label_) {
 		metadata_status_label_->setText(ui_text(ui_language_, "Loaded latest match.", "最新の対戦を読み込みました。"));
 	}
+	load_target_video_preview(metadata_preview_frame_index_);
+}
+
+void PluginUiController::load_target_video_preview(int frame_index)
+{
+	if (frame_index < 1) {
+		frame_index = 1;
+	}
+	if (frame_index > 3) {
+		frame_index = 3;
+	}
+	metadata_preview_frame_index_ = frame_index;
+	if (!metadata_video_preview_image_) {
+		return;
+	}
+	if (current_match_id_ <= 0) {
+		metadata_video_preview_image_->clear();
+		metadata_video_preview_image_->setText(ui_text(ui_language_, "No target video preview.",
+							       "対象動画プレビューはありません。"));
+		return;
+	}
+
+	const VideoPreviewResult result = worker_manager_.fetch_match_video_preview(current_match_id_, frame_index);
+	if (!result.reachable()) {
+		metadata_video_preview_image_->clear();
+		metadata_video_preview_image_->setText(qstr_utf8(result.error.empty() ?
+								  "Target video preview is unavailable." :
+								  result.error));
+		return;
+	}
+	if (metadata_video_label_ && !result.preview.video_path.empty()) {
+		metadata_video_label_->setText(ui_text(ui_language_, "Preview source: ", "確認対象: ") +
+					       qstr_utf8(result.preview.video_path));
+	}
+	if (!result.preview.available) {
+		metadata_video_preview_image_->clear();
+		const std::string reason = result.preview.reason.empty() ? "preview_unavailable" : result.preview.reason;
+		metadata_video_preview_image_->setText(qstr_utf8("Preview unavailable: " + reason));
+		return;
+	}
+
+	const QByteArray encoded(result.preview.content_base64.data(),
+				 static_cast<int>(result.preview.content_base64.size()));
+	const QByteArray bytes = QByteArray::fromBase64(encoded);
+	QPixmap pixmap;
+	if (bytes.isEmpty() || !pixmap.loadFromData(bytes, "PNG")) {
+		metadata_video_preview_image_->clear();
+		metadata_video_preview_image_->setText(
+			ui_text(ui_language_, "Preview image could not be decoded.", "プレビュー画像をデコードできませんでした。"));
+		return;
+	}
+
+	metadata_video_preview_image_->setText(QString());
+	metadata_video_preview_image_->setPixmap(
+		pixmap.scaled(metadata_video_preview_image_->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation));
 }
 
 void PluginUiController::save_metadata_from_dock()
@@ -1495,6 +1863,12 @@ void PluginUiController::save_inline_settings()
 						      settings.dock_theme;
 	settings.ui_language = settings_language_input_ ? utf8_string(settings_language_input_->currentData().toString()) :
 							 settings.ui_language;
+	settings.automatic_detection_enabled = automatic_detection_enabled_input_ ?
+						       automatic_detection_enabled_input_->isChecked() :
+						       settings.automatic_detection_enabled;
+	settings.automatic_detection_interval_ms = automatic_detection_interval_input_ ?
+							automatic_detection_interval_input_->value() :
+							settings.automatic_detection_interval_ms;
 	settings.restart_worker_on_change = true;
 	ui_language_ = settings.ui_language;
 	apply_ui_language();
@@ -1538,6 +1912,52 @@ void PluginUiController::request_show_help()
 		message);
 }
 
+bool PluginUiController::capture_current_screenshot_base64(std::string &frame_base64,
+							   std::string &screenshot_path,
+							   std::string &error,
+							   bool delete_after_read)
+{
+	const std::string previous = take_frontend_string(obs_frontend_get_last_screenshot());
+	obs_frontend_take_screenshot();
+
+	QElapsedTimer timer;
+	timer.start();
+	while (timer.elapsed() < 5000) {
+		QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
+		const std::string current = take_frontend_string(obs_frontend_get_last_screenshot());
+		if (!current.empty() && current != previous) {
+			QFileInfo info(qstr_utf8(current));
+			if (info.suffix().compare(QString::fromUtf8("png"), Qt::CaseInsensitive) != 0) {
+				error = "OBS saved a non-PNG screenshot; automatic setup requires PNG output.";
+				return false;
+			}
+
+			QFile file(info.absoluteFilePath());
+			if (!file.open(QIODevice::ReadOnly)) {
+				error = "Captured screenshot could not be opened.";
+				return false;
+			}
+			const QByteArray bytes = file.readAll();
+			if (bytes.isEmpty()) {
+				error = "Captured screenshot was empty.";
+				return false;
+			}
+			const QByteArray encoded = bytes.toBase64();
+			frame_base64 = std::string(encoded.constData(), static_cast<size_t>(encoded.size()));
+			screenshot_path = current;
+			if (delete_after_read) {
+				file.close();
+				QFile::remove(info.absoluteFilePath());
+			}
+			return true;
+		}
+		QThread::msleep(50);
+	}
+
+	error = "Timed out waiting for OBS screenshot capture.";
+	return false;
+}
+
 void PluginUiController::request_automatic_setup()
 {
 	QDialog dialog(dock_widget_);
@@ -1573,6 +1993,21 @@ void PluginUiController::request_automatic_setup()
 	form->addRow(ui_text(ui_language_, "Test frame text", "テストフレーム文字列"), test_frame_input);
 	layout->addLayout(form);
 
+	auto *capture_buttons = new QHBoxLayout;
+	auto *capture_start_button = new QPushButton(ui_text(ui_language_, "Capture Start Screen", "開始画面として取得"));
+	auto *capture_end_button = new QPushButton(ui_text(ui_language_, "Capture End Screen", "終了画面として取得"));
+	auto *test_current_button = new QPushButton(ui_text(ui_language_, "Test Current Screen", "現在画面でテスト"));
+	decorate_button(capture_start_button, QStyle::SP_ComputerIcon,
+			ui_text(ui_language_, "Capture the current OBS Program screen as the start template.", "現在のOBS Program画面を開始テンプレートとして取得します。"));
+	decorate_button(capture_end_button, QStyle::SP_ComputerIcon,
+			ui_text(ui_language_, "Capture the current OBS Program screen as the end template.", "現在のOBS Program画面を終了テンプレートとして取得します。"));
+	decorate_button(test_current_button, QStyle::SP_FileDialogInfoView,
+			ui_text(ui_language_, "Test the current OBS Program screen against start and end templates.", "現在のOBS Program画面を開始/終了テンプレートの両方でテストします。"));
+	capture_buttons->addWidget(capture_start_button);
+	capture_buttons->addWidget(capture_end_button);
+	capture_buttons->addWidget(test_current_button);
+	layout->addLayout(capture_buttons);
+
 	auto *status = new QTextEdit;
 	status->setReadOnly(true);
 	status->setAcceptRichText(false);
@@ -1587,6 +2022,14 @@ void PluginUiController::request_automatic_setup()
 	auto *register_button = new QPushButton(ui_text(ui_language_, "Register Template", "テンプレート登録"));
 	auto *test_button = new QPushButton(ui_text(ui_language_, "Test Detection", "検出テスト"));
 	auto *close_button = new QPushButton(ui_text(ui_language_, "Close", "閉じる"));
+	decorate_button(validate_button, QStyle::SP_DialogApplyButton,
+			ui_text(ui_language_, "Validate setup readiness without changing templates.", "テンプレートを変更せずにセットアップ状態を検証します。"));
+	decorate_button(register_button, QStyle::SP_DialogSaveButton,
+			ui_text(ui_language_, "Register the advanced template path shown above.", "上の詳細テンプレートパスを登録します。"));
+	decorate_button(test_button, QStyle::SP_FileDialogInfoView,
+			ui_text(ui_language_, "Run the advanced text/fixture detection test.", "詳細入力の文字列/フィクスチャで検出テストを実行します。"));
+	decorate_button(close_button, QStyle::SP_DialogCloseButton,
+			ui_text(ui_language_, "Close automatic recording setup.", "自動録画セットアップを閉じます。"));
 	buttons->addWidget(validate_button);
 	buttons->addWidget(register_button);
 	buttons->addWidget(test_button);
@@ -1616,6 +2059,47 @@ void PluginUiController::request_automatic_setup()
 				 const WorkerActionResult result = worker_manager_.register_detection_template(
 					 kind, path, threshold_input->value(), confirmations_input->value());
 				 status->setPlainText(result_text("Template registration", result));
+			 });
+	auto capture_template = [this, threshold_input, confirmations_input, status, result_text](const std::string &kind) {
+		std::string frame_base64;
+		std::string screenshot_path;
+		std::string error;
+		if (!capture_current_screenshot_base64(frame_base64, screenshot_path, error)) {
+			status->setPlainText(qstr_utf8("Current screen capture\nerror=" + error));
+			return;
+		}
+		const WorkerActionResult result = worker_manager_.capture_detection_template(
+			kind, frame_base64, threshold_input->value(), confirmations_input->value());
+		QString text = result_text(kind == "start" ? "Captured start template" : "Captured end template", result);
+		text.append(QString::fromUtf8("\nscreenshot="));
+		text.append(qstr_utf8(screenshot_path));
+		status->setPlainText(text);
+	};
+	QObject::connect(capture_start_button, &QPushButton::clicked, [capture_template]() {
+		capture_template("start");
+	});
+	QObject::connect(capture_end_button, &QPushButton::clicked, [capture_template]() {
+		capture_template("end");
+	});
+	QObject::connect(test_current_button, &QPushButton::clicked,
+			 [this, status, result_text]() {
+				 std::string frame_base64;
+				 std::string screenshot_path;
+				 std::string error;
+				 if (!capture_current_screenshot_base64(frame_base64, screenshot_path, error)) {
+					 status->setPlainText(qstr_utf8("Current screen test\nerror=" + error));
+					 return;
+				 }
+				 const WorkerActionResult start_result =
+					 worker_manager_.test_detection_template_base64("start", frame_base64);
+				 const WorkerActionResult end_result =
+					 worker_manager_.test_detection_template_base64("end", frame_base64);
+				 QString text = result_text("Current screen start test", start_result);
+				 text.append(QString::fromUtf8("\n\n"));
+				 text.append(result_text("Current screen end test", end_result));
+				 text.append(QString::fromUtf8("\nscreenshot="));
+				 text.append(qstr_utf8(screenshot_path));
+				 status->setPlainText(text);
 			 });
 	QObject::connect(test_button, &QPushButton::clicked,
 			 [this, kind_input, test_frame_input, status, result_text]() {
@@ -1679,6 +2163,43 @@ void PluginUiController::handle_automatic_recording(const WorkerStatusSnapshot &
 	if (state.state == "recording" || state.state == "completed" || state.state == "idle") {
 		automatic_recording_request_key_.clear();
 	}
+}
+
+void PluginUiController::handle_automatic_detection_feed(const WorkerStatusSnapshot &snapshot)
+{
+	const PluginSettings settings = load_plugin_settings();
+	if (!settings.automatic_detection_enabled) {
+		return;
+	}
+	if (snapshot.state != WorkerDiagnosticState::running || !snapshot.recording_state_available) {
+		return;
+	}
+	if (snapshot.recording_state.command_source == "manual" && snapshot.recording_state.state != "idle") {
+		return;
+	}
+
+	const qint64 now = QDateTime::currentMSecsSinceEpoch();
+	const int interval_ms = std::max(1000, settings.automatic_detection_interval_ms);
+	if (last_detection_frame_sent_ms_ > 0 && now - last_detection_frame_sent_ms_ < interval_ms) {
+		return;
+	}
+	last_detection_frame_sent_ms_ = now;
+
+	std::string frame_base64;
+	std::string screenshot_path;
+	std::string error;
+	if (!capture_current_screenshot_base64(frame_base64, screenshot_path, error, true)) {
+		blog(LOG_WARNING, "%s detection_feed capture_failed error=%s", kLogPrefix, error.c_str());
+		return;
+	}
+
+	const WorkerActionResult result = worker_manager_.send_detection_frame_base64(frame_base64);
+	if (result.accepted()) {
+		blog(LOG_INFO, "%s detection_feed sent interval_ms=%d", kLogPrefix, interval_ms);
+		return;
+	}
+	blog(LOG_WARNING, "%s detection_feed failed status=%d http=%lu error=%s",
+	     kLogPrefix, static_cast<int>(result.status), result.http_status, result.error.c_str());
 }
 
 void PluginUiController::log_queue_command_result(const char *action, const QueueCommandResult &result)

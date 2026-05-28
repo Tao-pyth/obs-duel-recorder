@@ -75,6 +75,20 @@ class QueueRecoveryApiTests(unittest.TestCase):
         self.assertEqual(uploaded.json()["state"], "uploaded")
         self.assertEqual(uploaded.json()["youtube_video_id"], "abc123")
 
+    def test_mark_uploaded_rejects_obvious_non_video_ids(self) -> None:
+        client, _ = self._client()
+        item = client.post("/queue/items", json={"video_path": "duel.mp4"}).json()
+        client.post(f"/queue/items/{item['id']}/command", json={"action": "start_upload"})
+
+        uploaded = client.post(
+            f"/queue/items/{item['id']}/command",
+            json={"action": "mark_uploaded", "youtube_video_id": "https://youtu.be/abc123"},
+        )
+
+        self.assertEqual(uploaded.status_code, 400)
+        self.assertEqual(uploaded.json()["code"], "queue_payload_invalid")
+        self.assertEqual(uploaded.json()["details"]["youtube_video_id"], "must_be_plain_video_id")
+
     def test_retry_limit_moves_to_manual_review(self) -> None:
         client, _ = self._client()
         item = client.post("/queue/items", json={"video_path": "duel.mp4", "max_retries": 0}).json()
