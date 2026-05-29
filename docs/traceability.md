@@ -165,6 +165,25 @@ Goals:
   - `docs/requirements/requirements.md` -> Setup Rules / Upload Rules / Overlay Rules / Runtime Rules
   - `AGENTS.md` -> Responsibility Separation / Documentation Rules / Recovery Rules
 
+### v1.1.4 - Consolidated Dock, YouTube, And Automatic Recording Update
+
+- Roadmap: `docs/roadmap.md` -> **v1.1.4 - Consolidated Dock, YouTube, And Automatic Recording Update**
+- Version tracking issue: `#473` - `[v1.1.4] Consolidated Dock UI, YouTube readiness, and guided automatic recording release tracking`
+- Acceptance checklist: `docs/requirements/v1.1.4-consolidated-dock-youtube-automatic-recording-acceptance.md`
+- Release readiness checklist: `docs/release/v1.1.4-consolidated-dock-youtube-automatic-recording-readiness.md`
+- UI architecture contract: `docs/architecture/dock-workflow-ui-state.md`
+- Previous released user-ready version: `v1.1.3`
+- Target version: `v1.1.4`
+- Required issue range: `#473` through `#504`
+- Required child issues:
+  - Dock UI and validation: `#474`, `#475`, `#476`, `#477`, `#478`, `#479`, `#480`, `#496`
+  - YouTube readiness: `#484`, `#489`, `#490`, `#491`, `#492`, `#493`, `#494`, `#495`
+  - Guided automatic recording: `#497`, `#498`, `#499`, `#500`, `#501`, `#502`, `#503`, `#504`
+  - Supporting backlog parents in scope: `#481`, `#482`, `#483`, `#485`, `#486`, `#487`, `#488`
+- Requirements (relevant sections):
+  - `docs/requirements/requirements.md` -> Setup Rules / Upload Rules / Detection Rules / Runtime Rules / Update Rules / OAuth Rules
+  - `AGENTS.md` -> Responsibility Separation / Runtime Directory Rules / Asset Distribution Rules / Documentation Rules / Recovery Rules
+
 ---
 
 ## Legacy Implementation Records

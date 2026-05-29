@@ -42,6 +42,9 @@ disabled until the Worker state is `running`.
 
 ## YouTube Setup
 
+YouTube upload is optional. Configure it only when you want OBS Duel Recorder
+to publish videos through the YouTube Data API.
+
 The setup wizard validates whether YouTube credential files exist under:
 
 ```text
@@ -51,7 +54,7 @@ user_data/config/secrets/
 Required files:
 
 - `youtube-client-secret.json`
-- `youtube-token.json`
+- `youtube-token.json`, created after authorization
 
 The setup wizard reports only file presence and safe paths. It does not display token or client-secret contents.
 
@@ -66,8 +69,10 @@ For production upload OAuth setup:
    ```
 
 3. Open the returned URL in your browser and approve the YouTube upload scope.
-4. Let the browser return to `/upload/oauth/callback`, or exchange the code
-   manually:
+   The default redirect URI is
+   `http://127.0.0.1:8787/upload/oauth/callback`.
+4. Let the browser return to `/upload/oauth/callback`. If the browser shows an
+   authorization code instead, exchange the code manually:
 
    ```powershell
    Invoke-WebRequest http://127.0.0.1:8787/upload/oauth/exchange-code -Method Post -ContentType "application/json" -Body '{"code":"PASTE_CODE_HERE"}' | Select-Object -ExpandProperty Content
@@ -79,6 +84,20 @@ For production upload OAuth setup:
    Invoke-WebRequest http://127.0.0.1:8787/upload/status | Select-Object -ExpandProperty Content
    ```
 
+Readiness is reported with `readiness_state` and `readiness_next_action` so the
+Dock can show one clear action instead of raw debug fields:
+
+| `readiness_state` | Meaning | User action |
+|---|---|---|
+| `ready` | OAuth, provider dependencies, and queue state allow upload. | Upload can proceed. |
+| `client_secret_missing` | `youtube-client-secret.json` is not present. | Place the Google OAuth desktop client JSON under `user_data/config/secrets/`. |
+| `token_missing` | Authorization has not created `youtube-token.json`. | Request an authorization URL and complete browser approval. |
+| `token_invalid` | The token file is unreadable, incomplete, or expired without refresh support. | Reauthorize and replace `youtube-token.json`. |
+| `token_expired_refreshable` | The token is expired but has a refresh token. | Use token refresh. |
+| `dependencies_missing` | Optional Google upload libraries are unavailable. | Use a packaged release with Google upload support or install the missing runtime dependencies. |
+| `quota_waiting` | Upload quota was exceeded. | Wait for quota reset before retrying. |
+| `manual_review_required` | A queue item needs a user decision. | Review YouTube and then retry, discard, or mark uploaded. |
+
 Token refresh can be requested without exposing token contents:
 
 ```powershell
@@ -87,6 +106,12 @@ Invoke-WebRequest http://127.0.0.1:8787/upload/oauth/refresh -Method Post | Sele
 
 Do not commit `youtube-client-secret.json`, `youtube-token.json`,
 authorization codes, or bearer tokens.
+
+Do not paste authorization codes, tokens, client secrets, or full OAuth error
+payloads into GitHub issues, screenshots, release ZIPs, logs, or documentation.
+Use only the safe status fields from `/upload/status` when reporting problems.
+
+For a focused OAuth guide, see [YouTube OAuth setup](youtube-oauth.md).
 
 ---
 

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import datetime as _dt
 import json
+import re
 import sqlite3
 from dataclasses import dataclass
 from pathlib import Path
@@ -20,6 +21,7 @@ QUEUE_STATES = {
 
 TERMINAL_STATES = {"uploaded", "discarded"}
 RESUMABLE_STATES = {"ready_upload", "upload_failed"}
+YOUTUBE_VIDEO_ID_RE = re.compile(r"^[A-Za-z0-9_-]{3,64}$")
 
 
 class QueueCommandError(ValueError):
@@ -255,6 +257,11 @@ class QueueStore:
                 params["youtube_video_id"] = _string_field(payload, "youtube_video_id")
                 if not params["youtube_video_id"]:
                     raise QueueCommandError("queue_payload_invalid", {"youtube_video_id": "required"})
+                if not _is_valid_youtube_video_id(params["youtube_video_id"]):
+                    raise QueueCommandError(
+                        "queue_payload_invalid",
+                        {"youtube_video_id": "must_be_plain_video_id"},
+                    )
                 params["youtube_url"] = _string_field(
                     payload,
                     "youtube_url",
@@ -414,3 +421,7 @@ def _item_from_row(row: sqlite3.Row) -> QueueItem:
         created_at=str(row["created_at"]),
         updated_at=str(row["updated_at"]),
     )
+
+
+def _is_valid_youtube_video_id(value: str) -> bool:
+    return bool(YOUTUBE_VIDEO_ID_RE.fullmatch(value.strip()))

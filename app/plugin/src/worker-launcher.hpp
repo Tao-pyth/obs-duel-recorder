@@ -90,10 +90,17 @@ public:
 	MatchFetchResult fetch_latest_match();
 	MetadataUpdateResult update_match_metadata(const MatchMetadataPayload &metadata);
 	UploadMetadataPreviewResult fetch_upload_metadata_preview(int match_id);
+	VideoPreviewResult fetch_match_video_preview(int match_id, int frame_index);
 	WorkerActionResult fetch_setup_validation();
 	WorkerActionResult register_detection_template(const std::string &kind, const std::string &path,
 						       double threshold, int confirmations);
+	WorkerActionResult capture_detection_template(const std::string &kind, const std::string &content_base64,
+						      double threshold, int confirmations);
 	WorkerActionResult test_detection_template(const std::string &kind, const std::string &frame_text);
+	WorkerActionResult test_detection_template_base64(const std::string &kind, const std::string &frame_base64);
+	WorkerActionResult send_detection_frame_base64(const std::string &frame_base64);
+	OAuthAuthorizationUrlResult request_upload_oauth_authorization_url();
+	WorkerActionResult refresh_upload_oauth_token();
 
 private:
 	void start(WorkerLaunchConfig config);

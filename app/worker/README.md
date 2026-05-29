@@ -79,6 +79,13 @@ Template matching test without recording:
 Invoke-WebRequest http://127.0.0.1:8787/detection/test -Method Post -ContentType "application/json" -Body '{"kind":"start","frame_text":"sample frame bytes or fixture text"}' | Select-Object -ExpandProperty Content
 ```
 
+PNG template matching test without recording:
+
+```powershell
+$png = [Convert]::ToBase64String([IO.File]::ReadAllBytes("C:/path/to/current-screen.png"))
+Invoke-WebRequest http://127.0.0.1:8787/detection/test -Method Post -ContentType "application/json" -Body (@{kind="start"; frame_base64=$png} | ConvertTo-Json -Compress) | Select-Object -ExpandProperty Content
+```
+
 Register a start template through setup:
 
 ```powershell
@@ -89,6 +96,12 @@ Register an end template through setup:
 
 ```powershell
 Invoke-WebRequest http://127.0.0.1:8787/setup/templates/register -Method Post -ContentType "application/json" -Body '{"kind":"end","path":"duel-end.tpl","threshold":1.0,"confirmations":2}' | Select-Object -ExpandProperty Content
+```
+
+Capture and register a start template through setup:
+
+```powershell
+Invoke-WebRequest http://127.0.0.1:8787/setup/templates/capture -Method Post -ContentType "application/json" -Body '{"kind":"start","extension":"png","content_base64":"<base64 image bytes>","threshold":1.0,"confirmations":2}' | Select-Object -ExpandProperty Content
 ```
 
 Screenshot capture example:
@@ -102,6 +115,15 @@ Screenshot preview example:
 ```powershell
 Invoke-WebRequest http://127.0.0.1:8787/screenshots/1/preview | Select-Object -ExpandProperty Content
 ```
+
+Target-video representative frame preview example:
+
+```powershell
+Invoke-WebRequest "http://127.0.0.1:8787/matches/1/video-preview?frame=2" | Select-Object -ExpandProperty Content
+```
+
+This endpoint uses the video linked to the match upload queue item. It returns
+base64 PNG content only when the local video exists and `ffmpeg` is available.
 
 Upload status check:
 

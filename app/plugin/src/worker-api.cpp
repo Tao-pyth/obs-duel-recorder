@@ -77,6 +77,16 @@ std::string extract_json_number(const std::string &body, const char *key)
 	return match[1].str();
 }
 
+bool extract_json_bool(const std::string &body, const char *key)
+{
+	const std::regex pattern(std::string("\"") + key + "\"\\s*:\\s*(true|false)");
+	std::smatch match;
+	if (!std::regex_search(body, match, pattern) || match.size() < 2) {
+		return false;
+	}
+	return match[1].str() == "true";
+}
+
 std::string extract_json_string_array(const std::string &body, const char *key)
 {
 	const std::regex pattern(std::string("\"") + key + "\"\\s*:\\s*\\[(.*?)\\]");
@@ -197,7 +207,21 @@ void populate_upload_metadata_preview(UploadMetadataPreviewPayload &preview, con
 	preview.description = extract_json_string(body, "description");
 	preview.tags = extract_json_string_array(body, "tags");
 	preview.notes = extract_json_string(body, "notes");
+	preview.privacy_status = extract_json_string(body, "privacy_status");
 	preview.warning = extract_json_string(body, "warning");
+}
+
+void populate_video_preview(VideoPreviewPayload &preview, const std::string &body)
+{
+	const std::string frame_index = extract_json_number(body, "frame_index");
+	const std::string frame_count = extract_json_number(body, "frame_count");
+	preview.available = extract_json_bool(body, "available");
+	preview.frame_index = frame_index.empty() ? 1 : std::stoi(frame_index);
+	preview.frame_count = frame_count.empty() ? 3 : std::stoi(frame_count);
+	preview.reason = extract_json_string(body, "reason");
+	preview.video_path = extract_json_string(body, "video_path");
+	preview.content_type = extract_json_string(body, "content_type");
+	preview.content_base64 = extract_json_string(body, "content_base64");
 }
 
 #ifdef _WIN32
@@ -240,7 +264,7 @@ HttpResponse http_request(const WorkerEndpoint &endpoint, const wchar_t *method,
 		return response;
 	}
 
-	WinHttpSetTimeouts(session, 1000, 1000, 1000, 1000);
+	WinHttpSetTimeouts(session, 1000, 1000, 3000, 5000);
 
 	HINTERNET connection = WinHttpConnect(session, endpoint.host.c_str(), endpoint.port, 0);
 	if (!connection) {
@@ -478,6 +502,8 @@ UploadStatusResult LocalhostApiClient::fetch_upload_status(const WorkerEndpoint 
 						      "0" : extract_json_number(response.body, "need_manual_review"));
 	result.discarded = std::stoi(extract_json_number(response.body, "discarded").empty() ?
 					     "0" : extract_json_number(response.body, "discarded"));
+	result.readiness_state = extract_json_string(response.body, "readiness_state");
+	result.readiness_next_action = extract_json_string(response.body, "readiness_next_action");
 	result.status = UploadStatusFetchStatus::reachable;
 	result.body = response.body;
 	return result;
@@ -831,6 +857,58 @@ UploadMetadataPreviewResult LocalhostApiClient::fetch_upload_metadata_preview(co
 #endif
 }
 
+VideoPreviewResult LocalhostApiClient::fetch_match_video_preview(const WorkerEndpoint &endpoint,
+								int match_id,
+								int frame_index) const
+{
+	VideoPreviewResult result;
+
+#ifdef _WIN32
+	if (match_id <= 0) {
+		result.status = VideoPreviewStatus::not_found;
+		result.error = "Match id is required";
+		return result;
+	}
+	if (frame_index < 1) {
+		frame_index = 1;
+	}
+	if (frame_index > 3) {
+		frame_index = 3;
+	}
+
+	const std::wstring path = L"/matches/" + std::to_wstring(match_id) + L"/video-preview?frame=" +
+				  std::to_wstring(frame_index);
+	const HttpResponse response = http_get(endpoint, path.c_str());
+	result.http_status = response.status;
+	result.body = response.body;
+	if (!response.ok) {
+		result.status = VideoPreviewStatus::unavailable;
+		result.error = response.error;
+		return result;
+	}
+	if (response.status == 404) {
+		result.status = VideoPreviewStatus::not_found;
+		result.error = extract_json_string(response.body, "message");
+		if (result.error.empty()) {
+			result.error = "Match video preview is not available";
+		}
+		return result;
+	}
+	if (response.status != 200) {
+		result.status = VideoPreviewStatus::invalid_response;
+		result.error = "GET /matches/{id}/video-preview returned non-200 status";
+		return result;
+	}
+	populate_video_preview(result.preview, response.body);
+	result.status = VideoPreviewStatus::reachable;
+	return result;
+#else
+	result.status = VideoPreviewStatus::unavailable;
+	result.error = "Video preview is only implemented on Windows";
+	return result;
+#endif
+}
+
 WorkerActionResult LocalhostApiClient::fetch_setup_validation(const WorkerEndpoint &endpoint) const
 {
 	WorkerActionResult result;
@@ -902,6 +980,51 @@ WorkerActionResult LocalhostApiClient::register_detection_template(const WorkerE
 #endif
 }
 
+WorkerActionResult LocalhostApiClient::capture_detection_template(const WorkerEndpoint &endpoint,
+								  const std::string &kind,
+								  const std::string &content_base64,
+								  double threshold,
+								  int confirmations) const
+{
+	WorkerActionResult result;
+
+#ifdef _WIN32
+	std::ostringstream body;
+	body << "{\"kind\":\"" << json_escape(kind)
+	     << "\",\"extension\":\"png\""
+	     << ",\"content_base64\":\"" << json_escape(content_base64)
+	     << "\",\"threshold\":" << threshold
+	     << ",\"confirmations\":" << confirmations << "}";
+	const HttpResponse response = http_post_json(endpoint, L"/setup/templates/capture", body.str());
+	result.http_status = response.status;
+	result.body = response.body;
+	if (!response.ok) {
+		result.status = WorkerActionStatus::unavailable;
+		result.error = response.error;
+		return result;
+	}
+	if (response.status == 400 || response.status == 409) {
+		result.status = WorkerActionStatus::rejected;
+		result.error = extract_json_string(response.body, "message");
+		if (result.error.empty()) {
+			result.error = "POST /setup/templates/capture rejected the captured template";
+		}
+		return result;
+	}
+	if (response.status != 200) {
+		result.status = WorkerActionStatus::invalid_response;
+		result.error = "POST /setup/templates/capture returned non-200 status";
+		return result;
+	}
+	result.status = WorkerActionStatus::accepted;
+	return result;
+#else
+	result.status = WorkerActionStatus::unavailable;
+	result.error = "Template capture is only implemented on Windows";
+	return result;
+#endif
+}
+
 WorkerActionResult LocalhostApiClient::test_detection_template(const WorkerEndpoint &endpoint,
 							      const std::string &kind,
 							      const std::string &frame_text) const
@@ -937,6 +1060,159 @@ WorkerActionResult LocalhostApiClient::test_detection_template(const WorkerEndpo
 #else
 	result.status = WorkerActionStatus::unavailable;
 	result.error = "Detection tests are only implemented on Windows";
+	return result;
+#endif
+}
+
+WorkerActionResult LocalhostApiClient::test_detection_template_base64(const WorkerEndpoint &endpoint,
+								      const std::string &kind,
+								      const std::string &frame_base64) const
+{
+	WorkerActionResult result;
+
+#ifdef _WIN32
+	const std::string body = "{\"kind\":\"" + json_escape(kind) + "\",\"frame_base64\":\"" +
+				 json_escape(frame_base64) + "\"}";
+	const HttpResponse response = http_post_json(endpoint, L"/detection/test", body);
+	result.http_status = response.status;
+	result.body = response.body;
+	if (!response.ok) {
+		result.status = WorkerActionStatus::unavailable;
+		result.error = response.error;
+		return result;
+	}
+	if (response.status == 400 || response.status == 409) {
+		result.status = WorkerActionStatus::rejected;
+		result.error = extract_json_string(response.body, "message");
+		if (result.error.empty()) {
+			result.error = "POST /detection/test rejected the captured frame";
+		}
+		return result;
+	}
+	if (response.status != 200) {
+		result.status = WorkerActionStatus::invalid_response;
+		result.error = "POST /detection/test returned non-200 status";
+		return result;
+	}
+	result.status = WorkerActionStatus::accepted;
+	return result;
+#else
+	result.status = WorkerActionStatus::unavailable;
+	result.error = "Detection tests are only implemented on Windows";
+	return result;
+#endif
+}
+
+WorkerActionResult LocalhostApiClient::send_detection_frame_base64(const WorkerEndpoint &endpoint,
+								   const std::string &frame_base64) const
+{
+	WorkerActionResult result;
+
+#ifdef _WIN32
+	const std::string body = "{\"frame_base64\":\"" + json_escape(frame_base64) + "\"}";
+	const HttpResponse response = http_post_json(endpoint, L"/detection/frame", body);
+	result.http_status = response.status;
+	result.body = response.body;
+	if (!response.ok) {
+		result.status = WorkerActionStatus::unavailable;
+		result.error = response.error;
+		return result;
+	}
+	if (response.status == 400 || response.status == 409 || response.status == 503) {
+		result.status = WorkerActionStatus::rejected;
+		result.error = extract_json_string(response.body, "message");
+		if (result.error.empty()) {
+			result.error = "POST /detection/frame rejected the captured frame";
+		}
+		return result;
+	}
+	if (response.status != 200) {
+		result.status = WorkerActionStatus::invalid_response;
+		result.error = "POST /detection/frame returned non-200 status";
+		return result;
+	}
+	result.status = WorkerActionStatus::accepted;
+	return result;
+#else
+	result.status = WorkerActionStatus::unavailable;
+	result.error = "Detection frame feed is only implemented on Windows";
+	return result;
+#endif
+}
+
+OAuthAuthorizationUrlResult LocalhostApiClient::request_upload_oauth_authorization_url(const WorkerEndpoint &endpoint) const
+{
+	OAuthAuthorizationUrlResult result;
+
+#ifdef _WIN32
+	const HttpResponse response = http_post_json(endpoint, L"/upload/oauth/authorization-url", "{}");
+	result.http_status = response.status;
+	result.body = response.body;
+	if (!response.ok) {
+		result.status = WorkerActionStatus::unavailable;
+		result.error = response.error;
+		return result;
+	}
+	if (response.status == 400 || response.status == 409) {
+		result.status = WorkerActionStatus::rejected;
+		result.error = extract_json_string(response.body, "message");
+		if (result.error.empty()) {
+			result.error = "POST /upload/oauth/authorization-url rejected OAuth setup";
+		}
+		return result;
+	}
+	if (response.status != 200) {
+		result.status = WorkerActionStatus::invalid_response;
+		result.error = "POST /upload/oauth/authorization-url returned non-200 status";
+		return result;
+	}
+	result.authorization_url = extract_json_string(response.body, "authorization_url");
+	result.redirect_uri = extract_json_string(response.body, "redirect_uri");
+	if (result.authorization_url.empty()) {
+		result.status = WorkerActionStatus::invalid_response;
+		result.error = "POST /upload/oauth/authorization-url response is missing authorization_url";
+		return result;
+	}
+	result.status = WorkerActionStatus::accepted;
+	return result;
+#else
+	result.status = WorkerActionStatus::unavailable;
+	result.error = "OAuth authorization is only implemented on Windows";
+	return result;
+#endif
+}
+
+WorkerActionResult LocalhostApiClient::refresh_upload_oauth_token(const WorkerEndpoint &endpoint) const
+{
+	WorkerActionResult result;
+
+#ifdef _WIN32
+	const HttpResponse response = http_post_json(endpoint, L"/upload/oauth/refresh", "{}");
+	result.http_status = response.status;
+	result.body = response.body;
+	if (!response.ok) {
+		result.status = WorkerActionStatus::unavailable;
+		result.error = response.error;
+		return result;
+	}
+	if (response.status == 400 || response.status == 409) {
+		result.status = WorkerActionStatus::rejected;
+		result.error = extract_json_string(response.body, "message");
+		if (result.error.empty()) {
+			result.error = "POST /upload/oauth/refresh rejected token refresh";
+		}
+		return result;
+	}
+	if (response.status != 200) {
+		result.status = WorkerActionStatus::invalid_response;
+		result.error = "POST /upload/oauth/refresh returned non-200 status";
+		return result;
+	}
+	result.status = WorkerActionStatus::accepted;
+	return result;
+#else
+	result.status = WorkerActionStatus::unavailable;
+	result.error = "OAuth refresh is only implemented on Windows";
 	return result;
 #endif
 }

@@ -187,6 +187,15 @@ class UploadApiTests(unittest.TestCase):
             status=403,
             content='{"error":{"message":"quota","errors":[{"reason":"quotaExceeded"}]}}',
         )
+        daily_limit = _google_failure_outcome(
+            status=403,
+            content='{"error":{"message":"daily limit","errors":[{"reason":"dailyLimitExceeded"}]}}',
+        )
+        user_rate = _google_failure_outcome(
+            status=403,
+            content='{"error":{"message":"user rate","errors":[{"reason":"userRateLimitExceeded"}]}}',
+        )
+        too_many_requests = _google_failure_outcome(status=429, content="too many requests")
         auth = _google_failure_outcome(
             status=401,
             content='{"error":{"message":"bad auth","errors":[{"reason":"authError"}]}}',
@@ -195,6 +204,11 @@ class UploadApiTests(unittest.TestCase):
 
         self.assertEqual(quota.outcome, "quota_exceeded")
         self.assertEqual(quota.error_code, "quotaExceeded")
+        self.assertEqual(daily_limit.outcome, "quota_exceeded")
+        self.assertEqual(daily_limit.error_code, "dailyLimitExceeded")
+        self.assertEqual(user_rate.outcome, "quota_exceeded")
+        self.assertEqual(user_rate.error_code, "userRateLimitExceeded")
+        self.assertEqual(too_many_requests.outcome, "quota_exceeded")
         self.assertEqual(auth.outcome, "auth_error")
         self.assertEqual(auth.error_code, "authError")
         self.assertEqual(retryable.outcome, "network_error")
@@ -280,6 +294,7 @@ class UploadApiTests(unittest.TestCase):
         self.assertEqual(calls["build"], ("youtube", "v3", "credentials"))
         self.assertEqual(calls["insert"]["part"], "snippet,status")
         self.assertEqual(calls["insert"]["body"]["snippet"]["title"], "Title")
+        self.assertEqual(calls["insert"]["body"]["status"]["privacyStatus"], "private")
         self.assertEqual(calls["media_path"], str(video_path))
 
     def test_upload_settings_expose_oauth_contract_without_secret_values(self) -> None:
@@ -329,6 +344,68 @@ class UploadApiTests(unittest.TestCase):
         self.assertTrue(status.json()["auth"]["token_refresh_configured"])
         self.assertNotIn("old-token", str(status.json()))
         self.assertNotIn("refresh-secret", str(status.json()))
+
+    def test_upload_readiness_reports_actionable_auth_states(self) -> None:
+        client, runtime_dirs = self._client()
+
+        missing = client.get("/upload/status")
+        self.assertEqual(missing.status_code, 200)
+        self.assertEqual(missing.json()["readiness"]["state"], "client_secret_missing")
+        self.assertEqual(missing.json()["readiness_state"], "client_secret_missing")
+        self.assertEqual(missing.json()["readiness"]["auth_state"], "client_secret_missing")
+
+        secrets_dir = runtime_dirs.config_dir / "secrets"
+        secrets_dir.mkdir(parents=True, exist_ok=True)
+        (secrets_dir / "youtube-client-secret.json").write_text('{"client_secret":"secret"}', encoding="utf-8")
+        client, _ = self._client_for_runtime(runtime_dirs)
+        token_missing = client.get("/upload/status")
+        self.assertEqual(token_missing.json()["readiness"]["state"], "token_missing")
+
+        (secrets_dir / "youtube-token.json").write_text("not json", encoding="utf-8")
+        client, _ = self._client_for_runtime(runtime_dirs)
+        invalid = client.get("/upload/status")
+        self.assertEqual(invalid.json()["readiness"]["state"], "token_invalid")
+
+        (secrets_dir / "youtube-token.json").write_text(
+            '{"token":"old-token","refresh_token":"refresh-secret","expiry":"2000-01-01T00:00:00Z"}',
+            encoding="utf-8",
+        )
+        client, _ = self._client_for_runtime(runtime_dirs)
+        expired = client.get("/upload/status")
+        self.assertEqual(expired.json()["readiness"]["state"], "token_expired_refreshable")
+        self.assertNotIn("old-token", str(expired.json()))
+        self.assertNotIn("refresh-secret", str(expired.json()))
+
+    def test_upload_readiness_reports_ready_provider_and_queue_states(self) -> None:
+        self._install_fake_google_dependencies()
+        client, runtime_dirs = self._client()
+        secrets_dir = runtime_dirs.config_dir / "secrets"
+        secrets_dir.mkdir(parents=True, exist_ok=True)
+        (secrets_dir / "youtube-client-secret.json").write_text('{"client_secret":"secret"}', encoding="utf-8")
+        (secrets_dir / "youtube-token.json").write_text(
+            '{"token":"ready-token","refresh_token":"refresh-secret","expiry":"2999-01-01T00:00:00Z"}',
+            encoding="utf-8",
+        )
+        client, runtime_dirs = self._client_for_runtime(runtime_dirs)
+
+        ready = client.get("/upload/status")
+
+        self.assertEqual(ready.status_code, 200)
+        self.assertEqual(ready.json()["readiness"]["state"], "ready")
+        self.assertEqual(ready.json()["readiness_state"], "ready")
+        self.assertEqual(ready.json()["readiness"]["provider_state"], "google_dependencies_ready")
+        self.assertNotIn("ready-token", str(ready.json()))
+        self.assertNotIn("refresh-secret", str(ready.json()))
+
+        self._write_video(runtime_dirs, "ambiguous.mp4")
+        self._create_queue_item(client, "ambiguous.mp4")
+        review = client.post("/upload/process-next", json={"mock_result": "ambiguous_error"})
+        self.assertEqual(review.status_code, 200)
+
+        status = client.get("/upload/status")
+        self.assertEqual(status.json()["readiness"]["state"], "manual_review_required")
+        self.assertEqual(status.json()["readiness"]["queue_state"], "manual_review_required")
+        self.assertEqual(status.json()["readiness"]["manual_review_count"], 1)
 
     def test_oauth_authorization_and_code_exchange_store_token_under_secrets(self) -> None:
         client, runtime_dirs = self._client()
@@ -514,6 +591,31 @@ class UploadApiTests(unittest.TestCase):
         client = TestClient(create_app(runtime_dirs=runtime_dirs, loaded_config=loaded_config, db_info=db_info))
         self.addCleanup(client.close)
         return client, runtime_dirs
+
+    def _install_fake_google_dependencies(self) -> None:
+        modules = {
+            "google": types.ModuleType("google"),
+            "google.oauth2": types.ModuleType("google.oauth2"),
+            "google.oauth2.credentials": types.ModuleType("google.oauth2.credentials"),
+            "googleapiclient": types.ModuleType("googleapiclient"),
+            "googleapiclient.discovery": types.ModuleType("googleapiclient.discovery"),
+            "googleapiclient.http": types.ModuleType("googleapiclient.http"),
+            "google_auth_oauthlib": types.ModuleType("google_auth_oauthlib"),
+            "google_auth_oauthlib.flow": types.ModuleType("google_auth_oauthlib.flow"),
+        }
+        for package in ("google", "google.oauth2", "googleapiclient", "google_auth_oauthlib"):
+            modules[package].__path__ = []
+        previous = {name: sys.modules.get(name) for name in modules}
+        sys.modules.update(modules)
+
+        def cleanup() -> None:
+            for name, value in previous.items():
+                if value is None:
+                    sys.modules.pop(name, None)
+                else:
+                    sys.modules[name] = value
+
+        self.addCleanup(cleanup)
 
 
 if __name__ == "__main__":

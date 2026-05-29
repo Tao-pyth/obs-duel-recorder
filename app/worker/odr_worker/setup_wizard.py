@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import base64
 import datetime as _dt
 import json
 from dataclasses import dataclass
@@ -143,6 +144,60 @@ class SetupWizardStore:
             "registered": spec.as_payload(),
             "config": validated.as_payload(),
             "validation": self._validate_templates(),
+        }
+
+    def register_captured_template(self, payload: dict[str, Any]) -> dict[str, object]:
+        if not isinstance(payload, dict):
+            raise SetupWizardError("setup_template_capture_invalid", {"payload": "must_be_object"})
+
+        errors: dict[str, object] = {}
+        kind = _template_kind(payload.get("kind"), errors)
+        threshold = _threshold(payload.get("threshold", 1.0), errors)
+        confirmations = _confirmations(payload.get("confirmations", 2), errors)
+        extension = _capture_extension(payload.get("extension", "png"), errors)
+        content = _capture_content(payload, errors)
+
+        if errors:
+            raise SetupWizardError("setup_template_capture_invalid", errors)
+        assert kind is not None
+        assert extension is not None
+        assert content is not None
+
+        templates_dir = default_templates_dir(self.runtime_dirs.user_data_dir)
+        templates_dir.mkdir(parents=True, exist_ok=True)
+        template_name = "duel-start" if kind == "duel_start" else "duel-end"
+        relative_path = f"{template_name}.{extension}"
+        template_path = (templates_dir / relative_path).resolve()
+        if templates_dir.resolve() != template_path.parent:
+            raise SetupWizardError("setup_template_capture_invalid", {"path": "invalid_template_path"})
+        overwritten = template_path.exists()
+
+        try:
+            template_path.write_bytes(content)
+        except OSError as exc:
+            raise SetupWizardError(
+                "setup_template_capture_invalid",
+                {"path": f"failed_to_write: {exc}"},
+            ) from exc
+
+        registered = self.register_template(
+            {
+                "kind": kind,
+                "name": template_name,
+                "path": relative_path,
+                "threshold": threshold,
+                "confirmations": confirmations,
+            }
+        )
+        return {
+            "captured": {
+                "kind": kind,
+                "name": template_name,
+                "relative_path": relative_path,
+                "bytes": len(content),
+                "overwritten": overwritten,
+            },
+            **registered,
         }
 
     def cancel(self) -> dict[str, object]:
@@ -382,6 +437,50 @@ def _confirmations(value: object, errors: dict[str, object]) -> int:
     if confirmations < 1:
         errors["confirmations"] = "must_be_positive"
     return confirmations
+
+
+def _capture_extension(value: object, errors: dict[str, object]) -> str | None:
+    if not isinstance(value, str):
+        errors["extension"] = "must_be_string"
+        return None
+    extension = value.strip().lower().lstrip(".")
+    if extension in {"jpg", "jpeg"}:
+        return "jpg"
+    if extension == "png":
+        return "png"
+    errors["extension"] = "invalid_extension"
+    return None
+
+
+def _capture_content(payload: dict[str, Any], errors: dict[str, object]) -> bytes | None:
+    has_base64 = "content_base64" in payload
+    has_text = "content_text" in payload
+    if has_base64 and has_text:
+        errors["content"] = "use_content_base64_or_content_text"
+        return None
+    if has_base64:
+        value = payload["content_base64"]
+        if not isinstance(value, str):
+            errors["content_base64"] = "must_be_string"
+            return None
+        try:
+            content = base64.b64decode(value, validate=True)
+        except ValueError:
+            errors["content_base64"] = "must_be_base64"
+            return None
+    elif has_text:
+        value = payload["content_text"]
+        if not isinstance(value, str):
+            errors["content_text"] = "must_be_string"
+            return None
+        content = value.encode("utf-8")
+    else:
+        errors["content"] = "content_base64_or_content_text_required"
+        return None
+    if not content:
+        errors["content"] = "empty"
+        return None
+    return content
 
 
 def _template_path(

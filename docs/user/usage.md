@@ -24,6 +24,8 @@ The Dock UI supports:
 - manual stop
 - metadata editing for the latest completed recording
 - upload title and description preview for the latest completed recording
+- representative frame preview for the metadata editing target when the linked
+  local video and ffmpeg are available
 - upload retry
 - upload discard
 - mark uploaded after confirming the YouTube video id
@@ -67,5 +69,10 @@ Invalid metadata values are rejected by the Worker without replacing the saved
 match record.
 
 Use the Upload preview before upload to inspect the generated YouTube title,
-description, and tags. If the preview reports missing fields, save Metadata and
-preview again before retrying upload.
+description, tags, and privacy status. If the preview reports missing fields,
+save Metadata and preview again before retrying upload.
+
+Quota waiting is not the same as a temporary network failure. If the Upload tab
+reports `quota_waiting`, wait for quota reset before retrying. Repeated
+immediate retry is unlikely to help and may consume additional YouTube API
+quota.

@@ -752,6 +752,22 @@ UploadMetadataPreviewResult WorkerProcessManager::fetch_upload_metadata_preview(
 	return api_client_.fetch_upload_metadata_preview(endpoint, match_id);
 }
 
+VideoPreviewResult WorkerProcessManager::fetch_match_video_preview(int match_id, int frame_index)
+{
+	WorkerEndpoint endpoint;
+	{
+		std::lock_guard<std::mutex> lock(mutex_);
+		endpoint = status_.endpoint;
+		if (status_.state != WorkerDiagnosticState::running) {
+			VideoPreviewResult result;
+			result.status = VideoPreviewStatus::unavailable;
+			result.error = "Worker is not running";
+			return result;
+		}
+	}
+	return api_client_.fetch_match_video_preview(endpoint, match_id, frame_index);
+}
+
 WorkerActionResult WorkerProcessManager::fetch_setup_validation()
 {
 	WorkerEndpoint endpoint;
@@ -787,6 +803,25 @@ WorkerActionResult WorkerProcessManager::register_detection_template(const std::
 	return api_client_.register_detection_template(endpoint, kind, path, threshold, confirmations);
 }
 
+WorkerActionResult WorkerProcessManager::capture_detection_template(const std::string &kind,
+								    const std::string &content_base64,
+								    double threshold,
+								    int confirmations)
+{
+	WorkerEndpoint endpoint;
+	{
+		std::lock_guard<std::mutex> lock(mutex_);
+		endpoint = status_.endpoint;
+		if (status_.state != WorkerDiagnosticState::running) {
+			WorkerActionResult result;
+			result.status = WorkerActionStatus::unavailable;
+			result.error = "Worker is not running";
+			return result;
+		}
+	}
+	return api_client_.capture_detection_template(endpoint, kind, content_base64, threshold, confirmations);
+}
+
 WorkerActionResult WorkerProcessManager::test_detection_template(const std::string &kind,
 								 const std::string &frame_text)
 {
@@ -802,6 +837,71 @@ WorkerActionResult WorkerProcessManager::test_detection_template(const std::stri
 		}
 	}
 	return api_client_.test_detection_template(endpoint, kind, frame_text);
+}
+
+WorkerActionResult WorkerProcessManager::test_detection_template_base64(const std::string &kind,
+									const std::string &frame_base64)
+{
+	WorkerEndpoint endpoint;
+	{
+		std::lock_guard<std::mutex> lock(mutex_);
+		endpoint = status_.endpoint;
+		if (status_.state != WorkerDiagnosticState::running) {
+			WorkerActionResult result;
+			result.status = WorkerActionStatus::unavailable;
+			result.error = "Worker is not running";
+			return result;
+		}
+	}
+	return api_client_.test_detection_template_base64(endpoint, kind, frame_base64);
+}
+
+WorkerActionResult WorkerProcessManager::send_detection_frame_base64(const std::string &frame_base64)
+{
+	WorkerEndpoint endpoint;
+	{
+		std::lock_guard<std::mutex> lock(mutex_);
+		endpoint = status_.endpoint;
+		if (status_.state != WorkerDiagnosticState::running) {
+			WorkerActionResult result;
+			result.status = WorkerActionStatus::unavailable;
+			result.error = "Worker is not running";
+			return result;
+		}
+	}
+	return api_client_.send_detection_frame_base64(endpoint, frame_base64);
+}
+
+OAuthAuthorizationUrlResult WorkerProcessManager::request_upload_oauth_authorization_url()
+{
+	WorkerEndpoint endpoint;
+	{
+		std::lock_guard<std::mutex> lock(mutex_);
+		endpoint = status_.endpoint;
+		if (status_.state != WorkerDiagnosticState::running) {
+			OAuthAuthorizationUrlResult result;
+			result.status = WorkerActionStatus::unavailable;
+			result.error = "Worker is not running";
+			return result;
+		}
+	}
+	return api_client_.request_upload_oauth_authorization_url(endpoint);
+}
+
+WorkerActionResult WorkerProcessManager::refresh_upload_oauth_token()
+{
+	WorkerEndpoint endpoint;
+	{
+		std::lock_guard<std::mutex> lock(mutex_);
+		endpoint = status_.endpoint;
+		if (status_.state != WorkerDiagnosticState::running) {
+			WorkerActionResult result;
+			result.status = WorkerActionStatus::unavailable;
+			result.error = "Worker is not running";
+			return result;
+		}
+	}
+	return api_client_.refresh_upload_oauth_token(endpoint);
 }
 
 void WorkerProcessManager::stop()

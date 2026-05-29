@@ -17,6 +17,7 @@ namespace {
 constexpr const char *kLogPrefix = "OBS Duel Recorder";
 odr::plugin::WorkerProcessManager worker_manager;
 odr::plugin::PluginUiController ui_controller(worker_manager);
+bool frontend_exit_seen = false;
 
 void launch_worker()
 {
@@ -97,7 +98,9 @@ void frontend_event(enum obs_frontend_event event, void *)
 		break;
 	case OBS_FRONTEND_EVENT_EXIT:
 		blog(LOG_INFO, "%s frontend exit", kLogPrefix);
+		frontend_exit_seen = true;
 		worker_manager.stop();
+		ui_controller.unregister_ui();
 		break;
 	case OBS_FRONTEND_EVENT_RECORDING_STARTED:
 	{
@@ -136,7 +139,9 @@ void obs_module_unload(void)
 	blog(LOG_INFO, "%s plugin shutdown", kLogPrefix);
 	ui_controller.unregister_ui();
 	worker_manager.stop();
-	obs_frontend_remove_event_callback(frontend_event, nullptr);
+	if (!frontend_exit_seen) {
+		obs_frontend_remove_event_callback(frontend_event, nullptr);
+	}
 }
 
 const char *obs_module_description(void)

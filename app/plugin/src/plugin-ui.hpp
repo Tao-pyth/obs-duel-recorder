@@ -8,9 +8,11 @@
 class QLabel;
 class QPushButton;
 class QComboBox;
+class QCheckBox;
 class QFrame;
 class QGroupBox;
 class QLineEdit;
+class QSpinBox;
 class QTabWidget;
 class QTextEdit;
 class QTimer;
@@ -37,16 +39,23 @@ private:
 	void request_upload_retry();
 	void request_upload_discard();
 	void request_upload_mark_uploaded();
+	void request_upload_oauth_authorization();
+	void request_upload_oauth_refresh();
+	void request_upload_oauth_help();
 	void request_edit_metadata();
 	void request_preview_upload_metadata();
 	void load_latest_metadata_into_dock();
+	void load_target_video_preview(int frame_index);
 	void save_metadata_from_dock();
 	void render_upload_preview_from_dock();
 	void save_inline_settings();
 	void toggle_diagnostics_details();
 	void request_show_help();
 	void request_automatic_setup();
+	bool capture_current_screenshot_base64(std::string &frame_base64, std::string &screenshot_path,
+					       std::string &error, bool delete_after_read = false);
 	void handle_automatic_recording(const WorkerStatusSnapshot &snapshot);
+	void handle_automatic_detection_feed(const WorkerStatusSnapshot &snapshot);
 	void log_recording_command_result(const char *action, const RecordingCommandResult &result);
 	void log_queue_command_result(const char *action, const QueueCommandResult &result);
 
@@ -59,6 +68,7 @@ private:
 	QLabel *output_value_ = nullptr;
 	QLabel *queue_value_ = nullptr;
 	QLabel *review_item_value_ = nullptr;
+	QLabel *youtube_value_ = nullptr;
 	QLabel *endpoint_value_ = nullptr;
 	QLabel *user_data_value_ = nullptr;
 	QLabel *worker_path_value_ = nullptr;
@@ -75,10 +85,12 @@ private:
 	QLabel *upload_title_ = nullptr;
 	QLabel *queue_label_ = nullptr;
 	QLabel *review_item_label_ = nullptr;
+	QLabel *youtube_label_ = nullptr;
 	QLabel *metadata_title_ = nullptr;
 	QLabel *metadata_note_ = nullptr;
 	QLabel *metadata_match_label_ = nullptr;
 	QLabel *metadata_video_label_ = nullptr;
+	QLabel *metadata_video_preview_image_ = nullptr;
 	QLabel *metadata_status_label_ = nullptr;
 	QLabel *upload_preview_title_label_ = nullptr;
 	QLabel *upload_preview_warning_label_ = nullptr;
@@ -114,6 +126,8 @@ private:
 	QLineEdit *settings_user_data_input_ = nullptr;
 	QComboBox *settings_theme_input_ = nullptr;
 	QComboBox *settings_language_input_ = nullptr;
+	QCheckBox *automatic_detection_enabled_input_ = nullptr;
+	QSpinBox *automatic_detection_interval_input_ = nullptr;
 	QPushButton *settings_button_ = nullptr;
 	QPushButton *help_button_ = nullptr;
 	QPushButton *automatic_setup_button_ = nullptr;
@@ -122,8 +136,14 @@ private:
 	QPushButton *retry_upload_button_ = nullptr;
 	QPushButton *discard_upload_button_ = nullptr;
 	QPushButton *mark_uploaded_button_ = nullptr;
+	QPushButton *oauth_authorize_button_ = nullptr;
+	QPushButton *oauth_refresh_button_ = nullptr;
+	QPushButton *oauth_help_button_ = nullptr;
 	QPushButton *edit_metadata_button_ = nullptr;
 	QPushButton *preview_metadata_button_ = nullptr;
+	QPushButton *video_preview_frame_1_button_ = nullptr;
+	QPushButton *video_preview_frame_2_button_ = nullptr;
+	QPushButton *video_preview_frame_3_button_ = nullptr;
 	QPushButton *reload_metadata_button_ = nullptr;
 	QPushButton *save_metadata_button_ = nullptr;
 	QPushButton *render_upload_preview_button_ = nullptr;
@@ -133,8 +153,11 @@ private:
 	std::string ui_language_ = "en";
 	OverlayStatePayload last_applied_overlay_state_;
 	int current_match_id_ = 0;
+	int metadata_preview_frame_index_ = 1;
+	bool metadata_loaded_after_worker_ready_ = false;
 	bool diagnostics_details_visible_ = false;
 	std::string automatic_recording_request_key_;
+	long long last_detection_frame_sent_ms_ = 0;
 	bool overlay_state_applied_ = false;
 	bool tools_menu_registered_ = false;
 };

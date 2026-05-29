@@ -1,18 +1,22 @@
 # User Documentation
 
-Status contract: These pages are roadmap-facing user docs and may include planned (not-yet-released) steps. Treat a step as currently available only when the latest release notes or [Roadmap](../roadmap.md) mark its version as released.
+Status contract: These pages are roadmap-facing user docs and may include planned
+(not-yet-released) steps. Treat a step as currently available only when the
+latest release notes or [Roadmap](../roadmap.md) mark its version as released.
 
 Select language / 言語を選択してください。
-
 - 日本語: [`docs/user/ja/index.md`](ja/index.md)
 - English (planned): [`docs/user/en/README.md`](en/README.md)
 
 ## Current user docs (English-base, pre-multilingual)
 
-These pages remain the current source of truth until `docs/user/en/**` is introduced:
+These pages remain the current source of truth until `docs/user/en/**` is
+introduced:
 
 - [Installation](install.md)
 - [First setup](setup.md)
+- [Automatic recording setup](automatic-recording-setup.md)
+- [YouTube OAuth setup](youtube-oauth.md)
 - [Operation flow and system overview](operation-flow.md)
 - [UI images](ui-images.md)
 - [OBS sources used by the Plugin](obs-sources.md)

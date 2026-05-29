@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import datetime as _dt
+import importlib
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -302,15 +303,21 @@ class UploadStore:
 
     def status(self) -> dict[str, object]:
         counts = self.queue_store.count_by_state()
+        auth = build_oauth_status(self.settings)
+        readiness = build_upload_readiness(settings=self.settings, auth=auth, queue_counts=counts)
         return {
             "settings": self.settings.as_payload(),
-            "auth": build_oauth_status(self.settings),
+            "auth": auth,
             "queue_counts": counts,
             "providers": {
                 "default": "mock",
                 "available": sorted(UPLOAD_PROVIDERS),
                 "google_optional_dependencies_required": True,
+                "google_dependencies_available": google_upload_dependencies_available(),
             },
+            "readiness": readiness,
+            "readiness_state": readiness["state"],
+            "readiness_next_action": readiness["next_action"],
             "manual_actions": ["retry", "discard", "mark_uploaded"],
         }
 
@@ -369,7 +376,9 @@ class UploadStore:
     def _upload_metadata(self, item: QueueItem) -> dict[str, object] | None:
         if self.metadata_store is None or item.match_id is None:
             return None
-        return self.metadata_store.render_upload_metadata(item.match_id)
+        metadata = dict(self.metadata_store.render_upload_metadata(item.match_id))
+        metadata["privacy_status"] = self.settings.privacy_status
+        return metadata
 
     def _next_ready_item(self) -> QueueItem | None:
         return self.queue_store.next_ready_item()
@@ -464,6 +473,80 @@ def build_oauth_status(settings: UploadSettings) -> dict[str, object]:
         "client_secret_path": str(settings.client_secret_path),
         "token_path": str(settings.token_path),
     }
+
+
+def build_upload_readiness(
+    *,
+    settings: UploadSettings,
+    auth: dict[str, object],
+    queue_counts: dict[str, int],
+) -> dict[str, object]:
+    token_state = str(auth.get("token_state", "missing"))
+    dependencies_available = google_upload_dependencies_available()
+    queue_state = "manual_review_required" if queue_counts.get("need_manual_review", 0) > 0 else "ready"
+    if queue_state == "ready" and queue_counts.get("quota_waiting", 0) > 0:
+        queue_state = "quota_waiting"
+
+    if not settings.client_secret_configured:
+        auth_state = "client_secret_missing"
+        next_action = "Place youtube-client-secret.json under user_data/config/secrets."
+    elif token_state == "missing":
+        auth_state = "token_missing"
+        next_action = "Authorize YouTube upload and create youtube-token.json."
+    elif token_state == "invalid":
+        auth_state = "token_invalid"
+        next_action = "Reauthorize YouTube upload and replace youtube-token.json."
+    elif token_state == "expired_refreshable":
+        auth_state = "token_expired_refreshable"
+        next_action = "Refresh the YouTube OAuth token."
+    elif token_state == "expired_reauthorization_required":
+        auth_state = "token_invalid"
+        next_action = "Reauthorize YouTube upload because the token expired without a refresh token."
+    elif token_state == "configured":
+        auth_state = "token_invalid"
+        next_action = "Reauthorize YouTube upload because the token file has no access token."
+    else:
+        auth_state = "ready"
+        next_action = "YouTube upload is ready."
+
+    provider_state = "google_dependencies_ready" if dependencies_available else "dependencies_missing"
+    state = auth_state
+    if state == "ready" and provider_state != "google_dependencies_ready":
+        state = provider_state
+        next_action = "Install optional Google upload dependencies before using the google provider."
+    if state == "ready" and queue_state != "ready":
+        state = queue_state
+        if queue_state == "quota_waiting":
+            next_action = "Wait for quota reset before retrying quota-waiting uploads."
+        else:
+            next_action = "Review the upload queue item before retrying, discarding, or marking uploaded."
+
+    return {
+        "state": state,
+        "auth_state": auth_state,
+        "provider_state": provider_state,
+        "queue_state": queue_state,
+        "next_action": next_action,
+        "google_dependencies_available": dependencies_available,
+        "quota_waiting_count": queue_counts.get("quota_waiting", 0),
+        "manual_review_count": queue_counts.get("need_manual_review", 0),
+        "ready_upload_count": queue_counts.get("ready_upload", 0),
+    }
+
+
+def google_upload_dependencies_available() -> bool:
+    required_modules = (
+        "google.oauth2.credentials",
+        "googleapiclient.discovery",
+        "googleapiclient.http",
+        "google_auth_oauthlib.flow",
+    )
+    for module_name in required_modules:
+        try:
+            importlib.import_module(module_name)
+        except ImportError:
+            return False
+    return True
 
 
 def _token_details(token_path: Path) -> dict[str, object]:
