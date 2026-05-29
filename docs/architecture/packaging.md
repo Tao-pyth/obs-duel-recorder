@@ -129,6 +129,13 @@ The install assistant validates the OBS root, copies
 to `obs-plugins\worker\odr-worker\`, preserves runtime `user_data`, and then
 runs the verifier.
 
+When the OBS root is under `Program Files`, Windows requires administrator
+permission to replace the Plugin DLL and Worker files. The install assistant
+detects this protected location and, when launched without administrator
+permission, relaunches itself through Windows UAC. The user must approve that
+prompt, or alternatively start PowerShell as Administrator before running the
+install command.
+
 ```powershell
 .\verify-install.bat "C:\Program Files\obs-studio"
 ```

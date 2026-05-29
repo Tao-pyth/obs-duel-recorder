@@ -8,6 +8,57 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
+function Test-WindowsAdmin {
+    try {
+        $identity = [Security.Principal.WindowsIdentity]::GetCurrent()
+        $principal = New-Object Security.Principal.WindowsPrincipal($identity)
+        return $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+    } catch {
+        return $false
+    }
+}
+
+function Test-ProtectedObsRoot {
+    param([string]$Path)
+
+    $programFilesRoots = @(
+        [Environment]::GetFolderPath("ProgramFiles"),
+        [Environment]::GetFolderPath("ProgramFilesX86")
+    ) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
+
+    $normalizedPath = $Path.TrimEnd("\", "/").ToLowerInvariant()
+    foreach ($root in $programFilesRoots) {
+        $normalizedRoot = $root.TrimEnd("\", "/").ToLowerInvariant()
+        if ($normalizedPath -eq $normalizedRoot -or $normalizedPath.StartsWith($normalizedRoot + "\")) {
+            return $true
+        }
+    }
+    return $false
+}
+
+function Invoke-ElevatedSelf {
+    param(
+        [string]$PackageRootPath,
+        [string]$ObsRootPath
+    )
+
+    $scriptPath = $PSCommandPath.Replace('"', '\"')
+    $packageArg = $PackageRootPath.Replace('"', '\"')
+    $obsArg = $ObsRootPath.Replace('"', '\"')
+    $arguments = "-NoLogo -NoProfile -ExecutionPolicy Bypass -File `"$scriptPath`" -PackageRoot `"$packageArg`" -ObsRoot `"$obsArg`""
+    Write-Output "Administrator permission is required to update OBS under Program Files."
+    Write-Output "Requesting Windows UAC elevation. Approve the prompt to continue."
+    try {
+        $process = Start-Process -FilePath "powershell.exe" -Verb RunAs -ArgumentList $arguments -Wait -PassThru
+    } catch {
+        throw "Administrator elevation was cancelled or failed. Start PowerShell as Administrator and run this script again."
+    }
+    if ($null -eq $process.ExitCode) {
+        exit 1
+    }
+    exit $process.ExitCode
+}
+
 function Resolve-ExistingDirectory {
     param(
         [string]$Path,
@@ -49,6 +100,10 @@ function Copy-DirectoryContents {
 
 $packageRootPath = Resolve-ExistingDirectory -Path $PackageRoot -Label "Package root"
 $obsRootPath = Resolve-ExistingDirectory -Path $ObsRoot -Label "OBS root"
+
+if (Test-ProtectedObsRoot -Path $obsRootPath -and -not (Test-WindowsAdmin)) {
+    Invoke-ElevatedSelf -PackageRootPath $packageRootPath -ObsRootPath $obsRootPath
+}
 
 $sourcePlugin = Join-Path $packageRootPath "app\plugin\obs-duel-recorder.dll"
 $sourceWorkerDir = Join-Path $packageRootPath "app\worker\odr-worker"
