@@ -52,6 +52,42 @@ function Add-CheckResult {
     $Failures.Add($FailureMessage)
 }
 
+function Get-FileSha256 {
+    param([string]$Path)
+
+    if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) {
+        return $null
+    }
+    return (Get-FileHash -LiteralPath $Path -Algorithm SHA256).Hash
+}
+
+function Add-HashCheckResult {
+    param(
+        [System.Collections.Generic.List[string]]$Failures,
+        [string]$Label,
+        [string]$SourcePath,
+        [string]$TargetPath
+    )
+
+    $sourceHash = Get-FileSha256 -Path $SourcePath
+    $targetHash = Get-FileSha256 -Path $TargetPath
+    $passed = -not [string]::IsNullOrWhiteSpace($sourceHash) -and $sourceHash -eq $targetHash
+
+    if ($passed) {
+        Write-Output "[OK] $Label"
+        Write-Output "     source: $sourceHash"
+        Write-Output "     target: $targetHash"
+        return
+    }
+
+    Write-Output "[FAIL] $Label"
+    Write-Output "       source: $SourcePath"
+    Write-Output "       target: $TargetPath"
+    Write-Output "       source hash: $sourceHash"
+    Write-Output "       target hash: $targetHash"
+    $Failures.Add("Installed file differs from the package. Copy '$SourcePath' to '$TargetPath' again while OBS is closed and PowerShell is running as Administrator.")
+}
+
 $packageRootPath = [System.IO.Path]::GetFullPath($PackageRoot)
 $obsRootPath = [System.IO.Path]::GetFullPath($ObsRoot)
 
@@ -93,12 +129,24 @@ Add-CheckResult `
     -Passed (Test-Path -LiteralPath $targetPlugin -PathType Leaf) `
     -FailureMessage "Missing OBS Plugin DLL. Copy '$sourcePlugin' to '$targetPlugin'."
 
+Add-HashCheckResult `
+    -Failures $failures `
+    -Label "OBS Plugin DLL matches package" `
+    -SourcePath $sourcePlugin `
+    -TargetPath $targetPlugin
+
 Add-CheckResult `
     -Failures $failures `
     -Label "OBS Worker bundle target is complete" `
     -Path $targetWorkerDir `
     -Passed (Test-WorkerBundle -WorkerDir $targetWorkerDir) `
     -FailureMessage "Missing or incomplete OBS Worker bundle. Copy the full directory '$sourceWorkerDir' to '$targetWorkerDir'. Do not copy only '$sourceWorkerExe'."
+
+Add-HashCheckResult `
+    -Failures $failures `
+    -Label "OBS Worker executable matches package" `
+    -SourcePath $sourceWorkerExe `
+    -TargetPath $targetWorkerExe
 
 if (Test-Path -LiteralPath $wrongWorkerDir -PathType Container) {
     Write-Output "[FAIL] Known wrong Worker placement detected"

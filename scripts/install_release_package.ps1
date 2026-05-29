@@ -100,6 +100,10 @@ function Copy-DirectoryContents {
     }
 }
 
+function Test-ObsProcessRunning {
+    return $null -ne (Get-Process -Name "obs64" -ErrorAction SilentlyContinue | Select-Object -First 1)
+}
+
 $packageRootPath = Resolve-ExistingDirectory -Path $PackageRoot -Label "Package root"
 $obsRootPath = Resolve-ExistingDirectory -Path $ObsRoot -Label "OBS root"
 
@@ -136,6 +140,9 @@ if (-not (Test-Path -LiteralPath $sourcePlugin -PathType Leaf)) {
 }
 if (-not (Test-WorkerBundle -WorkerDir $sourceWorkerDir)) {
     throw "Package Worker bundle is missing or incomplete. Expected odr-worker.exe and bundled files under: $sourceWorkerDir"
+}
+if (Test-ObsProcessRunning) {
+    throw "OBS is still running. Close OBS before installing so obs-duel-recorder.dll can be replaced safely."
 }
 
 Write-Output "OBS Duel Recorder ZIP install/update"
