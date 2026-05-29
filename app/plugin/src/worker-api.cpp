@@ -7,7 +7,6 @@
 
 #include <algorithm>
 #include <cctype>
-#include <regex>
 #include <sstream>
 #include <utility>
 #include <vector>
@@ -57,59 +56,128 @@ std::string json_unescape(const std::string &value)
 	return out.str();
 }
 
+size_t skip_json_ws(const std::string &body, size_t pos)
+{
+	while (pos < body.size() && std::isspace(static_cast<unsigned char>(body[pos]))) {
+		++pos;
+	}
+	return pos;
+}
+
+size_t find_json_value_start(const std::string &body, const char *key)
+{
+	const std::string key_token = std::string("\"") + key + "\"";
+	size_t search_pos = 0;
+	while ((search_pos = body.find(key_token, search_pos)) != std::string::npos) {
+		size_t pos = skip_json_ws(body, search_pos + key_token.size());
+		if (pos < body.size() && body[pos] == ':') {
+			return skip_json_ws(body, pos + 1);
+		}
+		search_pos += key_token.size();
+	}
+	return std::string::npos;
+}
+
+bool parse_json_string_at(const std::string &body, size_t pos, std::string &value, size_t &next_pos)
+{
+	if (pos >= body.size() || body[pos] != '"') {
+		return false;
+	}
+	std::ostringstream raw;
+	for (size_t i = pos + 1; i < body.size(); ++i) {
+		const char ch = body[i];
+		if (ch == '\\') {
+			if (i + 1 >= body.size()) {
+				return false;
+			}
+			raw << ch << body[++i];
+			continue;
+		}
+		if (ch == '"') {
+			value = json_unescape(raw.str());
+			next_pos = i + 1;
+			return true;
+		}
+		raw << ch;
+	}
+	return false;
+}
+
 std::string extract_json_string(const std::string &body, const char *key)
 {
-	const std::regex pattern(std::string("\"") + key + "\"\\s*:\\s*\"((?:\\\\.|[^\"])*)\"");
-	std::smatch match;
-	if (!std::regex_search(body, match, pattern) || match.size() < 2) {
+	const size_t pos = find_json_value_start(body, key);
+	if (pos == std::string::npos) {
 		return {};
 	}
-	return json_unescape(match[1].str());
+	std::string value;
+	size_t next_pos = 0;
+	if (!parse_json_string_at(body, pos, value, next_pos)) {
+		return {};
+	}
+	return value;
 }
 
 std::string extract_json_number(const std::string &body, const char *key)
 {
-	const std::regex pattern(std::string("\"") + key + "\"\\s*:\\s*([0-9]+)");
-	std::smatch match;
-	if (!std::regex_search(body, match, pattern) || match.size() < 2) {
+	const size_t pos = find_json_value_start(body, key);
+	if (pos == std::string::npos) {
 		return {};
 	}
-	return match[1].str();
+	size_t end = pos;
+	while (end < body.size() && std::isdigit(static_cast<unsigned char>(body[end]))) {
+		++end;
+	}
+	if (end == pos) {
+		return {};
+	}
+	return body.substr(pos, end - pos);
 }
 
 bool extract_json_bool(const std::string &body, const char *key)
 {
-	const std::regex pattern(std::string("\"") + key + "\"\\s*:\\s*(true|false)");
-	std::smatch match;
-	if (!std::regex_search(body, match, pattern) || match.size() < 2) {
-		return false;
-	}
-	return match[1].str() == "true";
+	const size_t pos = find_json_value_start(body, key);
+	return pos != std::string::npos && body.compare(pos, 4, "true") == 0;
 }
 
 std::string extract_json_string_array(const std::string &body, const char *key)
 {
-	const std::regex pattern(std::string("\"") + key + "\"\\s*:\\s*\\[(.*?)\\]");
-	std::smatch match;
-	if (!std::regex_search(body, match, pattern) || match.size() < 2) {
+	size_t pos = find_json_value_start(body, key);
+	if (pos == std::string::npos || pos >= body.size() || body[pos] != '[') {
 		return {};
 	}
-	const std::string array_body = match[1].str();
-	const std::regex item_pattern("\"((?:\\\\.|[^\"])*)\"");
+	++pos;
 	std::ostringstream joined;
-	for (std::sregex_iterator it(array_body.begin(), array_body.end(), item_pattern), end; it != end; ++it) {
+	while (pos < body.size()) {
+		pos = skip_json_ws(body, pos);
+		if (pos >= body.size() || body[pos] == ']') {
+			break;
+		}
+		if (body[pos] == ',') {
+			++pos;
+			continue;
+		}
+		std::string value;
+		size_t next_pos = 0;
+		if (!parse_json_string_at(body, pos, value, next_pos)) {
+			break;
+		}
 		if (joined.tellp() > 0) {
 			joined << ", ";
 		}
-		joined << json_unescape((*it)[1].str());
+		joined << value;
+		pos = next_pos;
 	}
 	return joined.str();
 }
 
 bool response_has_items(const std::string &body)
 {
-	const std::regex pattern("\"items\"\\s*:\\s*\\[\\s*\\{");
-	return std::regex_search(body, pattern);
+	size_t pos = find_json_value_start(body, "items");
+	if (pos == std::string::npos || pos >= body.size() || body[pos] != '[') {
+		return false;
+	}
+	pos = skip_json_ws(body, pos + 1);
+	return pos < body.size() && body[pos] == '{';
 }
 
 std::string normalize_path(std::string value)

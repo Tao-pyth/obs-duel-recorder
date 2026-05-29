@@ -2,7 +2,9 @@ param(
     [Parameter(Mandatory = $true)]
     [string]$ObsRoot,
 
-    [string]$PackageRoot = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot "..")).Path
+    [string]$PackageRoot = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot "..")).Path,
+
+    [switch]$ElevatedAttempt
 )
 
 Set-StrictMode -Version Latest
@@ -45,7 +47,7 @@ function Invoke-ElevatedSelf {
     $scriptPath = $PSCommandPath.Replace('"', '\"')
     $packageArg = $PackageRootPath.Replace('"', '\"')
     $obsArg = $ObsRootPath.Replace('"', '\"')
-    $arguments = "-NoLogo -NoProfile -ExecutionPolicy Bypass -File `"$scriptPath`" -PackageRoot `"$packageArg`" -ObsRoot `"$obsArg`""
+    $arguments = "-NoLogo -NoProfile -ExecutionPolicy Bypass -File `"$scriptPath`" -PackageRoot `"$packageArg`" -ObsRoot `"$obsArg`" -ElevatedAttempt"
     Write-Output "Administrator permission is required to update OBS under Program Files."
     Write-Output "Requesting Windows UAC elevation. Approve the prompt to continue."
     try {
@@ -102,6 +104,9 @@ $packageRootPath = Resolve-ExistingDirectory -Path $PackageRoot -Label "Package 
 $obsRootPath = Resolve-ExistingDirectory -Path $ObsRoot -Label "OBS root"
 
 if (Test-ProtectedObsRoot -Path $obsRootPath -and -not (Test-WindowsAdmin)) {
+    if ($ElevatedAttempt) {
+        throw "Administrator elevation did not produce an administrator PowerShell process. Start PowerShell as Administrator and run this script again."
+    }
     Invoke-ElevatedSelf -PackageRootPath $packageRootPath -ObsRootPath $obsRootPath
 }
 
