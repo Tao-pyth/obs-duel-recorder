@@ -367,9 +367,19 @@ The version tracking issue may contain the working release summary, but finalize
 - YouTube upload UX parent: #508
 - YouTube upload UX child issues: #509 through #578
 - Previous released user-ready version: `v1.1.6`
-- Target version: `v1.1.7`
-- Status: active, not yet released
-- Completion policy: this release cannot be marked complete until the open v1.1.7 issue set is implemented, explicitly superseded, or explicitly deferred, and release documentation plus validation evidence are updated.
+- Tag: `v1.1.7`
+- Tag target: `8cf45c29c8046400dbc96e0e05a46bc9ed4ebce2`
+- Release finalized at: `2026-05-30T16:07:07+09:00`
+- GitHub Release: `https://github.com/Tao-pyth/obs-duel-recorder/releases/tag/v1.1.7`
+- Release summary: `docs/release/v1.1.7-release-summary.md`
+- Major PRs: #585, #586, #587, #588, #589
+- Final ZIP evidence: `build/release-v1.1.7/obs-duel-recorder-v1.1.7.zip`
+- Final ZIP SHA256: `C88823D5938C9B2620E61D348EFF4AE4ED6015710EA6576FA1AA9BCE5FFC6E7B`
+- Rebuilt Plugin DLL SHA256: `80C7032FEB8F159E4E569427AB8F9ED08B4782E3EB20F236BDB9E2549CFAFF5B`
+- Rebuilt Worker EXE SHA256: `FA8EB2176B4BC14956D8675D733B387089A06FB06EE7F963C3CD1CFAF4B5E391`
+- Validation evidence: Worker unit tests passed; Worker full test discovery passed; Markdown link validation passed; Japanese user docs coverage passed; C++ Plugin configure and build passed with MSVC 19.44 through `NMake Makefiles`; Worker EXE build passed; final release package validation passed.
+- Deferred items: the broader remaining #508 YouTube UX refinements stay open for follow-up after v1.1.7 instead of blocking this stabilization release.
+- Status: released user-ready OBS Plugin package
 
 ### Legacy tag v1.0.0 - YouTube Upload MVP
 
