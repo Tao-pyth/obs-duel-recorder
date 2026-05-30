@@ -39,6 +39,9 @@ private:
 	void request_upload_retry();
 	void request_upload_discard();
 	void request_upload_mark_uploaded();
+	void request_upload_to_youtube();
+	void request_save_upload_privacy();
+	void request_open_uploaded_youtube();
 	void request_upload_oauth_authorization();
 	void request_upload_oauth_refresh();
 	void request_upload_oauth_help();
@@ -69,6 +72,10 @@ private:
 	QLabel *queue_value_ = nullptr;
 	QLabel *review_item_value_ = nullptr;
 	QLabel *youtube_value_ = nullptr;
+	QLabel *upload_target_value_ = nullptr;
+	QLabel *upload_text_value_ = nullptr;
+	QLabel *upload_blocking_value_ = nullptr;
+	QLabel *upload_result_value_ = nullptr;
 	QLabel *endpoint_value_ = nullptr;
 	QLabel *user_data_value_ = nullptr;
 	QLabel *worker_path_value_ = nullptr;
@@ -86,6 +93,10 @@ private:
 	QLabel *queue_label_ = nullptr;
 	QLabel *review_item_label_ = nullptr;
 	QLabel *youtube_label_ = nullptr;
+	QLabel *upload_target_label_ = nullptr;
+	QLabel *upload_text_label_ = nullptr;
+	QLabel *upload_blocking_label_ = nullptr;
+	QLabel *upload_result_label_ = nullptr;
 	QLabel *metadata_title_ = nullptr;
 	QLabel *metadata_note_ = nullptr;
 	QLabel *metadata_match_label_ = nullptr;
@@ -126,6 +137,7 @@ private:
 	QLineEdit *settings_user_data_input_ = nullptr;
 	QComboBox *settings_theme_input_ = nullptr;
 	QComboBox *settings_language_input_ = nullptr;
+	QComboBox *upload_privacy_input_ = nullptr;
 	QCheckBox *automatic_detection_enabled_input_ = nullptr;
 	QSpinBox *automatic_detection_interval_input_ = nullptr;
 	QPushButton *settings_button_ = nullptr;
@@ -136,6 +148,9 @@ private:
 	QPushButton *retry_upload_button_ = nullptr;
 	QPushButton *discard_upload_button_ = nullptr;
 	QPushButton *mark_uploaded_button_ = nullptr;
+	QPushButton *upload_to_youtube_button_ = nullptr;
+	QPushButton *save_upload_privacy_button_ = nullptr;
+	QPushButton *open_youtube_button_ = nullptr;
 	QPushButton *oauth_authorize_button_ = nullptr;
 	QPushButton *oauth_refresh_button_ = nullptr;
 	QPushButton *oauth_help_button_ = nullptr;
@@ -154,6 +169,8 @@ private:
 	OverlayStatePayload last_applied_overlay_state_;
 	int current_match_id_ = 0;
 	int metadata_preview_frame_index_ = 1;
+	bool upload_request_in_progress_ = false;
+	std::string last_uploaded_url_;
 	bool metadata_loaded_after_worker_ready_ = false;
 	bool diagnostics_details_visible_ = false;
 	std::string automatic_recording_request_key_;

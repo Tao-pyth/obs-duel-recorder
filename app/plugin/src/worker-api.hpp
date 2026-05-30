@@ -132,6 +132,26 @@ enum class UploadMetadataPreviewStatus {
 	invalid_response,
 };
 
+enum class UploadTargetFetchStatus {
+	reachable,
+	unavailable,
+	invalid_response,
+};
+
+enum class UploadProcessStatus {
+	accepted,
+	unavailable,
+	rejected,
+	invalid_response,
+};
+
+enum class UploadSettingsStatus {
+	accepted,
+	unavailable,
+	rejected,
+	invalid_response,
+};
+
 enum class VideoPreviewStatus {
 	reachable,
 	unavailable,
@@ -277,6 +297,68 @@ struct UploadMetadataPreviewResult {
 	}
 };
 
+struct UploadTargetPayload {
+	QueueActionItemPayload item;
+	int queue_item_id = 0;
+	int match_id = 0;
+	std::string state;
+	std::string video_path;
+	std::string resolved_video_path;
+	bool video_exists = false;
+	bool can_upload = false;
+	UploadMetadataPreviewPayload upload_metadata;
+	std::string blocking_reasons;
+};
+
+struct UploadTargetFetchResult {
+	UploadTargetFetchStatus status = UploadTargetFetchStatus::unavailable;
+	unsigned long http_status = 0;
+	bool found = false;
+	std::string reason;
+	UploadTargetPayload target;
+	std::string error;
+	std::string body;
+
+	bool reachable() const
+	{
+		return status == UploadTargetFetchStatus::reachable;
+	}
+};
+
+struct UploadProcessResult {
+	UploadProcessStatus status = UploadProcessStatus::unavailable;
+	unsigned long http_status = 0;
+	bool processed = false;
+	std::string outcome;
+	std::string reason;
+	int queue_item_id = 0;
+	int match_id = 0;
+	std::string youtube_video_id;
+	std::string youtube_url;
+	QueueActionItemPayload item;
+	UploadTargetPayload target;
+	std::string error;
+	std::string body;
+
+	bool accepted() const
+	{
+		return status == UploadProcessStatus::accepted;
+	}
+};
+
+struct UploadSettingsResult {
+	UploadSettingsStatus status = UploadSettingsStatus::unavailable;
+	unsigned long http_status = 0;
+	std::string privacy_status;
+	std::string error;
+	std::string body;
+
+	bool accepted() const
+	{
+		return status == UploadSettingsStatus::accepted;
+	}
+};
+
 struct VideoPreviewPayload {
 	bool available = false;
 	int frame_index = 1;
@@ -335,6 +417,11 @@ public:
 	MetadataUpdateResult update_match_metadata(const WorkerEndpoint &endpoint,
 						   const MatchMetadataPayload &metadata) const;
 	UploadMetadataPreviewResult fetch_upload_metadata_preview(const WorkerEndpoint &endpoint, int match_id) const;
+	UploadTargetFetchResult fetch_next_upload_target(const WorkerEndpoint &endpoint) const;
+	UploadProcessResult process_upload_item(const WorkerEndpoint &endpoint, int item_id,
+						const std::string &provider) const;
+	UploadSettingsResult update_upload_settings(const WorkerEndpoint &endpoint,
+						    const std::string &privacy_status) const;
 	VideoPreviewResult fetch_match_video_preview(const WorkerEndpoint &endpoint, int match_id, int frame_index) const;
 	WorkerActionResult fetch_setup_validation(const WorkerEndpoint &endpoint) const;
 	WorkerActionResult register_detection_template(const WorkerEndpoint &endpoint, const std::string &kind,

@@ -15,6 +15,7 @@
 - [OBS セットアップ](obs-setup.md)
 - [YouTube セットアップ](youtube-setup.md)
 - [YouTube OAuth セットアップ](youtube-oauth.md)
+- [YouTubeアップロード操作フロー](youtube-upload-flow.md)
 - [使い方](usage.md)
 - [キュー / 履歴](queue.md)
 - [アップデート](update.md)

@@ -540,7 +540,9 @@ void WorkerProcessManager::monitor_heartbeat(const WorkerLaunchConfig &config, c
 			UploadStatusResult upload = api_client_.fetch_upload_status(config.endpoint);
 			RecordingStateFetchResult recording = api_client_.fetch_recording_state(config.endpoint);
 			QueueActionFetchResult queue_action = api_client_.fetch_queue_action_item(config.endpoint);
-			update_status(WorkerDiagnosticState::running, config, current_ownership(), {}, &probe, 0, &overlay, &upload, &recording, &queue_action);
+			UploadTargetFetchResult upload_next_target = api_client_.fetch_next_upload_target(config.endpoint);
+			update_status(WorkerDiagnosticState::running, config, current_ownership(), {}, &probe, 0,
+				      &overlay, &upload, &recording, &queue_action, &upload_next_target);
 
 			if (!replacement_reported && identity_changed(baseline, probe)) {
 				replacement_reported = true;
@@ -582,7 +584,8 @@ void WorkerProcessManager::update_status(WorkerDiagnosticState state, const Work
 					 const WorkerProbeResult *probe, unsigned int consecutive_failures,
 					 const OverlayFetchResult *overlay, const UploadStatusResult *upload,
 					 const RecordingStateFetchResult *recording,
-					 const QueueActionFetchResult *queue_action)
+					 const QueueActionFetchResult *queue_action,
+					 const UploadTargetFetchResult *upload_next_target)
 {
 	std::lock_guard<std::mutex> lock(mutex_);
 	status_.state = state;
@@ -625,6 +628,10 @@ void WorkerProcessManager::update_status(WorkerDiagnosticState state, const Work
 	if (queue_action) {
 		status_.queue_action_item = *queue_action;
 		status_.queue_action_item_available = queue_action->reachable();
+	}
+	if (upload_next_target) {
+		status_.upload_next_target = *upload_next_target;
+		status_.upload_next_target_available = upload_next_target->reachable();
 	}
 }
 
@@ -750,6 +757,64 @@ UploadMetadataPreviewResult WorkerProcessManager::fetch_upload_metadata_preview(
 		}
 	}
 	return api_client_.fetch_upload_metadata_preview(endpoint, match_id);
+}
+
+UploadTargetFetchResult WorkerProcessManager::fetch_next_upload_target()
+{
+	WorkerEndpoint endpoint;
+	{
+		std::lock_guard<std::mutex> lock(mutex_);
+		endpoint = status_.endpoint;
+		if (status_.state != WorkerDiagnosticState::running) {
+			UploadTargetFetchResult result;
+			result.status = UploadTargetFetchStatus::unavailable;
+			result.error = "Worker is not running";
+			return result;
+		}
+	}
+	return api_client_.fetch_next_upload_target(endpoint);
+}
+
+UploadProcessResult WorkerProcessManager::process_upload_item(int item_id, const std::string &provider)
+{
+	WorkerEndpoint endpoint;
+	{
+		std::lock_guard<std::mutex> lock(mutex_);
+		endpoint = status_.endpoint;
+		if (status_.state != WorkerDiagnosticState::running) {
+			UploadProcessResult result;
+			result.status = UploadProcessStatus::unavailable;
+			result.error = "Worker is not running";
+			return result;
+		}
+	}
+	UploadProcessResult result = api_client_.process_upload_item(endpoint, item_id, provider);
+	{
+		std::lock_guard<std::mutex> lock(mutex_);
+		if (result.accepted()) {
+			status_.queue_action_item_available = false;
+			status_.queue_action_item = QueueActionFetchResult{};
+			status_.upload_next_target_available = false;
+			status_.upload_next_target = UploadTargetFetchResult{};
+		}
+	}
+	return result;
+}
+
+UploadSettingsResult WorkerProcessManager::update_upload_settings(const std::string &privacy_status)
+{
+	WorkerEndpoint endpoint;
+	{
+		std::lock_guard<std::mutex> lock(mutex_);
+		endpoint = status_.endpoint;
+		if (status_.state != WorkerDiagnosticState::running) {
+			UploadSettingsResult result;
+			result.status = UploadSettingsStatus::unavailable;
+			result.error = "Worker is not running";
+			return result;
+		}
+	}
+	return api_client_.update_upload_settings(endpoint, privacy_status);
 }
 
 VideoPreviewResult WorkerProcessManager::fetch_match_video_preview(int match_id, int frame_index)

@@ -139,6 +139,55 @@ bool extract_json_bool(const std::string &body, const char *key)
 	return pos != std::string::npos && body.compare(pos, 4, "true") == 0;
 }
 
+size_t find_json_delimiter_end(const std::string &body, size_t start, char open, char close)
+{
+	if (start >= body.size() || body[start] != open) {
+		return std::string::npos;
+	}
+	int depth = 0;
+	bool in_string = false;
+	bool escaped = false;
+	for (size_t i = start; i < body.size(); ++i) {
+		const char ch = body[i];
+		if (in_string) {
+			if (escaped) {
+				escaped = false;
+			} else if (ch == '\\') {
+				escaped = true;
+			} else if (ch == '"') {
+				in_string = false;
+			}
+			continue;
+		}
+		if (ch == '"') {
+			in_string = true;
+			continue;
+		}
+		if (ch == open) {
+			++depth;
+		} else if (ch == close) {
+			--depth;
+			if (depth == 0) {
+				return i + 1;
+			}
+		}
+	}
+	return std::string::npos;
+}
+
+std::string extract_json_object(const std::string &body, const char *key)
+{
+	const size_t pos = find_json_value_start(body, key);
+	if (pos == std::string::npos || pos >= body.size() || body[pos] != '{') {
+		return {};
+	}
+	const size_t end = find_json_delimiter_end(body, pos, '{', '}');
+	if (end == std::string::npos) {
+		return {};
+	}
+	return body.substr(pos, end - pos);
+}
+
 std::string extract_json_string_array(const std::string &body, const char *key)
 {
 	size_t pos = find_json_value_start(body, key);
@@ -279,6 +328,28 @@ void populate_upload_metadata_preview(UploadMetadataPreviewPayload &preview, con
 	preview.warning = extract_json_string(body, "warning");
 }
 
+void populate_upload_target(UploadTargetPayload &target, const std::string &body)
+{
+	populate_queue_item(target.item, body);
+	const std::string queue_item_id = extract_json_number(body, "queue_item_id");
+	const std::string match_id = extract_json_number(body, "match_id");
+	target.queue_item_id = queue_item_id.empty() ? target.item.id : std::stoi(queue_item_id);
+	target.match_id = match_id.empty() ? 0 : std::stoi(match_id);
+	target.state = extract_json_string(body, "state");
+	target.video_path = extract_json_string(body, "video_path");
+	target.resolved_video_path = extract_json_string(body, "resolved_video_path");
+	target.video_exists = extract_json_bool(body, "video_exists");
+	target.can_upload = extract_json_bool(body, "can_upload");
+	target.blocking_reasons = extract_json_string_array(body, "blocking_reasons");
+	const std::string metadata = extract_json_object(body, "upload_metadata");
+	if (!metadata.empty()) {
+		populate_upload_metadata_preview(target.upload_metadata, metadata);
+		if (target.upload_metadata.match_id <= 0) {
+			target.upload_metadata.match_id = target.match_id;
+		}
+	}
+}
+
 void populate_video_preview(VideoPreviewPayload &preview, const std::string &body)
 {
 	const std::string frame_index = extract_json_number(body, "frame_index");
@@ -302,16 +373,17 @@ struct HttpResponse {
 };
 
 HttpResponse http_request(const WorkerEndpoint &endpoint, const wchar_t *method, const wchar_t *path,
-			  const std::string &request_body);
+			  const std::string &request_body, unsigned int receive_timeout_ms = 5000);
 
 HttpResponse http_get(const WorkerEndpoint &endpoint, const wchar_t *path)
 {
 	return http_request(endpoint, L"GET", path, {});
 }
 
-HttpResponse http_post_json(const WorkerEndpoint &endpoint, const wchar_t *path, const std::string &body)
+HttpResponse http_post_json(const WorkerEndpoint &endpoint, const wchar_t *path, const std::string &body,
+			    unsigned int receive_timeout_ms = 5000)
 {
-	return http_request(endpoint, L"POST", path, body);
+	return http_request(endpoint, L"POST", path, body, receive_timeout_ms);
 }
 
 HttpResponse http_put_json(const WorkerEndpoint &endpoint, const wchar_t *path, const std::string &body)
@@ -320,7 +392,7 @@ HttpResponse http_put_json(const WorkerEndpoint &endpoint, const wchar_t *path, 
 }
 
 HttpResponse http_request(const WorkerEndpoint &endpoint, const wchar_t *method, const wchar_t *path,
-			  const std::string &request_body)
+			  const std::string &request_body, unsigned int receive_timeout_ms)
 {
 	HttpResponse response;
 	HINTERNET session = WinHttpOpen(L"OBS Duel Recorder Plugin/0.4",
@@ -332,7 +404,7 @@ HttpResponse http_request(const WorkerEndpoint &endpoint, const wchar_t *method,
 		return response;
 	}
 
-	WinHttpSetTimeouts(session, 1000, 1000, 3000, 5000);
+	WinHttpSetTimeouts(session, 1000, 1000, 3000, static_cast<int>(receive_timeout_ms));
 
 	HINTERNET connection = WinHttpConnect(session, endpoint.host.c_str(), endpoint.port, 0);
 	if (!connection) {
@@ -921,6 +993,156 @@ UploadMetadataPreviewResult LocalhostApiClient::fetch_upload_metadata_preview(co
 #else
 	result.status = UploadMetadataPreviewStatus::unavailable;
 	result.error = "Upload metadata preview is only implemented on Windows";
+	return result;
+#endif
+}
+
+UploadTargetFetchResult LocalhostApiClient::fetch_next_upload_target(const WorkerEndpoint &endpoint) const
+{
+	UploadTargetFetchResult result;
+
+#ifdef _WIN32
+	const HttpResponse response = http_get(endpoint, L"/upload/targets/next");
+	result.http_status = response.status;
+	result.body = response.body;
+
+	if (!response.ok) {
+		result.status = UploadTargetFetchStatus::unavailable;
+		result.error = response.error;
+		return result;
+	}
+	if (response.status != 200) {
+		result.status = UploadTargetFetchStatus::invalid_response;
+		result.error = "GET /upload/targets/next returned non-200 status";
+		return result;
+	}
+
+	result.found = extract_json_bool(response.body, "found");
+	result.reason = extract_json_string(response.body, "reason");
+	if (result.found) {
+		const std::string target = extract_json_object(response.body, "target");
+		if (target.empty()) {
+			result.status = UploadTargetFetchStatus::invalid_response;
+			result.error = "GET /upload/targets/next response is missing target";
+			return result;
+		}
+		populate_upload_target(result.target, target);
+		if (result.target.queue_item_id <= 0 || result.target.state.empty()) {
+			result.status = UploadTargetFetchStatus::invalid_response;
+			result.error = "GET /upload/targets/next response is missing upload target fields";
+			return result;
+		}
+	}
+	result.status = UploadTargetFetchStatus::reachable;
+	return result;
+#else
+	result.status = UploadTargetFetchStatus::unavailable;
+	result.error = "Upload target fetching is only implemented on Windows";
+	return result;
+#endif
+}
+
+UploadProcessResult LocalhostApiClient::process_upload_item(const WorkerEndpoint &endpoint,
+							    int item_id,
+							    const std::string &provider) const
+{
+	UploadProcessResult result;
+
+#ifdef _WIN32
+	if (item_id <= 0) {
+		result.status = UploadProcessStatus::rejected;
+		result.error = "Queue item id is required";
+		return result;
+	}
+	const std::string body = "{\"provider\":\"" + json_escape(provider.empty() ? "google" : provider) + "\"}";
+	const std::wstring path = L"/upload/items/" + std::to_wstring(item_id) + L"/process";
+	const HttpResponse response = http_post_json(endpoint, path.c_str(), body, 600000);
+	result.http_status = response.status;
+	result.body = response.body;
+
+	if (!response.ok) {
+		result.status = UploadProcessStatus::unavailable;
+		result.error = response.error;
+		return result;
+	}
+	if (response.status == 400 || response.status == 404 || response.status == 409) {
+		result.status = UploadProcessStatus::rejected;
+		result.error = extract_json_string(response.body, "message");
+		if (result.error.empty()) {
+			result.error = "POST /upload/items/{id}/process rejected upload";
+		}
+		return result;
+	}
+	if (response.status != 200) {
+		result.status = UploadProcessStatus::invalid_response;
+		result.error = "POST /upload/items/{id}/process returned non-200 status";
+		return result;
+	}
+
+	result.processed = extract_json_bool(response.body, "processed");
+	result.outcome = extract_json_string(response.body, "outcome");
+	result.reason = extract_json_string(response.body, "reason");
+	const std::string queue_item_id = extract_json_number(response.body, "queue_item_id");
+	const std::string match_id = extract_json_number(response.body, "match_id");
+	result.queue_item_id = queue_item_id.empty() ? 0 : std::stoi(queue_item_id);
+	result.match_id = match_id.empty() ? 0 : std::stoi(match_id);
+	result.youtube_video_id = extract_json_string(response.body, "youtube_video_id");
+	result.youtube_url = extract_json_string(response.body, "youtube_url");
+	const std::string item = extract_json_object(response.body, "item");
+	if (!item.empty()) {
+		populate_queue_item(result.item, item);
+	}
+	const std::string target = extract_json_object(response.body, "target");
+	if (!target.empty()) {
+		populate_upload_target(result.target, target);
+	}
+	result.status = UploadProcessStatus::accepted;
+	return result;
+#else
+	result.status = UploadProcessStatus::unavailable;
+	result.error = "Upload processing is only implemented on Windows";
+	return result;
+#endif
+}
+
+UploadSettingsResult LocalhostApiClient::update_upload_settings(const WorkerEndpoint &endpoint,
+								const std::string &privacy_status) const
+{
+	UploadSettingsResult result;
+
+#ifdef _WIN32
+	const std::string body = "{\"privacy_status\":\"" + json_escape(privacy_status) + "\"}";
+	const HttpResponse response = http_put_json(endpoint, L"/upload/settings", body);
+	result.http_status = response.status;
+	result.body = response.body;
+
+	if (!response.ok) {
+		result.status = UploadSettingsStatus::unavailable;
+		result.error = response.error;
+		return result;
+	}
+	if (response.status == 400 || response.status == 409) {
+		result.status = UploadSettingsStatus::rejected;
+		result.error = extract_json_string(response.body, "message");
+		if (result.error.empty()) {
+			result.error = "PUT /upload/settings rejected settings";
+		}
+		return result;
+	}
+	if (response.status != 200) {
+		result.status = UploadSettingsStatus::invalid_response;
+		result.error = "PUT /upload/settings returned non-200 status";
+		return result;
+	}
+
+	const std::string settings = extract_json_object(response.body, "settings");
+	result.privacy_status = settings.empty() ? extract_json_string(response.body, "privacy_status") :
+						   extract_json_string(settings, "privacy_status");
+	result.status = UploadSettingsStatus::accepted;
+	return result;
+#else
+	result.status = UploadSettingsStatus::unavailable;
+	result.error = "Upload settings are only implemented on Windows";
 	return result;
 #endif
 }
