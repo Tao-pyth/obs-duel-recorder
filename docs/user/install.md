@@ -43,6 +43,13 @@ copies the Plugin DLL and full Worker bundle, then runs the layout verifier.
 It uses Windows PowerShell only and does not require Python, CMake, Visual
 Studio, or other development tools.
 
+When OBS is installed under `C:\Program Files\obs-studio`, Windows requires
+Administrator permission to replace `obs-duel-recorder.dll`. The assistant
+detects this protected location and asks for UAC elevation. If elevation is
+cancelled or blocked, start PowerShell as Administrator and run the same
+command again. Close OBS before installing; the assistant stops before copying
+when `obs64.exe` is still running.
+
 The assistant does not modify runtime `user_data`. It does not delete existing
 user files.
 
@@ -96,7 +103,11 @@ After installing or manually copying files, run the verifier from the extracted 
 
 Use the root folder of your OBS installation. For Portable OBS, pass the portable OBS folder.
 
-The verifier prints the package source paths and OBS target paths it checked. It returns a failure if the Plugin DLL is missing, the Worker bundle is incomplete, or the Worker was placed under the known wrong `obs-plugins\64bit\worker\` path.
+The verifier prints the package source paths and OBS target paths it checked. It returns a failure if the Plugin DLL is missing, the Worker bundle is incomplete, the Worker was placed under the known wrong `obs-plugins\64bit\worker\` path, or the installed Plugin DLL / Worker executable hash does not match the package.
+
+If the hash check fails, OBS is probably still using an older file. Close OBS,
+run the installer from an Administrator PowerShell, then run the verifier again
+before starting OBS.
 
 ---
 

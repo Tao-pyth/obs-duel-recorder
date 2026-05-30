@@ -319,6 +319,58 @@ The version tracking issue may contain the working release summary, but finalize
   installed OBS tree reached the Plugin-started Worker health endpoint.
 - Status: released user-ready OBS Plugin package
 
+### v1.1.4 - Consolidated Dock, YouTube, And Automatic Recording Update
+
+- Version tracking issue: #473
+- Acceptance checklist: `docs/requirements/v1.1.4-consolidated-dock-youtube-automatic-recording-acceptance.md`
+- Release readiness checklist: `docs/release/v1.1.4-consolidated-dock-youtube-automatic-recording-readiness.md`
+- OBS smoke evidence: `docs/release/v1.1.4-obs-smoke.md`
+- Tag: `v1.1.4`
+- Tag target: `e647bd0cff7bef0337d8ae80e8cedec03b81ce64`
+- Release finalized at: `2026-05-30`
+- Major child issue range: #473 through #504
+- Major PR: release commit `Prepare v1.1.4 consolidated release`
+- Final ZIP evidence: `build/release-v1.1.4/obs-duel-recorder-v1.1.4.zip`
+- Validation evidence: release package build and validation completed; isolated OBS smoke evidence was recorded; Program Files installation requires an elevated shell and is verified separately through the install layout verifier.
+- Status: released user-ready OBS Plugin package
+
+### v1.1.5 - Video Preview Crash Hotfix
+
+- Version tracking issue: hotfix follow-up after #473
+- Tag: `v1.1.5`
+- Tag target: `7cc253731d3c9b33aad0a1d059ec9714f90293ec`
+- Release finalized at: `2026-05-30`
+- Major PR: #506 - `Fix OBS crash when parsing video preview`
+- Final ZIP evidence: `build/release-v1.1.5/obs-duel-recorder-v1.1.5.zip`
+- Scope: prevents OBS crashes caused by video preview parsing while preserving the v1.1.4 package layout and runtime-data separation.
+- Status: released user-ready OBS Plugin hotfix package
+
+### v1.1.6 - Installed Binary Verification Hotfix
+
+- Version tracking issue: hotfix follow-up after #506
+- Tag: `v1.1.6`
+- Tag target: `1bc4cd278e003b9e284529e4c10988bdc3a7c248`
+- Release finalized at: `2026-05-30`
+- Major PR: #507 - `Verify installed OBS binaries match release package`
+- Final ZIP evidence: `build/release-v1.1.6/obs-duel-recorder-v1.1.6.zip`
+- Scope: verifies installed OBS Plugin DLL and Worker executable hashes against the selected release package, and detects the known wrong Worker placement.
+- Status: released user-ready OBS Plugin hotfix package
+
+### v1.1.7 - Stabilization, Documentation, Install Safety, And YouTube Upload UX
+
+- Version tracking issue: #584
+- Documentation synchronization: #579
+- Install/update verification safety: #580
+- Automatic GitHub Issue error reporting boundary: #581
+- Issue prioritization/order: #582
+- Stale tracking cleanup: #583
+- YouTube upload UX parent: #508
+- YouTube upload UX child issues: #509 through #578
+- Previous released user-ready version: `v1.1.6`
+- Target version: `v1.1.7`
+- Status: active, not yet released
+- Completion policy: this release cannot be marked complete until the open v1.1.7 issue set is implemented, explicitly superseded, or explicitly deferred, and release documentation plus validation evidence are updated.
+
 ### Legacy tag v1.0.0 - YouTube Upload MVP
 
 - Version tracking issue: #318
