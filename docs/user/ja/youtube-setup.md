@@ -56,7 +56,7 @@ user_data/config/secrets/
 | 状態 | 意味 | 次の操作 |
 |---|---|---|
 | `ready` | アップロード準備ができています。 | アップロード可能です。 |
-| `client_secret_missing` | OAuth クライアントファイルがありません。 | `youtube-client-secret.json` を `user_data/config/secrets/` に配置します。 |
+| `client_secret_missing` | OAuth クライアントファイルがありません。 | Dock の `認証ファイルを選択` を使うか、`youtube-client-secret.json` を `user_data/config/secrets/` に配置します。 |
 | `token_missing` | まだ認可が完了していません。 | ブラウザ認可を実行します。 |
 | `token_invalid` | トークンが不正、未完成、または更新できません。 | 再認可して `youtube-token.json` を作り直します。 |
 | `token_expired_refreshable` | トークン期限切れですが更新可能です。 | トークン更新を実行します。 |

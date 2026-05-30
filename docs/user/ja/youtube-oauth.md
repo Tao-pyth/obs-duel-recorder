@@ -25,22 +25,24 @@ user_data/config/secrets/
 
 ## セットアップ手順
 
-1. YouTube Data API upload scope を使える Google OAuth デスクトップクライアントを用意します。
-2. ダウンロードした JSON を次の名前で保存します。
+1. YouTube Data API upload scope を使える Google OAuth デスクトップクライアントを用意します。Google側の作成手順は、Google Cloud Console の OAuth クライアント作成ヘルプを参照してください: <https://support.google.com/cloud/answer/6158849>
+2. Google Cloud Console から OAuth クライアント JSON をダウンロードします。
+3. OBS Duel Recorder Dock のアップロードタブで `認証ファイルを選択` を押し、ダウンロードした JSON を選択します。Dock が次の名前でコピーします。
 
    ```text
    user_data/config/secrets/youtube-client-secret.json
    ```
 
-3. OBS Duel Recorder を起動し、Worker が動作していることを確認します。
-4. 認可 URL を取得します。
+   手動で配置したい場合は `保存先フォルダを開く` を押し、上記の正確なファイル名でコピーしてください。
+4. OBS Duel Recorder を起動し、Worker が動作していることを確認します。
+5. 認可 URL を取得します。
 
    ```powershell
    Invoke-WebRequest http://127.0.0.1:8787/upload/oauth/authorization-url -Method Post -ContentType "application/json" -Body '{}' | Select-Object -ExpandProperty Content
    ```
 
-5. 返却された `authorization_url` をブラウザで開き、YouTube upload scope を許可します。
-6. 通常はブラウザが次の URL に戻ります。
+6. 返却された `authorization_url` をブラウザで開き、YouTube upload scope を許可します。
+7. 通常はブラウザが次の URL に戻ります。
 
    ```text
    http://127.0.0.1:8787/upload/oauth/callback
@@ -52,7 +54,7 @@ user_data/config/secrets/
    Invoke-WebRequest http://127.0.0.1:8787/upload/oauth/exchange-code -Method Post -ContentType "application/json" -Body '{"code":"PASTE_CODE_HERE"}' | Select-Object -ExpandProperty Content
    ```
 
-7. readiness を確認します。
+8. readiness を確認します。
 
    ```powershell
    Invoke-WebRequest http://127.0.0.1:8787/upload/status | Select-Object -ExpandProperty Content
@@ -65,7 +67,7 @@ user_data/config/secrets/
 | 状態 | 意味 | 次の操作 |
 |---|---|---|
 | `ready` | アップロード前提条件を満たしています。 | アップロード可能です。 |
-| `client_secret_missing` | OAuth クライアントファイルがありません。 | `youtube-client-secret.json` を `user_data/config/secrets/` に配置します。 |
+| `client_secret_missing` | OAuth クライアントファイルがありません。 | Dock の `認証ファイルを選択` を使うか、`youtube-client-secret.json` を `user_data/config/secrets/` に配置します。 |
 | `token_missing` | まだトークンが作成されていません。 | ブラウザ認可を完了します。 |
 | `token_invalid` | トークンが不正、未完成、または更新不能です。 | 再認可して `youtube-token.json` を置き換えます。 |
 | `token_expired_refreshable` | トークン期限切れですが refresh token があります。 | トークン更新を実行します。 |
