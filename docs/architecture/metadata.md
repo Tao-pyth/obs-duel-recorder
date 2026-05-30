@@ -105,10 +105,10 @@ Missing values use stable fallbacks such as `Unknown Opponent` or `unknown`. Unk
 
 Title length is capped at 100 characters. Description length is capped at 5000 characters. Truncation is deterministic.
 
-The OBS Dock `Preview Upload Metadata` action calls this same endpoint for the
-latest match and displays the generated title and description without starting
-an upload. When required metadata is missing, the preview shows the Worker
-warning and directs the user back to `Edit Metadata`.
+The OBS Dock Template tab calls this same endpoint for the selected match and
+displays the generated title, description, and tags without starting an upload.
+When required metadata is missing, the preview shows the Worker warning and
+directs the user back to metadata editing.
 
 ---
 
@@ -146,4 +146,3 @@ The Dock displays Worker validation failures and leaves the existing metadata
 record unchanged when a value is rejected. OCR and image-recognition candidates
 remain suggestions; they are never applied by opening or saving the Dock editor
 unless the user explicitly submits metadata through the Worker update API.
-

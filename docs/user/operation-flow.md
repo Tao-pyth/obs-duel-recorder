@@ -40,7 +40,7 @@ Responsibility boundary:
    - Confirm Worker status becomes running before using Start, Stop, setup, metadata, or upload actions.
 
 3. Complete first setup.
-   - Open Settings or first-run setup from the Dock.
+   - Open the `Manage` tab in the Dock.
    - Confirm the runtime data directory.
    - Confirm OBS integration and overlay/Text Source behavior.
    - Configure YouTube OAuth only if real upload is needed.

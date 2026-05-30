@@ -38,15 +38,22 @@ License decision:
 | Stop Recording | media stop | `stop-circle` | Stop action; keep red/error emphasis. |
 | Reload | reload | `refresh` | Refreshes the metadata target. |
 | Save | save | `content-save` | Persists metadata or settings. |
-| Preview | information/preview | `eye` or `file-eye` | Shows generated upload text before use. |
+| Preview | information/preview | `eye` or `file-eye` | Shows generated upload text before use in the Template tab. |
 | Retry Upload | reload | `replay` or `cloud-sync` | Reattempts current failed/manual item. |
 | Discard Upload | discard | `trash-can-outline` | Destructive queue action. |
 | Mark Uploaded | apply/check | `cloud-check` or `check-circle` | Marks an item complete with video ID evidence. |
 | Save Settings | save | `content-save-cog` | Persists settings and may restart Worker. |
-| Open Settings | detailed/settings | `cog` | Opens runtime/theme/language settings. |
 | Automatic Recording Setup | computer/capture | `cog-play` or `tune` | Opens guided start/end template setup. |
 | Current-screen capture | computer/capture | `monitor-screenshot` | Captures OBS Program screen for setup/test. |
 | Show/Hide Details | detailed view | `information-outline` or `chevron-down` | Reveals diagnostics without dominating the layout. |
+
+The representative-frame selectors intentionally use plain text labels `1`,
+`2`, and `3` instead of arrow icons. They choose one of three still frames and
+are not previous/next navigation controls.
+
+The Dock no longer exposes an `Open Settings` button inside Manage. Runtime,
+theme, and language fields are already editable inline, and saving them from the
+same surface avoids duplicate settings dialogs.
 
 ## Tooltip Rules
 
@@ -55,4 +62,3 @@ License decision:
 - Destructive actions must remain text-labeled and visually distinct.
 - Icon-only controls are not allowed for v1.1.4 unless a separate design review
   proves they remain unambiguous in Japanese and English.
-
