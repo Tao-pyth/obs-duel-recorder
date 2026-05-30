@@ -27,7 +27,9 @@
 #include <QLabel>
 #include <QLineEdit>
 #include <QMessageBox>
+#include <QMetaObject>
 #include <QPixmap>
+#include <QPointer>
 #include <QPushButton>
 #include <QTabWidget>
 #include <QTextEdit>
@@ -41,6 +43,7 @@
 
 #include <sstream>
 #include <string>
+#include <thread>
 #include <vector>
 
 namespace odr::plugin {
@@ -250,6 +253,156 @@ std::string youtube_summary(const WorkerStatusSnapshot &snapshot)
 	}
 	out << "upload API ready / quota waiting " << snapshot.upload_status.quota_waiting;
 	return out.str();
+}
+
+std::string localized_upload_state(const std::string &language, const std::string &state)
+{
+	if (!language_is_japanese(language)) {
+		return state.empty() ? "unknown" : state;
+	}
+	if (state == "ready") {
+		return "準備完了";
+	}
+	if (state == "client_secret_missing") {
+		return "client_secret.json未設定";
+	}
+	if (state == "token_missing") {
+		return "YouTube認証が必要";
+	}
+	if (state == "token_invalid") {
+		return "YouTube再認証が必要";
+	}
+	if (state == "token_expired_refreshable") {
+		return "トークン更新が必要";
+	}
+	if (state == "google_dependencies_missing") {
+		return "Google連携ライブラリ不足";
+	}
+	if (state == "quota_waiting") {
+		return "クォータ待ち";
+	}
+	if (state == "manual_review_required") {
+		return "手動確認が必要";
+	}
+	if (state == "ready_upload") {
+		return "アップロード待ち";
+	}
+	if (state == "upload_failed") {
+		return "アップロード失敗";
+	}
+	if (state == "need_manual_review") {
+		return "手動確認待ち";
+	}
+	if (state == "uploaded") {
+		return "アップロード済み";
+	}
+	if (state == "discarded") {
+		return "破棄済み";
+	}
+	if (state == "uploading") {
+		return "アップロード中";
+	}
+	return state.empty() ? "不明" : state;
+}
+
+std::string localized_blocking_reason(const std::string &language, const std::string &reason)
+{
+	if (!language_is_japanese(language)) {
+		return reason;
+	}
+	if (reason == "local_video_missing") {
+		return "ローカル動画ファイルが見つかりません";
+	}
+	if (reason == "video_path_missing") {
+		return "動画パスが未設定です";
+	}
+	if (reason == "upload_title_missing") {
+		return "アップロードタイトルが空です";
+	}
+	if (reason == "upload_description_missing") {
+		return "説明文が空です";
+	}
+	if (reason == "upload_tags_missing") {
+		return "タグが空です";
+	}
+	if (reason == "youtube_video_id_already_present") {
+		return "YouTube動画IDが既に保存されています";
+	}
+	if (reason.find("queue_state_") == 0) {
+		return "現在のキュー状態ではアップロードできません";
+	}
+	return reason;
+}
+
+std::string localized_blocking_reasons(const std::string &language, const std::string &reasons)
+{
+	if (reasons.empty()) {
+		return language_is_japanese(language) ? "なし" : "none";
+	}
+	std::stringstream input(reasons);
+	std::ostringstream out;
+	std::string reason;
+	while (std::getline(input, reason, ',')) {
+		while (!reason.empty() && reason.front() == ' ') {
+			reason.erase(reason.begin());
+		}
+		if (out.tellp() > 0) {
+			out << ", ";
+		}
+		out << localized_blocking_reason(language, reason);
+	}
+	return out.str();
+}
+
+std::string upload_target_summary(const WorkerStatusSnapshot &snapshot, const std::string &language)
+{
+	if (!snapshot.upload_next_target_available) {
+		return language_is_japanese(language) ? "Workerから取得できません" : "not available from Worker";
+	}
+	if (!snapshot.upload_next_target.found) {
+		return language_is_japanese(language) ? "対象なし" : "no upload target";
+	}
+	const UploadTargetPayload &target = snapshot.upload_next_target.target;
+	std::ostringstream out;
+	out << "#" << target.queue_item_id << " / "
+	    << localized_upload_state(language, target.state);
+	if (target.match_id > 0) {
+		out << " / match #" << target.match_id;
+	}
+	if (!target.video_path.empty()) {
+		out << "\n" << target.video_path;
+	}
+	if (!target.upload_metadata.privacy_status.empty()) {
+		out << "\nprivacy: " << target.upload_metadata.privacy_status;
+	}
+	return out.str();
+}
+
+std::string upload_text_summary(const WorkerStatusSnapshot &snapshot, const std::string &language)
+{
+	if (!snapshot.upload_next_target_available || !snapshot.upload_next_target.found) {
+		return language_is_japanese(language) ? "プレビュー対象なし" : "no preview target";
+	}
+	const UploadMetadataPreviewPayload &preview = snapshot.upload_next_target.target.upload_metadata;
+	std::ostringstream out;
+	out << "Title: " << (preview.title.empty() ? "(empty)" : preview.title) << "\n"
+	    << "Tags: " << (preview.tags.empty() ? "(empty)" : preview.tags);
+	if (!preview.description.empty()) {
+		out << "\n" << preview.description;
+	}
+	return out.str();
+}
+
+std::string upload_blocking_summary(const WorkerStatusSnapshot &snapshot, const std::string &language)
+{
+	if (!snapshot.upload_next_target_available || !snapshot.upload_next_target.found) {
+		return language_is_japanese(language) ? "対象なし" : "no target";
+	}
+	const UploadTargetPayload &target = snapshot.upload_next_target.target;
+	if (target.can_upload) {
+		return language_is_japanese(language) ? "アップロード可能" : "uploadable";
+	}
+	return localized_blocking_reasons(language, target.blocking_reasons);
 }
 
 QLabel *add_row(QFormLayout *layout, const char *name, QLabel **name_label = nullptr)
@@ -607,25 +760,66 @@ void PluginUiController::register_ui()
 	youtube_value_ = add_card_value(upload_layout, language_is_japanese(ui_language_) ? "YouTube連携" : "YouTube link",
 					&youtube_label_);
 
+	upload_target_value_ = add_card_value(upload_layout,
+					      language_is_japanese(ui_language_) ? "アップロード対象" : "Upload target",
+					      &upload_target_label_);
+	upload_text_value_ = add_card_value(upload_layout,
+					    language_is_japanese(ui_language_) ? "アップロード文面" : "Upload text",
+					    &upload_text_label_);
+	upload_blocking_value_ = add_card_value(upload_layout,
+						language_is_japanese(ui_language_) ? "実行可否" : "Readiness",
+						&upload_blocking_label_);
+	upload_result_value_ = add_card_value(upload_layout,
+					      language_is_japanese(ui_language_) ? "直近の結果" : "Latest result",
+					      &upload_result_label_);
+
+	auto *privacy_controls = new QHBoxLayout;
+	upload_privacy_input_ = new QComboBox;
+	upload_privacy_input_->addItem(ui_text(ui_language_, "Private", "非公開"), QString::fromUtf8("private"));
+	upload_privacy_input_->addItem(ui_text(ui_language_, "Unlisted", "限定公開"), QString::fromUtf8("unlisted"));
+	save_upload_privacy_button_ = new QPushButton(ui_text(ui_language_, "Save Privacy", "公開範囲を保存"));
+	QObject::connect(save_upload_privacy_button_, &QPushButton::clicked, [this]() { request_save_upload_privacy(); });
+	style_button(save_upload_privacy_button_, "#388e3c", "#ffffff");
+	decorate_button(save_upload_privacy_button_, QStyle::SP_DialogSaveButton,
+			ui_text(ui_language_, "Save the privacy status used by YouTube uploads.",
+				"YouTubeアップロードで使う公開範囲を保存します。"));
+	privacy_controls->addWidget(upload_privacy_input_);
+	privacy_controls->addWidget(save_upload_privacy_button_);
+	upload_layout->addLayout(privacy_controls);
+
 	auto *upload_controls = new QHBoxLayout;
+	upload_to_youtube_button_ = new QPushButton(ui_text(ui_language_, "Upload to YouTube", "YouTubeへアップロード"));
+	open_youtube_button_ = new QPushButton(ui_text(ui_language_, "Open YouTube", "YouTubeで開く"));
 	retry_upload_button_ = new QPushButton(ui_text(ui_language_, "Retry Upload", "再試行"));
 	discard_upload_button_ = new QPushButton(ui_text(ui_language_, "Discard Upload", "破棄"));
 	mark_uploaded_button_ = new QPushButton(ui_text(ui_language_, "Mark Uploaded", "アップロード済みにする"));
+	QObject::connect(upload_to_youtube_button_, &QPushButton::clicked, [this]() { request_upload_to_youtube(); });
 	QObject::connect(retry_upload_button_, &QPushButton::clicked, [this]() { request_upload_retry(); });
 	QObject::connect(discard_upload_button_, &QPushButton::clicked, [this]() { request_upload_discard(); });
 	QObject::connect(mark_uploaded_button_, &QPushButton::clicked, [this]() { request_upload_mark_uploaded(); });
+	QObject::connect(open_youtube_button_, &QPushButton::clicked, [this]() { request_open_uploaded_youtube(); });
+	style_button(upload_to_youtube_button_, "#1b5e20", "#ffffff");
 	style_button(retry_upload_button_, "#388e3c", "#ffffff");
 	style_button(discard_upload_button_, "#6b7280", "#ffffff");
 	style_button(mark_uploaded_button_, "#2e7d32", "#ffffff");
+	style_button(open_youtube_button_, "#2e7d32", "#ffffff");
+	decorate_button(upload_to_youtube_button_, QStyle::SP_ArrowUp,
+			ui_text(ui_language_, "Upload the selected queue item through the Google provider.",
+				"選択中のキュー項目をGoogle連携でアップロードします。"));
 	decorate_button(retry_upload_button_, QStyle::SP_BrowserReload,
 			ui_text(ui_language_, "Retry the current failed or manual-review upload item.", "現在の失敗または確認待ちアップロードを再試行します。"));
 	decorate_button(discard_upload_button_, QStyle::SP_DialogDiscardButton,
 			ui_text(ui_language_, "Discard the current upload queue item.", "現在のアップロードキュー項目を破棄します。"));
 	decorate_button(mark_uploaded_button_, QStyle::SP_DialogApplyButton,
 			ui_text(ui_language_, "Mark the current item uploaded after entering a YouTube video ID.", "YouTube動画IDを入力してアップロード済みにします。"));
+	decorate_button(open_youtube_button_, QStyle::SP_DialogOpenButton,
+			ui_text(ui_language_, "Open the last uploaded YouTube URL.",
+				"直近のアップロード済みURLを開きます。"));
+	upload_controls->addWidget(upload_to_youtube_button_);
 	upload_controls->addWidget(retry_upload_button_);
 	upload_controls->addWidget(discard_upload_button_);
 	upload_controls->addWidget(mark_uploaded_button_);
+	upload_controls->addWidget(open_youtube_button_);
 	upload_layout->addLayout(upload_controls);
 
 	auto *oauth_controls = new QHBoxLayout;
@@ -1134,6 +1328,28 @@ void PluginUiController::refresh()
 	if (youtube_value_) {
 		youtube_value_->setText(qstr_utf8(youtube_summary(snapshot)));
 	}
+	if (upload_target_value_) {
+		upload_target_value_->setText(qstr_utf8(upload_target_summary(snapshot, ui_language_)));
+	}
+	if (upload_text_value_) {
+		upload_text_value_->setText(qstr_utf8(upload_text_summary(snapshot, ui_language_)));
+	}
+	if (upload_blocking_value_) {
+		upload_blocking_value_->setText(qstr_utf8(upload_blocking_summary(snapshot, ui_language_)));
+	}
+	if (upload_result_value_ && upload_result_value_->text().isEmpty()) {
+		upload_result_value_->setText(ui_text(ui_language_, "No upload has run from this Dock yet.",
+						      "このDockからのアップロード実行結果はまだありません。"));
+	}
+	if (upload_privacy_input_ && snapshot.upload_next_target_available && snapshot.upload_next_target.found) {
+		const std::string privacy = snapshot.upload_next_target.target.upload_metadata.privacy_status;
+		if (!privacy.empty()) {
+			const int index = upload_privacy_input_->findData(qstr_utf8(privacy));
+			if (index >= 0) {
+				upload_privacy_input_->setCurrentIndex(index);
+			}
+		}
+	}
 	endpoint_value_->setText(qstr_utf8(endpoint));
 	user_data_value_->setText(snapshot.user_data_dir.empty() ? QString::fromUtf8("not configured") : qstr_wide(snapshot.user_data_dir));
 	worker_path_value_->setText(worker_path.empty() ? QString::fromUtf8("not available") : qstr_wide(worker_path));
@@ -1152,6 +1368,19 @@ void PluginUiController::refresh()
 		stop_button_->setVisible(currently_recording);
 	}
 	const bool queue_action_available = worker_running && snapshot.queue_action_item_available;
+	const bool upload_target_available = worker_running && snapshot.upload_next_target_available &&
+					     snapshot.upload_next_target.found &&
+					     snapshot.upload_next_target.target.can_upload &&
+					     !upload_request_in_progress_;
+	if (upload_to_youtube_button_) {
+		upload_to_youtube_button_->setEnabled(upload_target_available);
+	}
+	if (save_upload_privacy_button_) {
+		save_upload_privacy_button_->setEnabled(worker_running);
+	}
+	if (open_youtube_button_) {
+		open_youtube_button_->setEnabled(!last_uploaded_url_.empty());
+	}
 	if (retry_upload_button_) {
 		retry_upload_button_->setEnabled(queue_action_available);
 	}
@@ -1432,6 +1661,128 @@ void PluginUiController::request_upload_mark_uploaded()
 		video_id.trimmed().toStdString());
 	log_queue_command_result("mark_uploaded", result);
 	refresh();
+}
+
+void PluginUiController::request_save_upload_privacy()
+{
+	if (!upload_privacy_input_) {
+		return;
+	}
+	const std::string privacy_status = utf8_string(upload_privacy_input_->currentData().toString());
+	const UploadSettingsResult result = worker_manager_.update_upload_settings(privacy_status);
+	if (!result.accepted()) {
+		QMessageBox::warning(
+			dock_widget_,
+			ui_text(ui_language_, "Upload privacy", "アップロード公開範囲"),
+			qstr_utf8(result.error.empty() ? "Worker could not save upload privacy settings." :
+							result.error));
+		return;
+	}
+	if (upload_result_value_) {
+		upload_result_value_->setText(ui_text(ui_language_, "Upload privacy setting was saved.",
+						      "アップロード公開範囲を保存しました。"));
+	}
+	refresh();
+}
+
+void PluginUiController::request_open_uploaded_youtube()
+{
+	if (last_uploaded_url_.empty()) {
+		return;
+	}
+	QDesktopServices::openUrl(QUrl(qstr_utf8(last_uploaded_url_)));
+}
+
+void PluginUiController::request_upload_to_youtube()
+{
+	const WorkerStatusSnapshot snapshot = worker_manager_.status_snapshot();
+	if (!snapshot.upload_next_target_available || !snapshot.upload_next_target.found) {
+		return;
+	}
+	const UploadTargetPayload target = snapshot.upload_next_target.target;
+	if (!target.can_upload) {
+		QMessageBox::warning(
+			dock_widget_,
+			ui_text(ui_language_, "Upload blocked", "アップロード不可"),
+			qstr_utf8(upload_blocking_summary(snapshot, ui_language_)));
+		return;
+	}
+	std::string selected_privacy = target.upload_metadata.privacy_status;
+	if (upload_privacy_input_) {
+		const std::string privacy_status = utf8_string(upload_privacy_input_->currentData().toString());
+		const UploadSettingsResult settings = worker_manager_.update_upload_settings(privacy_status);
+		if (!settings.accepted()) {
+			QMessageBox::warning(
+				dock_widget_,
+				ui_text(ui_language_, "Upload privacy", "アップロード公開範囲"),
+				qstr_utf8(settings.error.empty() ? "Worker could not save upload privacy settings." :
+							 settings.error));
+			return;
+		}
+		selected_privacy = privacy_status;
+	}
+
+	std::ostringstream message;
+	message << "Upload queue item #" << target.queue_item_id << " to YouTube using the Google provider?\n\n"
+		<< "Video: " << target.video_path << "\n"
+		<< "Title: " << target.upload_metadata.title << "\n"
+		<< "Privacy: " << selected_privacy;
+	const auto answer = QMessageBox::question(
+		dock_widget_,
+		ui_text(ui_language_, "Confirm YouTube upload", "YouTubeアップロード確認"),
+		qstr_utf8(message.str()),
+		QMessageBox::Yes | QMessageBox::No,
+		QMessageBox::No);
+	if (answer != QMessageBox::Yes) {
+		return;
+	}
+
+	upload_request_in_progress_ = true;
+	if (upload_result_value_) {
+		upload_result_value_->setText(ui_text(ui_language_, "Uploading to YouTube...",
+						      "YouTubeへアップロード中です..."));
+	}
+	refresh();
+
+	const int item_id = target.queue_item_id;
+	QPointer<QWidget> dock = dock_widget_;
+	std::thread([this, dock, item_id]() {
+		const UploadProcessResult result = worker_manager_.process_upload_item(item_id, "google");
+		QWidget *dock_widget = dock.data();
+		if (!dock_widget) {
+			return;
+		}
+		QMetaObject::invokeMethod(
+			dock_widget,
+			[this, result]() {
+				upload_request_in_progress_ = false;
+				std::ostringstream text;
+				if (result.accepted()) {
+					text << "processed=" << (result.processed ? "true" : "false");
+					if (!result.outcome.empty()) {
+						text << " outcome=" << result.outcome;
+					}
+					if (!result.reason.empty()) {
+						text << " reason=" << result.reason;
+					}
+					if (!result.youtube_video_id.empty()) {
+						text << "\nyoutube_video_id=" << result.youtube_video_id;
+					}
+					if (!result.youtube_url.empty()) {
+						last_uploaded_url_ = result.youtube_url;
+						text << "\n" << result.youtube_url;
+					}
+				} else {
+					text << "upload failed: "
+					     << (result.error.empty() ? "Worker did not accept upload." : result.error);
+				}
+				if (upload_result_value_) {
+					upload_result_value_->setText(qstr_utf8(text.str()));
+				}
+				refresh();
+			},
+			Qt::QueuedConnection);
+	}).detach();
 }
 
 void PluginUiController::request_upload_oauth_authorization()

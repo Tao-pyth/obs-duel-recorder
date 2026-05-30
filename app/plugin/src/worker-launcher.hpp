@@ -48,6 +48,7 @@ struct WorkerStatusSnapshot {
 	OverlayStatePayload overlay_state;
 	UploadStatusResult upload_status;
 	QueueActionFetchResult queue_action_item;
+	UploadTargetFetchResult upload_next_target;
 	std::wstring user_data_dir;
 	std::wstring worker_command;
 	std::wstring expected_worker_path;
@@ -71,6 +72,7 @@ struct WorkerStatusSnapshot {
 	bool overlay_state_available = false;
 	bool upload_status_available = false;
 	bool queue_action_item_available = false;
+	bool upload_next_target_available = false;
 };
 
 class WorkerProcessManager {
@@ -90,6 +92,9 @@ public:
 	MatchFetchResult fetch_latest_match();
 	MetadataUpdateResult update_match_metadata(const MatchMetadataPayload &metadata);
 	UploadMetadataPreviewResult fetch_upload_metadata_preview(int match_id);
+	UploadTargetFetchResult fetch_next_upload_target();
+	UploadProcessResult process_upload_item(int item_id, const std::string &provider);
+	UploadSettingsResult update_upload_settings(const std::string &privacy_status);
 	VideoPreviewResult fetch_match_video_preview(int match_id, int frame_index);
 	WorkerActionResult fetch_setup_validation();
 	WorkerActionResult register_detection_template(const std::string &kind, const std::string &path,
@@ -114,7 +119,8 @@ private:
 			   const OverlayFetchResult *overlay = nullptr,
 			   const UploadStatusResult *upload = nullptr,
 			   const RecordingStateFetchResult *recording = nullptr,
-			   const QueueActionFetchResult *queue_action = nullptr);
+			   const QueueActionFetchResult *queue_action = nullptr,
+			   const UploadTargetFetchResult *upload_next_target = nullptr);
 	void close_process_handles();
 
 	LocalhostApiClient api_client_;

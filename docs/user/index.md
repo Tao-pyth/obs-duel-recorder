@@ -17,6 +17,7 @@ introduced:
 - [First setup](setup.md)
 - [Automatic recording setup](automatic-recording-setup.md)
 - [YouTube OAuth setup](youtube-oauth.md)
+- [YouTube upload flow](youtube-upload-flow.md)
 - [Operation flow and system overview](operation-flow.md)
 - [UI images](ui-images.md)
 - [OBS sources used by the Plugin](obs-sources.md)
