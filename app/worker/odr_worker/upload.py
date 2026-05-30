@@ -543,8 +543,9 @@ def build_upload_settings(*, user_data_dir: Path, privacy_status: str = DEFAULT_
         raise UploadCommandError(
             "upload_privacy_invalid",
             {"privacy_status": privacy_status, "allowed": sorted(ALLOWED_PRIVACY_STATUSES)},
-        )
+    )
     secrets_dir = user_data_dir / "config" / "secrets"
+    secrets_dir.mkdir(parents=True, exist_ok=True)
     token_path = secrets_dir / "youtube-token.json"
     client_secret_path = secrets_dir / "youtube-client-secret.json"
     return UploadSettings(
@@ -603,7 +604,10 @@ def build_upload_readiness(
 
     if not settings.client_secret_configured:
         auth_state = "client_secret_missing"
-        next_action = "Place youtube-client-secret.json under user_data/config/secrets."
+        next_action = (
+            "Select the Google OAuth client JSON from the OBS Dock, or place it as "
+            "user_data/config/secrets/youtube-client-secret.json."
+        )
     elif token_state == "missing":
         auth_state = "token_missing"
         next_action = "Authorize YouTube upload and create youtube-token.json."

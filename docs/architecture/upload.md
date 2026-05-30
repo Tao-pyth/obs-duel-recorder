@@ -193,7 +193,7 @@ The stable readiness states are:
 | State | Meaning | Typical next action |
 |---|---|---|
 | `ready` | Google upload dependencies, OAuth client secret, token, and queue state are usable. | Upload can proceed. |
-| `client_secret_missing` | `youtube-client-secret.json` is not present. | Place the client secret under `user_data/config/secrets/`. |
+| `client_secret_missing` | `youtube-client-secret.json` is not present. | Use the Dock auth-file selection action, or place the client secret under `user_data/config/secrets/`. |
 | `token_missing` | `youtube-token.json` is not present. | Run OAuth authorization. |
 | `token_invalid` | Token JSON is invalid, expired without refresh, or lacks an access token. | Reauthorize and replace the token. |
 | `token_expired_refreshable` | Token is expired but has a refresh token. | Run token refresh. |

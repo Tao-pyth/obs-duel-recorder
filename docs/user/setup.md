@@ -90,7 +90,7 @@ Dock can show one clear action instead of raw debug fields:
 | `readiness_state` | Meaning | User action |
 |---|---|---|
 | `ready` | OAuth, provider dependencies, and queue state allow upload. | Upload can proceed. |
-| `client_secret_missing` | `youtube-client-secret.json` is not present. | Place the Google OAuth desktop client JSON under `user_data/config/secrets/`. |
+| `client_secret_missing` | `youtube-client-secret.json` is not present. | Use `Select Auth File` in the Dock, or place the Google OAuth desktop client JSON under `user_data/config/secrets/`. |
 | `token_missing` | Authorization has not created `youtube-token.json`. | Request an authorization URL and complete browser approval. |
 | `token_invalid` | The token file is unreadable, incomplete, or expired without refresh support. | Reauthorize and replace `youtube-token.json`. |
 | `token_expired_refreshable` | The token is expired but has a refresh token. | Use token refresh. |
