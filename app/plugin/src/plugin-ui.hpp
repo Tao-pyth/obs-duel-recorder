@@ -151,7 +151,6 @@ private:
 	QComboBox *upload_queue_input_ = nullptr;
 	QCheckBox *automatic_detection_enabled_input_ = nullptr;
 	QSpinBox *automatic_detection_interval_input_ = nullptr;
-	QPushButton *settings_button_ = nullptr;
 	QPushButton *help_button_ = nullptr;
 	QPushButton *automatic_setup_button_ = nullptr;
 	QPushButton *start_button_ = nullptr;
@@ -170,7 +169,6 @@ private:
 	QPushButton *edit_upload_metadata_button_ = nullptr;
 	QPushButton *edit_metadata_button_ = nullptr;
 	QPushButton *go_upload_button_ = nullptr;
-	QPushButton *preview_metadata_button_ = nullptr;
 	QPushButton *video_preview_frame_1_button_ = nullptr;
 	QPushButton *video_preview_frame_2_button_ = nullptr;
 	QPushButton *video_preview_frame_3_button_ = nullptr;

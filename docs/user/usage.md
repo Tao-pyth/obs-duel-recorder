@@ -23,7 +23,7 @@ The Dock UI supports:
 - manual start
 - manual stop
 - metadata editing for the latest completed recording
-- upload title and description preview for the latest completed recording
+- upload title, description, and tag template preview from the Template tab
 - representative frame preview for the metadata editing target when the linked
   local video and ffmpeg are available
 - upload retry
@@ -35,7 +35,8 @@ As of `v1.1.3`, the Dock follows the normal operation order:
 
 - `Record`: recording state, output identity, and manual start/stop
 - `Metadata`: latest match fields, deck/opponent dropdowns, memo, and save status
-- `Upload`: upload queue actions plus title, description, and tag template preview
+- `Upload`: upload queue actions, selected target preview, YouTube readiness, and OAuth actions
+- `Template`: upload title, description, and tag template editing plus preview
 - `Manage`: setup readiness, inline settings, Help, automatic setup, and diagnostics details
 
 Retrying an item that needs manual review can create a duplicate YouTube upload.
@@ -68,9 +69,9 @@ Users can:
 Invalid metadata values are rejected by the Worker without replacing the saved
 match record.
 
-Use the Upload preview before upload to inspect the generated YouTube title,
-description, tags, and privacy status. If the preview reports missing fields,
-save Metadata and preview again before retrying upload.
+Use the Template tab preview before upload to inspect the generated YouTube
+title, description, tags, and privacy status. If the preview reports missing
+fields, save Metadata and preview again before retrying upload.
 
 Quota waiting is not the same as a temporary network failure. If the Upload tab
 reports `quota_waiting`, wait for quota reset before retrying. Repeated

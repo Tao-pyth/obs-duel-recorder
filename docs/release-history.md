@@ -381,6 +381,15 @@ The version tracking issue may contain the working release summary, but finalize
 - Deferred items: the broader remaining #508 YouTube UX refinements stay open for follow-up after v1.1.7 instead of blocking this stabilization release.
 - Status: released user-ready OBS Plugin package
 
+### v1.1.8 - Real OBS Dock Usability Correction
+
+- Version tracking issue: #595
+- Child issues: #596, #597, #598, #599, #600, #601
+- Previous released user-ready version: `v1.1.7`
+- Release summary: `docs/release/v1.1.8-release-summary.md`
+- Scope: fixes real OBS Dock readability issues found in screenshots, including truncated Record/Upload action buttons, duplicate preview/settings surfaces, misleading frame selector arrows, and cramped upload template editing.
+- Status: active implementation target until the v1.1.8 package and GitHub Release are published.
+
 ### Legacy tag v1.0.0 - YouTube Upload MVP
 
 - Version tracking issue: #318

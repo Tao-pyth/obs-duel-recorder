@@ -24,7 +24,8 @@ v1.1.3 以降の Dock は通常の流れに合わせて並びます。
 
 - `Record`: 録画状態、出力の紐づき、手動開始/停止
 - `Metadata`: 最新対戦の deck/opponent deck、result、rank、DP、memo の直接編集
-- `Upload`: アップロードキュー操作、タイトル/説明文/タグテンプレート、プレビュー
+- `Upload`: アップロードキュー操作、選択中動画の確認、YouTube連携状態、OAuth操作
+- `Template`: タイトル/説明文/タグテンプレートの編集、プレビュー
 - `Manage`: セットアップ状態、設定、ヘルプ、自動録画セットアップ、詳細診断
 
 失敗時は Manage の詳細診断、または `/recording/state` を確認してください。
@@ -37,7 +38,7 @@ Deck と opponent deck は手入力できるプルダウンです。保存した
 
 Deck、opponent deck、rank、DP は次の match が空欄の場合に前回保存値を引き継ぎます。必要に応じて直接書き換えられます。
 
-YouTube upload metadata は Worker が同じテンプレートから生成します。Upload タブのプレビューでタイトル、説明文、タグ、警告を確認してからアップロードしてください。
+YouTube upload metadata は Worker が同じテンプレートから生成します。Template タブのプレビューでタイトル、説明文、タグ、警告を確認してからアップロードしてください。
 
 ## 認識候補
 

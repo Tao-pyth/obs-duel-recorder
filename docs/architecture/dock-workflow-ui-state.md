@@ -4,7 +4,8 @@
 
 1. Record
 2. Upload
-3. Manage
+3. Template
+4. Manage
 
 The Dock should keep daily controls visible and move raw diagnostic parameters behind explicit detail controls.
 
@@ -28,7 +29,8 @@ full #473-#504 release scope:
 | Tab | Purpose |
 |---|---|
 | Record | Recording state, a switching start/stop control, latest match metadata, editable deck/opponent deck dropdowns, rank/DP carry-over, memo, save status, and the target video identity. |
-| Upload | Upload queue actions, upload title/description/tag template editing, preview, and YouTube integration summary. |
+| Upload | Upload queue actions, selected target preview, upload text summary, and YouTube integration summary. |
+| Template | Upload title/description/tag template editing and preview. |
 | Manage | Setup readiness, inline settings, save settings, automatic setup entrypoint, and hidden diagnostics details. |
 
 ## Agreed v1.1.4 Dock Mockup
@@ -37,7 +39,7 @@ full #473-#504 release scope:
 +------------------------------------------------------+
 | OBS Duel Recorder                                    |
 +------------------------------------------------------+
-| [ Record / 録画 ] [ Upload / アップロード ] [ Manage / 管理 ] |
+| [ Record / 録画 ] [ Upload / アップロード ] [ Template / テンプレート ] [ Manage / 管理 ] |
 +------------------------------------------------------+
 
 [ Record / 録画 ]
@@ -76,7 +78,14 @@ full #473-#504 release scope:
 |  State: ready to upload                               |
 |  [ Retry ] [ Mark uploaded ] [ Discard ]              |
 +------------------------------------------------------+
-| Upload text                               [Edit]      |
+| Upload text summary                                  |
+|  Title / description / tags are shown for the        |
+|  selected upload target.                             |
++------------------------------------------------------+
+
+[ Template / テンプレート ]
++------------------------------------------------------+
+| Upload templates                                    |
 |  Title                                               |
 |  Description                                         |
 |  Tags                                                |
@@ -234,3 +243,18 @@ The Dock uses restrained Material-inspired roles:
 | surface | Cards and tab backgrounds. |
 
 The Dock palette is light-green based. Primary actions, surfaces, and borders should stay in the same green family; only destructive/error states may use red. Decorative color without a state or hierarchy reason should be avoided.
+
+## v1.1.8 Usability Adjustment
+
+The real OBS smoke review for #595 split upload text template editing out of
+the Upload tab. Upload remains focused on queue selection, target preview, and
+YouTube readiness. Template editing and preview live in the Template tab so the
+narrow OBS Dock does not compress queue actions and multi-line template fields
+into the same viewport.
+
+Frame selectors display `1`, `2`, and `3` without previous/next arrows. They
+represent three still frames, not chronological navigation buttons.
+
+The Manage tab uses inline settings plus a single Save Settings action. The
+duplicate Open Settings button is removed from the Dock surface because it
+opened another copy of the same settings controls.
