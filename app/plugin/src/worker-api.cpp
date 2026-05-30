@@ -644,6 +644,30 @@ UploadStatusResult LocalhostApiClient::fetch_upload_status(const WorkerEndpoint 
 					     "0" : extract_json_number(response.body, "discarded"));
 	result.readiness_state = extract_json_string(response.body, "readiness_state");
 	result.readiness_next_action = extract_json_string(response.body, "readiness_next_action");
+	const std::string settings = extract_json_object(response.body, "settings");
+	const std::string auth = extract_json_object(response.body, "auth");
+	const std::string providers = extract_json_object(response.body, "providers");
+	result.privacy_status = settings.empty() ? extract_json_string(response.body, "privacy_status") :
+						  extract_json_string(settings, "privacy_status");
+	result.client_secret_configured = settings.empty() ? extract_json_bool(response.body, "client_secret_configured") :
+							      extract_json_bool(settings, "client_secret_configured");
+	result.token_configured = settings.empty() ? extract_json_bool(response.body, "token_configured") :
+						      extract_json_bool(settings, "token_configured");
+	result.token_state = auth.empty() ? extract_json_string(response.body, "token_state") :
+					    extract_json_string(auth, "token_state");
+	result.token_expiry = auth.empty() ? extract_json_string(response.body, "expiry") :
+					     extract_json_string(auth, "expiry");
+	result.auth_ready = auth.empty() ? extract_json_bool(response.body, "auth_ready") :
+					   extract_json_bool(auth, "auth_ready");
+	result.token_expired = auth.empty() ? extract_json_bool(response.body, "expired") :
+					      extract_json_bool(auth, "expired");
+	result.token_refreshable = auth.empty() ? extract_json_bool(response.body, "refreshable") :
+						 extract_json_bool(auth, "refreshable");
+	result.provider_default = providers.empty() ? extract_json_string(response.body, "default") :
+						      extract_json_string(providers, "default");
+	result.google_dependencies_available = providers.empty() ?
+						       extract_json_bool(response.body, "google_dependencies_available") :
+						       extract_json_bool(providers, "google_dependencies_available");
 	result.status = UploadStatusFetchStatus::reachable;
 	result.body = response.body;
 	return result;

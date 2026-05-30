@@ -405,6 +405,68 @@ std::string upload_blocking_summary(const WorkerStatusSnapshot &snapshot, const 
 	return localized_blocking_reasons(language, target.blocking_reasons);
 }
 
+std::string localized_upload_next_action(const std::string &language, const std::string &state,
+					 const std::string &fallback)
+{
+	if (!language_is_japanese(language)) {
+		return fallback.empty() ? "No action required." : fallback;
+	}
+	if (state == "client_secret_missing") {
+		return "user_data/config/secrets/youtube-client-secret.json を配置してください。";
+	}
+	if (state == "token_missing") {
+		return "YouTube認証を実行してください。";
+	}
+	if (state == "token_invalid") {
+		return "YouTubeを再認証し、トークンを作り直してください。";
+	}
+	if (state == "token_expired_refreshable") {
+		return "トークン更新を実行してください。";
+	}
+	if (state == "google_dependencies_missing" || state == "dependencies_missing") {
+		return "Googleアップロード依存ライブラリを含む配布版を使用してください。";
+	}
+	if (state == "quota_waiting") {
+		return "YouTubeクォータのリセット後に再試行してください。";
+	}
+	if (state == "manual_review_required") {
+		return "YouTube側を確認し、再試行・破棄・アップロード済み設定を選んでください。";
+	}
+	if (state == "ready") {
+		return "アップロード可能です。";
+	}
+	return fallback.empty() ? "状態を確認してください。" : fallback;
+}
+
+std::string upload_readiness_summary(const WorkerStatusSnapshot &snapshot, const std::string &language)
+{
+	if (!snapshot.upload_status_available) {
+		if (!snapshot.upload_status.error.empty()) {
+			return (language_is_japanese(language) ? "Upload API取得不可: " : "upload API not available: ") +
+			       snapshot.upload_status.error;
+		}
+		return language_is_japanese(language) ? "Upload API取得不可" : "upload API not available";
+	}
+
+	const UploadStatusResult &status = snapshot.upload_status;
+	std::ostringstream out;
+	out << (language_is_japanese(language) ? "状態: " : "State: ")
+	    << localized_upload_state(language, status.readiness_state) << "\n"
+	    << (language_is_japanese(language) ? "次の操作: " : "Next action: ")
+	    << localized_upload_next_action(language, status.readiness_state, status.readiness_next_action) << "\n"
+	    << "OAuth client secret: " << (status.client_secret_configured ? "configured" : "missing") << "\n"
+	    << "Token: " << (status.token_state.empty() ? "unknown" : status.token_state);
+	if (!status.token_expiry.empty()) {
+		out << " / expiry: " << status.token_expiry;
+	}
+	out << " / refreshable: " << (status.token_refreshable ? "yes" : "no") << "\n"
+	    << "Google dependencies: " << (status.google_dependencies_available ? "available" : "missing");
+	if (!status.privacy_status.empty()) {
+		out << "\nPrivacy: " << status.privacy_status;
+	}
+	return out.str();
+}
+
 QLabel *add_row(QFormLayout *layout, const char *name, QLabel **name_label = nullptr)
 {
 	auto *label = new QLabel(QString::fromUtf8(name));
@@ -1326,7 +1388,7 @@ void PluginUiController::refresh()
 	queue_value_->setText(qstr_utf8(queue_summary(snapshot)));
 	review_item_value_->setText(qstr_utf8(review_item_summary(snapshot)));
 	if (youtube_value_) {
-		youtube_value_->setText(qstr_utf8(youtube_summary(snapshot)));
+		youtube_value_->setText(qstr_utf8(upload_readiness_summary(snapshot, ui_language_)));
 	}
 	if (upload_target_value_) {
 		upload_target_value_->setText(qstr_utf8(upload_target_summary(snapshot, ui_language_)));
@@ -1392,10 +1454,18 @@ void PluginUiController::refresh()
 						  snapshot.queue_action_item.item.state == "need_manual_review");
 	}
 	if (oauth_authorize_button_) {
-		oauth_authorize_button_->setEnabled(worker_running);
+		oauth_authorize_button_->setEnabled(worker_running && snapshot.upload_status.client_secret_configured);
+		const bool primary = snapshot.upload_status.readiness_state == "token_missing" ||
+				     snapshot.upload_status.readiness_state == "token_invalid";
+		style_button(oauth_authorize_button_, primary ? "#1b5e20" : "#6b7280", "#ffffff");
 	}
 	if (oauth_refresh_button_) {
-		oauth_refresh_button_->setEnabled(worker_running);
+		const bool refresh_needed = snapshot.upload_status.readiness_state == "token_expired_refreshable" ||
+					    snapshot.upload_status.token_refreshable;
+		oauth_refresh_button_->setEnabled(worker_running && refresh_needed);
+		style_button(oauth_refresh_button_, snapshot.upload_status.readiness_state == "token_expired_refreshable" ?
+						   "#1b5e20" : "#6b7280",
+			     "#ffffff");
 	}
 	if (oauth_help_button_) {
 		oauth_help_button_->setEnabled(true);
