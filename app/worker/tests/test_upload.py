@@ -408,6 +408,31 @@ class UploadApiTests(unittest.TestCase):
         self.assertNotIn("super-sensitive-refresh", str(status.json()["auth"]))
         self.assertNotIn("super-sensitive-client-secret", str(settings))
 
+    def test_upload_settings_endpoint_persists_privacy_status(self) -> None:
+        from odr_worker.config import load_worker_config
+
+        client, runtime_dirs = self._client()
+
+        updated = client.put("/upload/settings", json={"privacy_status": "unlisted"})
+
+        self.assertEqual(updated.status_code, 200)
+        self.assertEqual(updated.json()["settings"]["privacy_status"], "unlisted")
+        loaded_config = load_worker_config(user_data_dir=runtime_dirs.user_data_dir)
+        self.assertEqual(loaded_config.config.upload_privacy_status, "unlisted")
+
+        client, _ = self._client_for_runtime(runtime_dirs)
+        status = client.get("/upload/status")
+        self.assertEqual(status.status_code, 200)
+        self.assertEqual(status.json()["settings"]["privacy_status"], "unlisted")
+
+    def test_upload_settings_endpoint_rejects_invalid_privacy_status(self) -> None:
+        client, _ = self._client()
+
+        updated = client.put("/upload/settings", json={"privacy_status": "public"})
+
+        self.assertEqual(updated.status_code, 400)
+        self.assertEqual(updated.json()["code"], "upload_privacy_invalid")
+
     def test_oauth_status_reports_expired_refreshable_token_without_secret_values(self) -> None:
         client, runtime_dirs = self._client()
         secrets_dir = runtime_dirs.config_dir / "secrets"
@@ -662,15 +687,11 @@ class UploadApiTests(unittest.TestCase):
         from fastapi.testclient import TestClient
 
         from odr_worker.api import create_app
-        from odr_worker.config import LoadedWorkerConfig, WorkerConfig
+        from odr_worker.config import load_worker_config
         from odr_worker.db import init_db
 
         db_info = init_db(runtime_dirs=runtime_dirs)
-        loaded_config = LoadedWorkerConfig(
-            config=WorkerConfig(),
-            config_path=runtime_dirs.config_dir / "worker.toml",
-            config_loaded=False,
-        )
+        loaded_config = load_worker_config(user_data_dir=runtime_dirs.user_data_dir)
         client = TestClient(create_app(runtime_dirs=runtime_dirs, loaded_config=loaded_config, db_info=db_info))
         self.addCleanup(client.close)
         return client, runtime_dirs

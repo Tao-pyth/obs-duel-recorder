@@ -10,6 +10,9 @@ class WorkerConfigError(RuntimeError):
     """Raised when the Worker config file cannot be parsed or validated."""
 
 
+ALLOWED_UPLOAD_PRIVACY_STATUSES = {"private", "unlisted"}
+
+
 @dataclass(frozen=True)
 class WorkerConfig:
     """Worker configuration scaffold (v0.2).
@@ -20,6 +23,7 @@ class WorkerConfig:
 
     host: str = "127.0.0.1"
     port: int = 8787
+    upload_privacy_status: str = "private"
 
 
 @dataclass(frozen=True)
@@ -79,13 +83,50 @@ def load_worker_config(user_data_dir: Path | None = None) -> LoadedWorkerConfig:
         if not isinstance(config_table, dict):
             raise ValueError("[worker] must be a TOML table")
 
+        upload_table = raw.get("upload", {})
+        if not isinstance(upload_table, dict):
+            raise ValueError("[upload] must be a TOML table")
+
         host = str(config_table.get("host", WorkerConfig.host))
         port = int(config_table.get("port", WorkerConfig.port))
+        upload_privacy_status = str(upload_table.get("privacy_status", WorkerConfig.upload_privacy_status))
+        if upload_privacy_status not in ALLOWED_UPLOAD_PRIVACY_STATUSES:
+            raise ValueError("[upload].privacy_status must be private or unlisted")
     except (OSError, tomllib.TOMLDecodeError, TypeError, ValueError) as exc:
         raise WorkerConfigError(f"Failed to load Worker config from {config_path}: {exc}") from exc
 
     return LoadedWorkerConfig(
-        config=WorkerConfig(host=host, port=port),
+        config=WorkerConfig(host=host, port=port, upload_privacy_status=upload_privacy_status),
         config_path=config_path,
         config_loaded=True,
     )
+
+
+def save_worker_config(*, user_data_dir: Path, config: WorkerConfig) -> Path:
+    """Persist non-secret Worker settings under user_data/config/worker.toml."""
+
+    if config.upload_privacy_status not in ALLOWED_UPLOAD_PRIVACY_STATUSES:
+        raise WorkerConfigError("upload_privacy_status must be private or unlisted")
+
+    config_path = get_default_config_path(user_data_dir)
+    config_path.parent.mkdir(parents=True, exist_ok=True)
+    config_path.write_text(
+        "\n".join(
+            [
+                "[worker]",
+                f"host = {_toml_string(config.host)}",
+                f"port = {config.port}",
+                "",
+                "[upload]",
+                f"privacy_status = {_toml_string(config.upload_privacy_status)}",
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    return config_path
+
+
+def _toml_string(value: str) -> str:
+    escaped = value.replace("\\", "\\\\").replace('"', '\\"')
+    return f'"{escaped}"'
