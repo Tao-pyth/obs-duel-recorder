@@ -31,6 +31,7 @@
 #include <QPixmap>
 #include <QPointer>
 #include <QPushButton>
+#include <QSignalBlocker>
 #include <QTabWidget>
 #include <QTextEdit>
 #include <QThread>
@@ -328,6 +329,24 @@ std::string localized_blocking_reason(const std::string &language, const std::st
 	if (reason == "youtube_video_id_already_present") {
 		return "YouTube動画IDが既に保存されています";
 	}
+	if (reason == "metadata_unavailable") {
+		return "メタデータが紐づいていません";
+	}
+	if (reason == "metadata_deck_name_missing") {
+		return "自分のデッキが未入力です";
+	}
+	if (reason == "metadata_opponent_deck_missing") {
+		return "相手のデッキが未入力です";
+	}
+	if (reason == "metadata_result_missing") {
+		return "結果が未入力です";
+	}
+	if (reason == "metadata_rank_missing") {
+		return "ランクが未入力です";
+	}
+	if (reason == "metadata_dp_missing") {
+		return "DPが未入力です";
+	}
 	if (reason.find("queue_state_") == 0) {
 		return "現在のキュー状態ではアップロードできません";
 	}
@@ -354,6 +373,16 @@ std::string localized_blocking_reasons(const std::string &language, const std::s
 	return out.str();
 }
 
+std::string display_video_name(const std::string &video_path, const std::string &resolved_video_path)
+{
+	const std::string path = video_path.empty() ? resolved_video_path : video_path;
+	if (path.empty()) {
+		return {};
+	}
+	const size_t slash = path.find_last_of("\\/");
+	return slash == std::string::npos ? path : path.substr(slash + 1);
+}
+
 std::string upload_target_summary(const WorkerStatusSnapshot &snapshot, const std::string &language)
 {
 	if (!snapshot.upload_next_target_available) {
@@ -369,8 +398,9 @@ std::string upload_target_summary(const WorkerStatusSnapshot &snapshot, const st
 	if (target.match_id > 0) {
 		out << " / match #" << target.match_id;
 	}
-	if (!target.video_path.empty()) {
-		out << "\n" << target.video_path;
+	const std::string video_name = display_video_name(target.video_path, target.resolved_video_path);
+	if (!video_name.empty()) {
+		out << "\nVideo: " << video_name;
 	}
 	if (!target.upload_metadata.privacy_status.empty()) {
 		out << "\nprivacy: " << target.upload_metadata.privacy_status;
@@ -403,6 +433,32 @@ std::string upload_blocking_summary(const WorkerStatusSnapshot &snapshot, const 
 		return language_is_japanese(language) ? "アップロード可能" : "uploadable";
 	}
 	return localized_blocking_reasons(language, target.blocking_reasons);
+}
+
+std::string upload_queue_item_label(const UploadTargetPayload &target, const std::string &language)
+{
+	std::ostringstream out;
+	const char *icon = "○";
+	if (target.can_upload) {
+		icon = "✓";
+	} else if (target.state == "upload_failed" || target.state == "need_manual_review") {
+		icon = "!";
+	} else if (target.state == "uploaded") {
+		icon = "✓";
+	}
+	out << icon << " #" << target.queue_item_id << " "
+	    << localized_upload_state(language, target.state);
+	if (target.match_id > 0) {
+		out << " / match #" << target.match_id;
+	}
+	if (!target.item.created_at.empty()) {
+		out << " / " << target.item.created_at;
+	}
+	const std::string video_name = display_video_name(target.video_path, target.resolved_video_path);
+	if (!video_name.empty()) {
+		out << " / " << video_name;
+	}
+	return out.str();
 }
 
 std::string localized_upload_next_action(const std::string &language, const std::string &state,
@@ -453,14 +509,7 @@ std::string upload_readiness_summary(const WorkerStatusSnapshot &snapshot, const
 	out << (language_is_japanese(language) ? "状態: " : "State: ")
 	    << localized_upload_state(language, status.readiness_state) << "\n"
 	    << (language_is_japanese(language) ? "次の操作: " : "Next action: ")
-	    << localized_upload_next_action(language, status.readiness_state, status.readiness_next_action) << "\n"
-	    << "OAuth client secret: " << (status.client_secret_configured ? "configured" : "missing") << "\n"
-	    << "Token: " << (status.token_state.empty() ? "unknown" : status.token_state);
-	if (!status.token_expiry.empty()) {
-		out << " / expiry: " << status.token_expiry;
-	}
-	out << " / refreshable: " << (status.token_refreshable ? "yes" : "no") << "\n"
-	    << "Google dependencies: " << (status.google_dependencies_available ? "available" : "missing");
+	    << localized_upload_next_action(language, status.readiness_state, status.readiness_next_action);
 	if (!status.privacy_status.empty()) {
 		out << "\nPrivacy: " << status.privacy_status;
 	}
@@ -821,6 +870,44 @@ void PluginUiController::register_ui()
 					    &review_item_label_);
 	youtube_value_ = add_card_value(upload_layout, language_is_japanese(ui_language_) ? "YouTube連携" : "YouTube link",
 					&youtube_label_);
+	upload_queue_input_ = new QComboBox;
+	QObject::connect(upload_queue_input_, QOverload<int>::of(&QComboBox::currentIndexChanged), [this](int index) {
+		if (!upload_queue_input_ || index < 0) {
+			return;
+		}
+		selected_upload_queue_item_id_ = upload_queue_input_->itemData(index).toInt();
+		load_upload_video_preview(upload_preview_frame_index_);
+		refresh();
+	});
+	upload_layout->addWidget(upload_queue_input_);
+
+	upload_video_preview_image_ = new QLabel(ui_text(ui_language_, "No upload target preview.", "アップロード対象プレビューはありません。"));
+	upload_video_preview_image_->setAlignment(Qt::AlignCenter);
+	upload_video_preview_image_->setMinimumHeight(120);
+	upload_video_preview_image_->setMaximumHeight(180);
+	upload_video_preview_image_->setStyleSheet(
+		"background: #f3f8f2; border: 1px solid #c8d6c5; color: #35543a; padding: 8px;");
+	upload_layout->addWidget(upload_video_preview_image_);
+	auto *upload_preview_controls = new QHBoxLayout;
+	upload_preview_frame_1_button_ = new QPushButton("1");
+	upload_preview_frame_2_button_ = new QPushButton("2");
+	upload_preview_frame_3_button_ = new QPushButton("3");
+	QObject::connect(upload_preview_frame_1_button_, &QPushButton::clicked, [this]() { load_upload_video_preview(1); });
+	QObject::connect(upload_preview_frame_2_button_, &QPushButton::clicked, [this]() { load_upload_video_preview(2); });
+	QObject::connect(upload_preview_frame_3_button_, &QPushButton::clicked, [this]() { load_upload_video_preview(3); });
+	decorate_button(upload_preview_frame_1_button_, QStyle::SP_MediaSeekBackward,
+			ui_text(ui_language_, "Show the first representative frame.", "1枚目の代表フレームを表示します。"));
+	decorate_button(upload_preview_frame_2_button_, QStyle::SP_FileDialogInfoView,
+			ui_text(ui_language_, "Show the middle representative frame.", "中央の代表フレームを表示します。"));
+	decorate_button(upload_preview_frame_3_button_, QStyle::SP_MediaSeekForward,
+			ui_text(ui_language_, "Show the last representative frame.", "3枚目の代表フレームを表示します。"));
+	style_button(upload_preview_frame_1_button_, "#6b7280", "#ffffff");
+	style_button(upload_preview_frame_2_button_, "#1b5e20", "#ffffff");
+	style_button(upload_preview_frame_3_button_, "#6b7280", "#ffffff");
+	upload_preview_controls->addWidget(upload_preview_frame_1_button_);
+	upload_preview_controls->addWidget(upload_preview_frame_2_button_);
+	upload_preview_controls->addWidget(upload_preview_frame_3_button_);
+	upload_layout->addLayout(upload_preview_controls);
 
 	upload_target_value_ = add_card_value(upload_layout,
 					      language_is_japanese(ui_language_) ? "アップロード対象" : "Upload target",
@@ -852,15 +939,31 @@ void PluginUiController::register_ui()
 	auto *upload_controls = new QHBoxLayout;
 	upload_to_youtube_button_ = new QPushButton(ui_text(ui_language_, "Upload to YouTube", "YouTubeへアップロード"));
 	open_youtube_button_ = new QPushButton(ui_text(ui_language_, "Open YouTube", "YouTubeで開く"));
+	edit_upload_metadata_button_ = new QPushButton(ui_text(ui_language_, "Edit Metadata", "メタデータ編集"));
 	retry_upload_button_ = new QPushButton(ui_text(ui_language_, "Retry Upload", "再試行"));
 	discard_upload_button_ = new QPushButton(ui_text(ui_language_, "Discard Upload", "破棄"));
 	mark_uploaded_button_ = new QPushButton(ui_text(ui_language_, "Mark Uploaded", "アップロード済みにする"));
 	QObject::connect(upload_to_youtube_button_, &QPushButton::clicked, [this]() { request_upload_to_youtube(); });
+	QObject::connect(edit_upload_metadata_button_, &QPushButton::clicked, [this]() {
+		const WorkerStatusSnapshot snapshot = worker_manager_.status_snapshot();
+		if (!has_selected_upload_target(snapshot)) {
+			return;
+		}
+		const UploadTargetPayload target = selected_upload_target(snapshot);
+		if (target.match_id <= 0) {
+			return;
+		}
+		if (dock_tabs_) {
+			dock_tabs_->setCurrentIndex(0);
+		}
+		load_match_metadata_into_dock(target.match_id);
+	});
 	QObject::connect(retry_upload_button_, &QPushButton::clicked, [this]() { request_upload_retry(); });
 	QObject::connect(discard_upload_button_, &QPushButton::clicked, [this]() { request_upload_discard(); });
 	QObject::connect(mark_uploaded_button_, &QPushButton::clicked, [this]() { request_upload_mark_uploaded(); });
 	QObject::connect(open_youtube_button_, &QPushButton::clicked, [this]() { request_open_uploaded_youtube(); });
 	style_button(upload_to_youtube_button_, "#1b5e20", "#ffffff");
+	style_button(edit_upload_metadata_button_, "#2e7d32", "#ffffff");
 	style_button(retry_upload_button_, "#388e3c", "#ffffff");
 	style_button(discard_upload_button_, "#6b7280", "#ffffff");
 	style_button(mark_uploaded_button_, "#2e7d32", "#ffffff");
@@ -868,6 +971,9 @@ void PluginUiController::register_ui()
 	decorate_button(upload_to_youtube_button_, QStyle::SP_ArrowUp,
 			ui_text(ui_language_, "Upload the selected queue item through the Google provider.",
 				"選択中のキュー項目をGoogle連携でアップロードします。"));
+	decorate_button(edit_upload_metadata_button_, QStyle::SP_FileDialogDetailedView,
+			ui_text(ui_language_, "Open the selected queue item's metadata in the Record tab.",
+				"選択中のキュー項目のメタデータを録画タブで編集します。"));
 	decorate_button(retry_upload_button_, QStyle::SP_BrowserReload,
 			ui_text(ui_language_, "Retry the current failed or manual-review upload item.", "現在の失敗または確認待ちアップロードを再試行します。"));
 	decorate_button(discard_upload_button_, QStyle::SP_DialogDiscardButton,
@@ -878,6 +984,7 @@ void PluginUiController::register_ui()
 			ui_text(ui_language_, "Open the last uploaded YouTube URL.",
 				"直近のアップロード済みURLを開きます。"));
 	upload_controls->addWidget(upload_to_youtube_button_);
+	upload_controls->addWidget(edit_upload_metadata_button_);
 	upload_controls->addWidget(retry_upload_button_);
 	upload_controls->addWidget(discard_upload_button_);
 	upload_controls->addWidget(mark_uploaded_button_);
@@ -979,22 +1086,42 @@ void PluginUiController::register_ui()
 	metadata_form->addRow(ui_text(ui_language_, "Memo", "メモ"), metadata_memo_input_);
 	metadata_layout->addLayout(metadata_form);
 
+	go_upload_button_ = new QPushButton(ui_text(ui_language_, "Go to Upload", "アップロードへ"));
+
 	edit_metadata_button_ = new QPushButton(ui_text(ui_language_, "Edit Metadata", "メタデータ編集"));
 	preview_metadata_button_ = new QPushButton(ui_text(ui_language_, "Preview Upload Metadata", "アップロード文面プレビュー"));
 	reload_metadata_button_ = new QPushButton(ui_text(ui_language_, "Reload", "再読込"));
 	save_metadata_button_ = new QPushButton(ui_text(ui_language_, "Save", "保存"));
 	QObject::connect(edit_metadata_button_, &QPushButton::clicked, [this]() { request_edit_metadata(); });
 	QObject::connect(preview_metadata_button_, &QPushButton::clicked, [this]() { request_preview_upload_metadata(); });
+	QObject::connect(go_upload_button_, &QPushButton::clicked, [this]() {
+		const WorkerStatusSnapshot snapshot = worker_manager_.status_snapshot();
+		if (current_match_id_ > 0 && snapshot.upload_items_available) {
+			for (const UploadTargetPayload &target : snapshot.upload_items.items) {
+				if (target.match_id == current_match_id_) {
+					selected_upload_queue_item_id_ = target.queue_item_id;
+					break;
+				}
+			}
+		}
+		if (dock_tabs_) {
+			dock_tabs_->setCurrentIndex(1);
+		}
+		refresh();
+	});
 	QObject::connect(reload_metadata_button_, &QPushButton::clicked, [this]() { load_latest_metadata_into_dock(); });
 	QObject::connect(save_metadata_button_, &QPushButton::clicked, [this]() { save_metadata_from_dock(); });
 	style_button(edit_metadata_button_, "#2e7d32", "#ffffff");
 	style_button(preview_metadata_button_, "#1b5e20", "#ffffff");
+	style_button(go_upload_button_, "#2e7d32", "#ffffff");
 	style_button(reload_metadata_button_, "#6b7280", "#ffffff");
 	style_button(save_metadata_button_, "#2e7d32", "#ffffff");
 	decorate_button(edit_metadata_button_, QStyle::SP_FileDialogDetailedView,
 			ui_text(ui_language_, "Open metadata editing dialog.", "メタデータ編集ダイアログを開きます。"));
 	decorate_button(preview_metadata_button_, QStyle::SP_FileDialogInfoView,
 			ui_text(ui_language_, "Preview upload title, description, and tags.", "アップロードするタイトル、説明文、タグを確認します。"));
+	decorate_button(go_upload_button_, QStyle::SP_ArrowForward,
+			ui_text(ui_language_, "Move to the Upload tab.", "アップロードタブへ移動します。"));
 	decorate_button(video_preview_frame_1_button_, QStyle::SP_MediaSeekBackward,
 			ui_text(ui_language_, "Show the first representative frame.", "1枚目の代表フレームを表示します。"));
 	decorate_button(video_preview_frame_2_button_, QStyle::SP_FileDialogInfoView,
@@ -1010,6 +1137,7 @@ void PluginUiController::register_ui()
 	metadata_controls->addWidget(save_metadata_button_);
 	metadata_controls->addWidget(edit_metadata_button_);
 	metadata_controls->addWidget(preview_metadata_button_);
+	metadata_controls->addWidget(go_upload_button_);
 	metadata_layout->addLayout(metadata_controls);
 	metadata_layout->addWidget(metadata_status_label_);
 	recording_tab_layout->addWidget(metadata_card_);
@@ -1025,6 +1153,12 @@ void PluginUiController::register_ui()
 	upload_description_template_input_ = new QTextEdit(qstr_utf8(settings.upload_description_template));
 	upload_description_template_input_->setMaximumHeight(110);
 	upload_tags_template_input_ = new QLineEdit(qstr_utf8(settings.upload_tags_template));
+	QObject::connect(upload_title_template_input_, &QLineEdit::textChanged,
+			 [this]() { render_upload_preview_from_dock(); });
+	QObject::connect(upload_description_template_input_, &QTextEdit::textChanged,
+			 [this]() { render_upload_preview_from_dock(); });
+	QObject::connect(upload_tags_template_input_, &QLineEdit::textChanged,
+			 [this]() { render_upload_preview_from_dock(); });
 	template_form->addRow(ui_text(ui_language_, "Title template", "タイトルテンプレート"), upload_title_template_input_);
 	template_form->addRow(ui_text(ui_language_, "Description template", "説明文テンプレート"), upload_description_template_input_);
 	template_form->addRow(ui_text(ui_language_, "Tags template", "タグテンプレート"), upload_tags_template_input_);
@@ -1134,11 +1268,26 @@ void PluginUiController::apply_dock_theme(const std::string &theme)
 	if (mark_uploaded_button_) {
 		style_button(mark_uploaded_button_, palette.settings_bg, palette.settings_fg);
 	}
+	if (upload_to_youtube_button_) {
+		style_button(upload_to_youtube_button_, palette.header_bg, "#ffffff");
+	}
+	if (edit_upload_metadata_button_) {
+		style_button(edit_upload_metadata_button_, palette.metadata_bg_button, palette.metadata_fg_button);
+	}
+	if (save_upload_privacy_button_) {
+		style_button(save_upload_privacy_button_, palette.settings_bg, palette.settings_fg);
+	}
+	if (open_youtube_button_) {
+		style_button(open_youtube_button_, palette.settings_bg, palette.settings_fg);
+	}
 	if (edit_metadata_button_) {
 		style_button(edit_metadata_button_, palette.metadata_bg_button, palette.metadata_fg_button);
 	}
 	if (preview_metadata_button_) {
 		style_button(preview_metadata_button_, palette.header_bg, "#ffffff");
+	}
+	if (go_upload_button_) {
+		style_button(go_upload_button_, palette.metadata_bg_button, palette.metadata_fg_button);
 	}
 	if (video_preview_frame_1_button_) {
 		style_button(video_preview_frame_1_button_, palette.secondary_bg, palette.secondary_fg);
@@ -1279,6 +1428,18 @@ void PluginUiController::apply_ui_language()
 	if (mark_uploaded_button_) {
 		mark_uploaded_button_->setText(ui_text(ui_language_, "Mark Uploaded", "アップロード済みにする"));
 	}
+	if (upload_to_youtube_button_) {
+		upload_to_youtube_button_->setText(ui_text(ui_language_, "Upload to YouTube", "YouTubeへアップロード"));
+	}
+	if (open_youtube_button_) {
+		open_youtube_button_->setText(ui_text(ui_language_, "Open YouTube", "YouTubeで開く"));
+	}
+	if (save_upload_privacy_button_) {
+		save_upload_privacy_button_->setText(ui_text(ui_language_, "Save Privacy", "公開範囲を保存"));
+	}
+	if (edit_upload_metadata_button_) {
+		edit_upload_metadata_button_->setText(ui_text(ui_language_, "Edit Metadata", "メタデータ編集"));
+	}
 	if (oauth_authorize_button_) {
 		oauth_authorize_button_->setText(ui_text(ui_language_, "Authorize YouTube", "YouTube認証"));
 	}
@@ -1293,6 +1454,9 @@ void PluginUiController::apply_ui_language()
 	}
 	if (preview_metadata_button_) {
 		preview_metadata_button_->setText(ui_text(ui_language_, "Preview Upload Metadata", "アップロード文面プレビュー"));
+	}
+	if (go_upload_button_) {
+		go_upload_button_->setText(ui_text(ui_language_, "Go to Upload", "アップロードへ"));
 	}
 	if (reload_metadata_button_) {
 		reload_metadata_button_->setText(ui_text(ui_language_, "Reload", "再読込"));
@@ -1387,24 +1551,79 @@ void PluginUiController::refresh()
 	output_value_->setText(qstr_utf8(recording_output_summary(snapshot)));
 	queue_value_->setText(qstr_utf8(queue_summary(snapshot)));
 	review_item_value_->setText(qstr_utf8(review_item_summary(snapshot)));
+	refresh_upload_queue_selector(snapshot);
+	const bool selected_target_available = has_selected_upload_target(snapshot);
+	const UploadTargetPayload selected_target = selected_upload_target(snapshot);
 	if (youtube_value_) {
 		youtube_value_->setText(qstr_utf8(upload_readiness_summary(snapshot, ui_language_)));
 	}
 	if (upload_target_value_) {
-		upload_target_value_->setText(qstr_utf8(upload_target_summary(snapshot, ui_language_)));
+		if (selected_target_available) {
+			std::ostringstream out;
+			out << "#" << selected_target.queue_item_id << " / "
+			    << localized_upload_state(ui_language_, selected_target.state);
+			if (selected_target.match_id > 0) {
+				out << " / match #" << selected_target.match_id;
+			}
+			const std::string video_name =
+				display_video_name(selected_target.video_path, selected_target.resolved_video_path);
+			if (!video_name.empty()) {
+				out << "\nVideo: " << video_name;
+			}
+			out << "\n" << (ui_language_ == "ja" ? "メタデータ: " : "Metadata: ")
+			    << (selected_target.metadata_confirmed ? (ui_language_ == "ja" ? "確認済み" : "confirmed") :
+								     (ui_language_ == "ja" ? "未確認" : "missing"));
+			if (!selected_target.upload_metadata.deck_name.empty()) {
+				out << "\nDeck: " << selected_target.upload_metadata.deck_name;
+			}
+			if (!selected_target.upload_metadata.opponent_deck.empty()) {
+				out << "\nOpponent: " << selected_target.upload_metadata.opponent_deck;
+			}
+			if (!selected_target.upload_metadata.result.empty() || !selected_target.upload_metadata.rank.empty() ||
+			    !selected_target.upload_metadata.dp.empty()) {
+				out << "\nResult/Rank/DP: "
+				    << (selected_target.upload_metadata.result.empty() ? "-" : selected_target.upload_metadata.result)
+				    << " / "
+				    << (selected_target.upload_metadata.rank.empty() ? "-" : selected_target.upload_metadata.rank)
+				    << " / "
+				    << (selected_target.upload_metadata.dp.empty() ? "-" : selected_target.upload_metadata.dp);
+			}
+			upload_target_value_->setText(qstr_utf8(out.str()));
+		} else {
+			upload_target_value_->setText(qstr_utf8(upload_target_summary(snapshot, ui_language_)));
+		}
 	}
 	if (upload_text_value_) {
-		upload_text_value_->setText(qstr_utf8(upload_text_summary(snapshot, ui_language_)));
+		if (selected_target_available) {
+			std::ostringstream out;
+			out << "Title: "
+			    << (selected_target.upload_metadata.title.empty() ? "(empty)" :
+									 selected_target.upload_metadata.title)
+			    << "\nTags: "
+			    << (selected_target.upload_metadata.tags.empty() ? "(empty)" :
+									selected_target.upload_metadata.tags);
+			if (!selected_target.upload_metadata.description.empty()) {
+				out << "\n" << selected_target.upload_metadata.description;
+			}
+			upload_text_value_->setText(qstr_utf8(out.str()));
+		} else {
+			upload_text_value_->setText(qstr_utf8(upload_text_summary(snapshot, ui_language_)));
+		}
 	}
 	if (upload_blocking_value_) {
-		upload_blocking_value_->setText(qstr_utf8(upload_blocking_summary(snapshot, ui_language_)));
+		upload_blocking_value_->setText(
+			selected_target_available ?
+				qstr_utf8(selected_target.can_upload ?
+						  (ui_language_ == "ja" ? "✓ アップロード可能" : "✓ uploadable") :
+						  localized_blocking_reasons(ui_language_, selected_target.blocking_reasons)) :
+				qstr_utf8(upload_blocking_summary(snapshot, ui_language_)));
 	}
 	if (upload_result_value_ && upload_result_value_->text().isEmpty()) {
 		upload_result_value_->setText(ui_text(ui_language_, "No upload has run from this Dock yet.",
 						      "このDockからのアップロード実行結果はまだありません。"));
 	}
-	if (upload_privacy_input_ && snapshot.upload_next_target_available && snapshot.upload_next_target.found) {
-		const std::string privacy = snapshot.upload_next_target.target.upload_metadata.privacy_status;
+	if (upload_privacy_input_ && selected_target_available) {
+		const std::string privacy = selected_target.upload_metadata.privacy_status;
 		if (!privacy.empty()) {
 			const int index = upload_privacy_input_->findData(qstr_utf8(privacy));
 			if (index >= 0) {
@@ -1429,13 +1648,20 @@ void PluginUiController::refresh()
 		stop_button_->setEnabled(worker_running);
 		stop_button_->setVisible(currently_recording);
 	}
-	const bool queue_action_available = worker_running && snapshot.queue_action_item_available;
-	const bool upload_target_available = worker_running && snapshot.upload_next_target_available &&
-					     snapshot.upload_next_target.found &&
-					     snapshot.upload_next_target.target.can_upload &&
+	const bool queue_action_available = worker_running && selected_target_available &&
+					    selected_target.state != "uploaded" &&
+					    selected_target.state != "discarded";
+	const bool upload_target_available = worker_running && selected_target_available &&
+					     selected_target.can_upload &&
 					     !upload_request_in_progress_;
 	if (upload_to_youtube_button_) {
 		upload_to_youtube_button_->setEnabled(upload_target_available);
+	}
+	if (edit_upload_metadata_button_) {
+		edit_upload_metadata_button_->setEnabled(worker_running && selected_target_available && selected_target.match_id > 0);
+	}
+	if (go_upload_button_) {
+		go_upload_button_->setEnabled(worker_running && current_match_id_ > 0);
 	}
 	if (save_upload_privacy_button_) {
 		save_upload_privacy_button_->setEnabled(worker_running);
@@ -1451,7 +1677,7 @@ void PluginUiController::refresh()
 	}
 	if (mark_uploaded_button_) {
 		mark_uploaded_button_->setEnabled(queue_action_available &&
-						  snapshot.queue_action_item.item.state == "need_manual_review");
+						  selected_target.state == "need_manual_review");
 	}
 	if (oauth_authorize_button_) {
 		oauth_authorize_button_->setEnabled(worker_running && snapshot.upload_status.client_secret_configured);
@@ -1668,10 +1894,10 @@ void PluginUiController::request_manual_stop()
 void PluginUiController::request_upload_retry()
 {
 	const WorkerStatusSnapshot snapshot = worker_manager_.status_snapshot();
-	if (!snapshot.queue_action_item_available) {
+	if (!has_selected_upload_target(snapshot)) {
 		return;
 	}
-	const QueueActionItemPayload &item = snapshot.queue_action_item.item;
+	const QueueActionItemPayload item = selected_upload_target(snapshot).item;
 	if (item.state == "need_manual_review") {
 		const auto answer = QMessageBox::warning(
 			dock_widget_,
@@ -1691,7 +1917,7 @@ void PluginUiController::request_upload_retry()
 void PluginUiController::request_upload_discard()
 {
 	const WorkerStatusSnapshot snapshot = worker_manager_.status_snapshot();
-	if (!snapshot.queue_action_item_available) {
+	if (!has_selected_upload_target(snapshot)) {
 		return;
 	}
 	const auto answer = QMessageBox::question(
@@ -1703,7 +1929,7 @@ void PluginUiController::request_upload_discard()
 	if (answer != QMessageBox::Yes) {
 		return;
 	}
-	const QueueCommandResult result = worker_manager_.send_queue_command(snapshot.queue_action_item.item.id, "discard");
+	const QueueCommandResult result = worker_manager_.send_queue_command(selected_upload_target(snapshot).queue_item_id, "discard");
 	log_queue_command_result("discard", result);
 	refresh();
 }
@@ -1711,7 +1937,7 @@ void PluginUiController::request_upload_discard()
 void PluginUiController::request_upload_mark_uploaded()
 {
 	const WorkerStatusSnapshot snapshot = worker_manager_.status_snapshot();
-	if (!snapshot.queue_action_item_available) {
+	if (!has_selected_upload_target(snapshot)) {
 		return;
 	}
 	bool ok = false;
@@ -1725,8 +1951,20 @@ void PluginUiController::request_upload_mark_uploaded()
 	if (!ok || video_id.trimmed().isEmpty()) {
 		return;
 	}
+	const QString url = QString::fromUtf8("https://youtu.be/") + video_id.trimmed();
+	const auto answer = QMessageBox::question(
+		dock_widget_,
+		ui_text(ui_language_, "Mark uploaded", "アップロード済みにする"),
+		ui_text(ui_language_, "Store this YouTube URL for the selected queue item?\n\n",
+			"選択中のキュー項目に次のYouTube URLを保存しますか？\n\n") +
+			url,
+		QMessageBox::Yes | QMessageBox::No,
+		QMessageBox::No);
+	if (answer != QMessageBox::Yes) {
+		return;
+	}
 	const QueueCommandResult result = worker_manager_.send_queue_command(
-		snapshot.queue_action_item.item.id,
+		selected_upload_target(snapshot).queue_item_id,
 		"mark_uploaded",
 		video_id.trimmed().toStdString());
 	log_queue_command_result("mark_uploaded", result);
@@ -1766,15 +2004,15 @@ void PluginUiController::request_open_uploaded_youtube()
 void PluginUiController::request_upload_to_youtube()
 {
 	const WorkerStatusSnapshot snapshot = worker_manager_.status_snapshot();
-	if (!snapshot.upload_next_target_available || !snapshot.upload_next_target.found) {
+	if (!has_selected_upload_target(snapshot)) {
 		return;
 	}
-	const UploadTargetPayload target = snapshot.upload_next_target.target;
+	const UploadTargetPayload target = selected_upload_target(snapshot);
 	if (!target.can_upload) {
 		QMessageBox::warning(
 			dock_widget_,
 			ui_text(ui_language_, "Upload blocked", "アップロード不可"),
-			qstr_utf8(upload_blocking_summary(snapshot, ui_language_)));
+			qstr_utf8(localized_blocking_reasons(ui_language_, target.blocking_reasons)));
 		return;
 	}
 	std::string selected_privacy = target.upload_metadata.privacy_status;
@@ -1859,6 +2097,11 @@ void PluginUiController::request_upload_oauth_authorization()
 {
 	const OAuthAuthorizationUrlResult result = worker_manager_.request_upload_oauth_authorization_url();
 	if (!result.accepted()) {
+		if (upload_result_value_) {
+			upload_result_value_->setText(
+				qstr_utf8(result.error.empty() ? "Worker could not create a YouTube OAuth authorization URL." :
+							 result.error));
+		}
 		QMessageBox::warning(
 			dock_widget_,
 			ui_text(ui_language_, "YouTube authorization", "YouTube認証"),
@@ -1875,6 +2118,9 @@ void PluginUiController::request_upload_oauth_authorization()
 
 	const QUrl authorization_url(qstr_utf8(result.authorization_url));
 	if (!QDesktopServices::openUrl(authorization_url)) {
+		if (upload_result_value_) {
+			upload_result_value_->setText(qstr_utf8("Unable to open the browser for YouTube authorization."));
+		}
 		QMessageBox::warning(
 			dock_widget_,
 			ui_text(ui_language_, "YouTube authorization", "YouTube認証"),
@@ -1903,6 +2149,11 @@ void PluginUiController::request_upload_oauth_refresh()
 {
 	const WorkerActionResult result = worker_manager_.refresh_upload_oauth_token();
 	if (!result.accepted()) {
+		if (upload_result_value_) {
+			upload_result_value_->setText(
+				qstr_utf8(result.error.empty() ? "Worker could not refresh the YouTube OAuth token." :
+							 result.error));
+		}
 		QMessageBox::warning(
 			dock_widget_,
 			ui_text(ui_language_, "Refresh YouTube token", "YouTubeトークン更新"),
@@ -1935,6 +2186,57 @@ void PluginUiController::request_upload_oauth_help()
 			ui_text(ui_language_, "YouTube OAuth help", "YouTube OAuthヘルプ"),
 			ui_text(ui_language_, "Open this setup guide:\n\n", "次の設定ガイドを開いてください:\n\n") +
 				docs_url);
+	}
+}
+
+bool PluginUiController::has_selected_upload_target(const WorkerStatusSnapshot &snapshot) const
+{
+	if (snapshot.upload_items_available && selected_upload_queue_item_id_ > 0) {
+		for (const UploadTargetPayload &target : snapshot.upload_items.items) {
+			if (target.queue_item_id == selected_upload_queue_item_id_) {
+				return true;
+			}
+		}
+	}
+	return snapshot.upload_next_target_available && snapshot.upload_next_target.found;
+}
+
+UploadTargetPayload PluginUiController::selected_upload_target(const WorkerStatusSnapshot &snapshot) const
+{
+	if (snapshot.upload_items_available && selected_upload_queue_item_id_ > 0) {
+		for (const UploadTargetPayload &target : snapshot.upload_items.items) {
+			if (target.queue_item_id == selected_upload_queue_item_id_) {
+				return target;
+			}
+		}
+	}
+	return snapshot.upload_next_target.target;
+}
+
+void PluginUiController::refresh_upload_queue_selector(const WorkerStatusSnapshot &snapshot)
+{
+	if (!upload_queue_input_) {
+		return;
+	}
+	QSignalBlocker blocker(upload_queue_input_);
+	upload_queue_input_->clear();
+	if (!snapshot.upload_items_available || snapshot.upload_items.items.empty()) {
+		upload_queue_input_->addItem(ui_text(ui_language_, "No upload queue items", "アップロードキュー項目なし"), 0);
+		selected_upload_queue_item_id_ = 0;
+		return;
+	}
+
+	bool selected_seen = false;
+	for (const UploadTargetPayload &target : snapshot.upload_items.items) {
+		upload_queue_input_->addItem(qstr_utf8(upload_queue_item_label(target, ui_language_)), target.queue_item_id);
+		if (target.queue_item_id == selected_upload_queue_item_id_) {
+			selected_seen = true;
+			upload_queue_input_->setCurrentIndex(upload_queue_input_->count() - 1);
+		}
+	}
+	if (!selected_seen) {
+		selected_upload_queue_item_id_ = snapshot.upload_items.items.front().queue_item_id;
+		upload_queue_input_->setCurrentIndex(0);
 	}
 }
 
@@ -2139,6 +2441,81 @@ void PluginUiController::load_latest_metadata_into_dock()
 	load_target_video_preview(metadata_preview_frame_index_);
 }
 
+void PluginUiController::load_match_metadata_into_dock(int match_id)
+{
+	const MatchFetchResult fetched = worker_manager_.fetch_match(match_id);
+	PluginSettings settings = load_plugin_settings();
+	if (!fetched.reachable()) {
+		if (metadata_status_label_) {
+			metadata_status_label_->setText(qstr_utf8(fetched.error.empty() ? "Selected match metadata is unavailable." :
+									 fetched.error));
+		}
+		return;
+	}
+
+	current_match_id_ = fetched.match.id;
+	if (metadata_match_label_) {
+		metadata_match_label_->setText(QString::fromUtf8("Match #%1").arg(fetched.match.id));
+	}
+	const WorkerStatusSnapshot snapshot = worker_manager_.status_snapshot();
+	std::string video;
+	if (snapshot.upload_items_available) {
+		for (const UploadTargetPayload &target : snapshot.upload_items.items) {
+			if (target.match_id == fetched.match.id) {
+				video = target.video_path.empty() ? target.resolved_video_path : target.video_path;
+				break;
+			}
+		}
+	}
+	if (metadata_video_label_) {
+		metadata_video_label_->setText(video.empty() ?
+						       ui_text(ui_language_, "Preview: video path is not linked yet.",
+							       "プレビュー: 動画パスはまだ紐づいていません。") :
+						       ui_text(ui_language_, "Preview source: ", "確認対象: ") + qstr_utf8(video));
+	}
+	if (metadata_deck_input_) {
+		metadata_deck_input_->setCurrentText(qstr_utf8(fetched.match.deck_name.empty() ? settings.last_deck_name :
+									 fetched.match.deck_name));
+	}
+	if (metadata_opponent_input_) {
+		metadata_opponent_input_->setCurrentText(qstr_utf8(fetched.match.opponent_deck.empty() ?
+									     settings.last_opponent_deck :
+									     fetched.match.opponent_deck));
+	}
+	if (metadata_result_input_) {
+		metadata_result_input_->setText(qstr_utf8(fetched.match.result));
+	}
+	if (metadata_rank_input_) {
+		metadata_rank_input_->setText(qstr_utf8(fetched.match.rank.empty() ? settings.last_rank : fetched.match.rank));
+	}
+	if (metadata_dp_input_) {
+		metadata_dp_input_->setText(qstr_utf8(fetched.match.dp.empty() ? settings.last_dp : fetched.match.dp));
+	}
+	if (metadata_memo_input_) {
+		metadata_memo_input_->setPlainText(qstr_utf8(fetched.match.memo));
+	}
+	if (upload_title_template_input_) {
+		upload_title_template_input_->setText(qstr_utf8(fetched.match.title_template.empty() ?
+								 settings.upload_title_template :
+								 fetched.match.title_template));
+	}
+	if (upload_description_template_input_) {
+		upload_description_template_input_->setPlainText(qstr_utf8(fetched.match.description_template.empty() ?
+									  settings.upload_description_template :
+									  fetched.match.description_template));
+	}
+	if (upload_tags_template_input_) {
+		upload_tags_template_input_->setText(qstr_utf8(fetched.match.tags_template.empty() ?
+							       settings.upload_tags_template :
+							       fetched.match.tags_template));
+	}
+	if (metadata_status_label_) {
+		metadata_status_label_->setText(ui_text(ui_language_, "Loaded selected upload target metadata.",
+							"選択中のアップロード対象メタデータを読み込みました。"));
+	}
+	load_target_video_preview(metadata_preview_frame_index_);
+}
+
 void PluginUiController::load_target_video_preview(int frame_index)
 {
 	if (frame_index < 1) {
@@ -2173,7 +2550,8 @@ void PluginUiController::load_target_video_preview(int frame_index)
 	if (!result.preview.available) {
 		metadata_video_preview_image_->clear();
 		const std::string reason = result.preview.reason.empty() ? "preview_unavailable" : result.preview.reason;
-		metadata_video_preview_image_->setText(qstr_utf8("Preview unavailable: " + reason));
+		metadata_video_preview_image_->setText(
+			qstr_utf8((ui_language_ == "ja" ? "プレビューを表示できません: " : "Preview unavailable: ") + reason));
 		return;
 	}
 
@@ -2191,6 +2569,56 @@ void PluginUiController::load_target_video_preview(int frame_index)
 	metadata_video_preview_image_->setText(QString());
 	metadata_video_preview_image_->setPixmap(
 		pixmap.scaled(metadata_video_preview_image_->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation));
+}
+
+void PluginUiController::load_upload_video_preview(int frame_index)
+{
+	if (frame_index < 1) {
+		frame_index = 1;
+	}
+	if (frame_index > 3) {
+		frame_index = 3;
+	}
+	upload_preview_frame_index_ = frame_index;
+	if (!upload_video_preview_image_) {
+		return;
+	}
+	const WorkerStatusSnapshot snapshot = worker_manager_.status_snapshot();
+	if (!has_selected_upload_target(snapshot)) {
+		upload_video_preview_image_->clear();
+		upload_video_preview_image_->setText(ui_text(ui_language_, "No upload target preview.",
+							    "アップロード対象プレビューはありません。"));
+		return;
+	}
+	const UploadTargetPayload target = selected_upload_target(snapshot);
+	if (target.match_id <= 0) {
+		upload_video_preview_image_->clear();
+		upload_video_preview_image_->setText(ui_text(ui_language_, "Upload target has no match metadata.",
+							    "アップロード対象に対戦メタデータがありません。"));
+		return;
+	}
+	const VideoPreviewResult result = worker_manager_.fetch_match_video_preview(target.match_id, frame_index);
+	if (!result.reachable() || !result.preview.available) {
+		upload_video_preview_image_->clear();
+		const std::string reason = !result.error.empty() ? result.error :
+					   (result.preview.reason.empty() ? "preview_unavailable" : result.preview.reason);
+		upload_video_preview_image_->setText(
+			qstr_utf8((ui_language_ == "ja" ? "プレビューを表示できません: " : "Preview unavailable: ") + reason));
+		return;
+	}
+	const QByteArray encoded(result.preview.content_base64.data(),
+				 static_cast<int>(result.preview.content_base64.size()));
+	const QByteArray bytes = QByteArray::fromBase64(encoded);
+	QPixmap pixmap;
+	if (bytes.isEmpty() || !pixmap.loadFromData(bytes, "PNG")) {
+		upload_video_preview_image_->clear();
+		upload_video_preview_image_->setText(
+			ui_text(ui_language_, "Preview image could not be decoded.", "プレビュー画像をデコードできませんでした。"));
+		return;
+	}
+	upload_video_preview_image_->setText(QString());
+	upload_video_preview_image_->setPixmap(
+		pixmap.scaled(upload_video_preview_image_->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation));
 }
 
 void PluginUiController::save_metadata_from_dock()

@@ -229,6 +229,36 @@ bool response_has_items(const std::string &body)
 	return pos < body.size() && body[pos] == '{';
 }
 
+std::vector<std::string> extract_json_object_array(const std::string &body, const char *key)
+{
+	std::vector<std::string> objects;
+	size_t pos = find_json_value_start(body, key);
+	if (pos == std::string::npos || pos >= body.size() || body[pos] != '[') {
+		return objects;
+	}
+	++pos;
+	while (pos < body.size()) {
+		pos = skip_json_ws(body, pos);
+		if (pos >= body.size() || body[pos] == ']') {
+			break;
+		}
+		if (body[pos] == ',') {
+			++pos;
+			continue;
+		}
+		if (body[pos] != '{') {
+			break;
+		}
+		const size_t end = find_json_delimiter_end(body, pos, '{', '}');
+		if (end == std::string::npos) {
+			break;
+		}
+		objects.push_back(body.substr(pos, end - pos));
+		pos = end;
+	}
+	return objects;
+}
+
 std::string normalize_path(std::string value)
 {
 	std::replace(value.begin(), value.end(), '\\', '/');
@@ -294,11 +324,18 @@ void populate_recording_state(RecordingStatePayload &state, const std::string &b
 void populate_queue_item(QueueActionItemPayload &item, const std::string &body)
 {
 	const std::string id = extract_json_number(body, "id");
+	const std::string match_id = extract_json_number(body, "match_id");
 	item.id = id.empty() ? 0 : std::stoi(id);
+	item.match_id = match_id.empty() ? 0 : std::stoi(match_id);
 	item.state = extract_json_string(body, "state");
 	item.video_path = extract_json_string(body, "video_path");
+	item.youtube_video_id = extract_json_string(body, "youtube_video_id");
+	item.youtube_url = extract_json_string(body, "youtube_url");
 	item.manual_review_reason = extract_json_string(body, "manual_review_reason");
 	item.last_error_code = extract_json_string(body, "last_error_code");
+	item.last_error_message = extract_json_string(body, "last_error_message");
+	item.created_at = extract_json_string(body, "created_at");
+	item.updated_at = extract_json_string(body, "updated_at");
 }
 
 void populate_match_metadata(MatchMetadataPayload &match, const std::string &body)
@@ -320,6 +357,11 @@ void populate_upload_metadata_preview(UploadMetadataPreviewPayload &preview, con
 {
 	const std::string id = extract_json_number(body, "match_id");
 	preview.match_id = id.empty() ? 0 : std::stoi(id);
+	preview.deck_name = extract_json_string(body, "deck_name");
+	preview.opponent_deck = extract_json_string(body, "opponent_deck");
+	preview.result = extract_json_string(body, "result");
+	preview.rank = extract_json_string(body, "rank");
+	preview.dp = extract_json_string(body, "dp");
 	preview.title = extract_json_string(body, "title");
 	preview.description = extract_json_string(body, "description");
 	preview.tags = extract_json_string_array(body, "tags");
@@ -340,6 +382,8 @@ void populate_upload_target(UploadTargetPayload &target, const std::string &body
 	target.resolved_video_path = extract_json_string(body, "resolved_video_path");
 	target.video_exists = extract_json_bool(body, "video_exists");
 	target.can_upload = extract_json_bool(body, "can_upload");
+	target.metadata_confirmed = extract_json_bool(body, "metadata_confirmed");
+	target.metadata_missing_fields = extract_json_string_array(body, "metadata_missing_fields");
 	target.blocking_reasons = extract_json_string_array(body, "blocking_reasons");
 	const std::string metadata = extract_json_object(body, "upload_metadata");
 	if (!metadata.empty()) {
@@ -910,6 +954,51 @@ MatchFetchResult LocalhostApiClient::fetch_latest_match(const WorkerEndpoint &en
 #endif
 }
 
+MatchFetchResult LocalhostApiClient::fetch_match(const WorkerEndpoint &endpoint, int match_id) const
+{
+	MatchFetchResult result;
+
+#ifdef _WIN32
+	if (match_id <= 0) {
+		result.status = MatchFetchStatus::not_found;
+		result.error = "Match id is required";
+		return result;
+	}
+	const std::wstring path = L"/matches/" + std::to_wstring(match_id);
+	const HttpResponse response = http_get(endpoint, path.c_str());
+	result.http_status = response.status;
+	result.body = response.body;
+
+	if (!response.ok) {
+		result.status = MatchFetchStatus::unavailable;
+		result.error = response.error;
+		return result;
+	}
+	if (response.status == 404) {
+		result.status = MatchFetchStatus::not_found;
+		result.error = extract_json_string(response.body, "message");
+		return result;
+	}
+	if (response.status != 200) {
+		result.status = MatchFetchStatus::invalid_response;
+		result.error = "GET /matches/{id} returned non-200 status";
+		return result;
+	}
+	populate_match_metadata(result.match, response.body);
+	if (result.match.id <= 0) {
+		result.status = MatchFetchStatus::invalid_response;
+		result.error = "GET /matches/{id} response is missing match id";
+		return result;
+	}
+	result.status = MatchFetchStatus::reachable;
+	return result;
+#else
+	result.status = MatchFetchStatus::unavailable;
+	result.error = "Match metadata fetching is only implemented on Windows";
+	return result;
+#endif
+}
+
 MetadataUpdateResult LocalhostApiClient::update_match_metadata(const WorkerEndpoint &endpoint,
 							      const MatchMetadataPayload &metadata) const
 {
@@ -1017,6 +1106,42 @@ UploadMetadataPreviewResult LocalhostApiClient::fetch_upload_metadata_preview(co
 #else
 	result.status = UploadMetadataPreviewStatus::unavailable;
 	result.error = "Upload metadata preview is only implemented on Windows";
+	return result;
+#endif
+}
+
+UploadItemsFetchResult LocalhostApiClient::fetch_upload_items(const WorkerEndpoint &endpoint) const
+{
+	UploadItemsFetchResult result;
+
+#ifdef _WIN32
+	const HttpResponse response = http_get(endpoint, L"/upload/items");
+	result.http_status = response.status;
+	result.body = response.body;
+
+	if (!response.ok) {
+		result.status = UploadItemsFetchStatus::unavailable;
+		result.error = response.error;
+		return result;
+	}
+	if (response.status != 200) {
+		result.status = UploadItemsFetchStatus::invalid_response;
+		result.error = "GET /upload/items returned non-200 status";
+		return result;
+	}
+
+	for (const std::string &object : extract_json_object_array(response.body, "items")) {
+		UploadTargetPayload target;
+		populate_upload_target(target, object);
+		if (target.queue_item_id > 0 && !target.state.empty()) {
+			result.items.push_back(target);
+		}
+	}
+	result.status = UploadItemsFetchStatus::reachable;
+	return result;
+#else
+	result.status = UploadItemsFetchStatus::unavailable;
+	result.error = "Upload item fetching is only implemented on Windows";
 	return result;
 #endif
 }

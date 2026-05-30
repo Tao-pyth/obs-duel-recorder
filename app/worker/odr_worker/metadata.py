@@ -248,6 +248,11 @@ class MatchMetadataStore:
         )
         return {
             "match_id": record.id,
+            "deck_name": record.deck_name,
+            "opponent_deck": record.opponent_deck,
+            "result": record.result,
+            "rank": record.rank,
+            "dp": record.dp,
             "title": title,
             "description": description,
             "tags": tags,

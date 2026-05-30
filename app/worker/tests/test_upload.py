@@ -144,25 +144,35 @@ class UploadApiTests(unittest.TestCase):
     def test_upload_items_endpoint_returns_ui_ready_targets_and_blocking_reasons(self) -> None:
         client, runtime_dirs = self._client()
         self._write_video(runtime_dirs, "ready.mp4")
+        self._write_video(runtime_dirs, "uploaded.mp4")
         ready = self._create_queue_item(client, "ready.mp4")
         missing = self._create_queue_item(client, str(runtime_dirs.videos_dir / "missing.mp4"))
         failed = self._create_queue_item(client, "failed.mp4")
+        uploaded = self._create_queue_item(client, "uploaded.mp4")
         client.post(f"/queue/items/{failed['id']}/command", json={"action": "start_upload"})
         client.post(
             f"/queue/items/{failed['id']}/command",
             json={"action": "mark_upload_failed", "error_code": "network_timeout"},
+        )
+        client.post(
+            f"/upload/items/{uploaded['id']}/process",
+            json={"mock_result": "success", "youtube_video_id": "uploaded123"},
         )
 
         items = client.get("/upload/items")
 
         self.assertEqual(items.status_code, 200)
         targets = items.json()["items"]
-        self.assertEqual([target["queue_item_id"] for target in targets], [ready["id"], missing["id"], failed["id"]])
+        self.assertEqual(
+            [target["queue_item_id"] for target in targets],
+            [ready["id"], missing["id"], failed["id"], uploaded["id"]],
+        )
         self.assertTrue(targets[0]["can_upload"])
         self.assertFalse(targets[1]["can_upload"])
         self.assertIn("local_video_missing", targets[1]["blocking_reasons"])
         self.assertEqual(items.json()["queue_counts"]["ready_upload"], 2)
         self.assertEqual(items.json()["queue_counts"]["upload_failed"], 1)
+        self.assertEqual(items.json()["queue_counts"]["uploaded"], 1)
 
     def test_next_upload_target_skips_uploaded_history(self) -> None:
         client, runtime_dirs = self._client()
@@ -223,6 +233,54 @@ class UploadApiTests(unittest.TestCase):
         self.assertIn("queue_state_uploaded", repeated.json()["target"]["blocking_reasons"])
         self.assertIn("youtube_video_id_already_present", repeated.json()["target"]["blocking_reasons"])
         self.assertEqual(client.get(f"/queue/items/{item['id']}").json()["youtube_video_id"], "done123")
+
+    def test_upload_is_blocked_until_required_metadata_is_confirmed(self) -> None:
+        client, runtime_dirs = self._client()
+        self._write_video(runtime_dirs, "metadata.mp4")
+        item = self._create_queue_item(
+            client,
+            "metadata.mp4",
+            metadata={"deck_name": "", "opponent_deck": "", "result": "", "rank": "", "dp": ""},
+        )
+
+        blocked = client.post(
+            f"/upload/items/{item['id']}/process",
+            json={"mock_result": "success", "youtube_video_id": "blocked123"},
+        )
+
+        self.assertEqual(blocked.status_code, 200)
+        self.assertFalse(blocked.json()["processed"])
+        self.assertEqual(blocked.json()["reason"], "upload_blocked")
+        target = blocked.json()["target"]
+        self.assertFalse(target["metadata_confirmed"])
+        self.assertEqual(
+            target["metadata_missing_fields"],
+            ["deck_name", "opponent_deck", "result", "rank", "dp"],
+        )
+        self.assertIn("metadata_deck_name_missing", target["blocking_reasons"])
+        self.assertEqual(client.get(f"/queue/items/{item['id']}").json()["state"], "ready_upload")
+
+        saved = client.put(
+            f"/matches/{item['match_id']}/metadata",
+            json={
+                "deck_name": "Dragon",
+                "opponent_deck": "Spellbook",
+                "result": "win",
+                "rank": "Diamond",
+                "dp": "1000",
+            },
+        )
+        self.assertEqual(saved.status_code, 200)
+
+        uploaded = client.post(
+            f"/upload/items/{item['id']}/process",
+            json={"mock_result": "success", "youtube_video_id": "ready123"},
+        )
+
+        self.assertEqual(uploaded.status_code, 200)
+        self.assertTrue(uploaded.json()["processed"])
+        self.assertEqual(uploaded.json()["item"]["state"], "uploaded")
+        self.assertEqual(uploaded.json()["youtube_video_id"], "ready123")
 
     def test_invalid_mock_result_does_not_start_upload(self) -> None:
         client, runtime_dirs = self._client()
@@ -654,8 +712,27 @@ class UploadApiTests(unittest.TestCase):
         self.assertEqual(redacted["nested"]["client_secret"], "[REDACTED]")
         self.assertEqual(redacted["nested"]["message"], "[REDACTED]")
 
-    def _create_queue_item(self, client, video_path: str, *, max_retries: int = 3) -> dict[str, object]:
-        resp = client.post("/queue/items", json={"video_path": video_path, "max_retries": max_retries})
+    def _create_queue_item(
+        self,
+        client,
+        video_path: str,
+        *,
+        max_retries: int = 3,
+        metadata: dict[str, str] | None = None,
+    ) -> dict[str, object]:
+        metadata = metadata or {
+            "deck_name": "Dragon",
+            "opponent_deck": "Spellbook",
+            "result": "win",
+            "rank": "Diamond",
+            "dp": "1000",
+        }
+        match = client.post("/matches", json=metadata)
+        self.assertEqual(match.status_code, 200)
+        resp = client.post(
+            "/queue/items",
+            json={"match_id": match.json()["id"], "video_path": video_path, "max_retries": max_retries},
+        )
         self.assertEqual(resp.status_code, 200)
         return resp.json()
 

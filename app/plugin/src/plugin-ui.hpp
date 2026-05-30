@@ -45,10 +45,15 @@ private:
 	void request_upload_oauth_authorization();
 	void request_upload_oauth_refresh();
 	void request_upload_oauth_help();
+	UploadTargetPayload selected_upload_target(const WorkerStatusSnapshot &snapshot) const;
+	bool has_selected_upload_target(const WorkerStatusSnapshot &snapshot) const;
+	void refresh_upload_queue_selector(const WorkerStatusSnapshot &snapshot);
 	void request_edit_metadata();
 	void request_preview_upload_metadata();
 	void load_latest_metadata_into_dock();
+	void load_match_metadata_into_dock(int match_id);
 	void load_target_video_preview(int frame_index);
+	void load_upload_video_preview(int frame_index);
 	void save_metadata_from_dock();
 	void render_upload_preview_from_dock();
 	void save_inline_settings();
@@ -102,6 +107,7 @@ private:
 	QLabel *metadata_match_label_ = nullptr;
 	QLabel *metadata_video_label_ = nullptr;
 	QLabel *metadata_video_preview_image_ = nullptr;
+	QLabel *upload_video_preview_image_ = nullptr;
 	QLabel *metadata_status_label_ = nullptr;
 	QLabel *upload_preview_title_label_ = nullptr;
 	QLabel *upload_preview_warning_label_ = nullptr;
@@ -138,6 +144,7 @@ private:
 	QComboBox *settings_theme_input_ = nullptr;
 	QComboBox *settings_language_input_ = nullptr;
 	QComboBox *upload_privacy_input_ = nullptr;
+	QComboBox *upload_queue_input_ = nullptr;
 	QCheckBox *automatic_detection_enabled_input_ = nullptr;
 	QSpinBox *automatic_detection_interval_input_ = nullptr;
 	QPushButton *settings_button_ = nullptr;
@@ -154,11 +161,16 @@ private:
 	QPushButton *oauth_authorize_button_ = nullptr;
 	QPushButton *oauth_refresh_button_ = nullptr;
 	QPushButton *oauth_help_button_ = nullptr;
+	QPushButton *edit_upload_metadata_button_ = nullptr;
 	QPushButton *edit_metadata_button_ = nullptr;
+	QPushButton *go_upload_button_ = nullptr;
 	QPushButton *preview_metadata_button_ = nullptr;
 	QPushButton *video_preview_frame_1_button_ = nullptr;
 	QPushButton *video_preview_frame_2_button_ = nullptr;
 	QPushButton *video_preview_frame_3_button_ = nullptr;
+	QPushButton *upload_preview_frame_1_button_ = nullptr;
+	QPushButton *upload_preview_frame_2_button_ = nullptr;
+	QPushButton *upload_preview_frame_3_button_ = nullptr;
 	QPushButton *reload_metadata_button_ = nullptr;
 	QPushButton *save_metadata_button_ = nullptr;
 	QPushButton *render_upload_preview_button_ = nullptr;
@@ -168,7 +180,9 @@ private:
 	std::string ui_language_ = "en";
 	OverlayStatePayload last_applied_overlay_state_;
 	int current_match_id_ = 0;
+	int selected_upload_queue_item_id_ = 0;
 	int metadata_preview_frame_index_ = 1;
+	int upload_preview_frame_index_ = 1;
 	bool upload_request_in_progress_ = false;
 	std::string last_uploaded_url_;
 	bool metadata_loaded_after_worker_ready_ = false;

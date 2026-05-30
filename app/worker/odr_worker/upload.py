@@ -337,6 +337,7 @@ class UploadStore:
     def upload_target_payload(self, item: QueueItem) -> dict[str, object]:
         upload_metadata = self._upload_metadata(item)
         blocking_reasons = self._blocking_reasons(item, upload_metadata)
+        missing_fields = _metadata_missing_fields(upload_metadata)
         return {
             "item": item.as_payload(),
             "queue_item_id": item.id,
@@ -346,6 +347,8 @@ class UploadStore:
             "resolved_video_path": str(self._resolve_video_path(item.video_path)) if item.video_path else "",
             "video_exists": self._video_exists(self._resolve_video_path(item.video_path)) if item.video_path else False,
             "upload_metadata": upload_metadata,
+            "metadata_confirmed": upload_metadata is not None and not missing_fields,
+            "metadata_missing_fields": missing_fields,
             "blocking_reasons": blocking_reasons,
             "can_upload": not blocking_reasons,
         }
@@ -409,8 +412,16 @@ class UploadStore:
                 "target": self.upload_target_payload(discarded),
             }
 
+        upload_metadata = self._upload_metadata(item)
+        blocking_reasons = self._blocking_reasons(item, upload_metadata)
+        if blocking_reasons:
+            return {
+                "processed": False,
+                "reason": "upload_blocked",
+                "target": self.upload_target_payload(item),
+            }
+
         uploading = self.queue_store.apply_command(item.id, {"action": "start_upload"})
-        upload_metadata = self._upload_metadata(uploading)
         upload_payload = dict(payload)
         upload_payload["resolved_video_path"] = str(video_path)
         if upload_metadata is not None:
@@ -468,6 +479,8 @@ class UploadStore:
         elif not self._video_exists(self._resolve_video_path(item.video_path)):
             reasons.append("local_video_missing")
         if upload_metadata is not None:
+            for field in _metadata_missing_fields(upload_metadata):
+                reasons.append(f"metadata_{field}_missing")
             if not str(upload_metadata.get("title", "")).strip():
                 reasons.append("upload_title_missing")
             if not str(upload_metadata.get("description", "")).strip():
@@ -475,6 +488,8 @@ class UploadStore:
             tags = upload_metadata.get("tags", [])
             if not isinstance(tags, list) or not [tag for tag in tags if isinstance(tag, str) and tag.strip()]:
                 reasons.append("upload_tags_missing")
+        else:
+            reasons.append("metadata_unavailable")
         return reasons
 
     def _apply_outcome(self, item: QueueItem, outcome: UploadOutcome) -> QueueItem:
@@ -543,6 +558,7 @@ def build_upload_settings(*, user_data_dir: Path, privacy_status: str = DEFAULT_
 
 
 def _sort_upload_items_for_ui(items: list[QueueItem]) -> list[QueueItem]:
+    # Keep actionable work first in the Dock. Uploaded/discarded entries remain available as history.
     priority = {
         "ready_upload": 0,
         "upload_failed": 1,
@@ -630,6 +646,15 @@ def build_upload_readiness(
         "manual_review_count": queue_counts.get("need_manual_review", 0),
         "ready_upload_count": queue_counts.get("ready_upload", 0),
     }
+
+
+def _metadata_missing_fields(upload_metadata: dict[str, object] | None) -> list[str]:
+    if upload_metadata is None:
+        return []
+    value = upload_metadata.get("missing_fields", [])
+    if not isinstance(value, list):
+        return []
+    return [str(item) for item in value if isinstance(item, str) and item.strip()]
 
 
 def google_upload_dependencies_available() -> bool:

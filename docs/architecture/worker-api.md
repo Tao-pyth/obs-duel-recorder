@@ -403,6 +403,51 @@ Manual decisions continue to use `POST /queue/items/{item_id}/command`:
 The OBS Dock uses this queue command API for failed/manual-review upload
 controls. It displays only compact item fields and redacted queue evidence.
 
+### `GET /upload/items`
+
+Purpose:
+- Return upload targets for the Dock queue selector.
+- Keep active work above uploaded/discarded history.
+- Expose enough state to disable unsafe upload actions without exposing secrets.
+
+Sort order:
+- `ready_upload`
+- `upload_failed`
+- `need_manual_review`
+- `quota_waiting`
+- `uploading`
+- `uploaded`
+- `discarded`
+
+Target fields include:
+- `queue_item_id`, `match_id`, `state`
+- `video_path`, `resolved_video_path`, and `video_exists`
+- `upload_metadata` with final `deck_name`, `opponent_deck`, `result`, `rank`, `dp`, `title`, `description`, `tags`, `warning`, and `privacy_status`
+- `metadata_confirmed` and `metadata_missing_fields`
+- `blocking_reasons`
+- `can_upload`
+
+Normal UI should show the video file name, not the full local path. Full paths
+are support/debug details.
+
+### `GET /upload/targets/next`
+
+Purpose:
+- Return the first non-terminal target for compact summaries and backward
+  compatibility.
+- Skip uploaded/discarded history.
+
+### `POST /upload/items/{item_id}/process`
+
+Purpose:
+- Process the exact queue item selected in the Dock.
+- Preserve `/upload/process-next` for backward compatibility while avoiding
+  accidental upload of a different ready item.
+
+The Worker blocks this endpoint when local video is missing, required metadata
+is missing, rendered title/description/tags are empty, the item is terminal, or a
+YouTube video ID is already stored.
+
 The v1.0 upload API is defined by:
 - `docs/architecture/upload.md`
 - `docs/requirements/v1.0-youtube-upload-mvp-acceptance.md`

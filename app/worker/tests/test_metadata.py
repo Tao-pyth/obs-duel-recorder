@@ -107,6 +107,9 @@ class MatchMetadataApiTests(unittest.TestCase):
         self.assertEqual(metadata.json()["missing_fields"], ["rank", "dp"])
         self.assertEqual(metadata.json()["warning"], "Missing metadata fields: rank, dp")
         self.assertEqual(metadata.json()["privacy_status"], "private")
+        self.assertEqual(metadata.json()["deck_name"], "Swordsoul")
+        self.assertEqual(metadata.json()["opponent_deck"], "Purrely")
+        self.assertEqual(metadata.json()["result"], "loss")
 
     def test_upload_metadata_templates_include_description_and_tags(self) -> None:
         client, _ = self._client()
@@ -220,7 +223,13 @@ class MatchMetadataApiTests(unittest.TestCase):
         video_path.write_bytes(b"fake video")
         match_id = client.post(
             "/matches",
-            json={"deck_name": "Vanquish Soul", "opponent_deck": "Tearlaments", "result": "win"},
+            json={
+                "deck_name": "Vanquish Soul",
+                "opponent_deck": "Tearlaments",
+                "result": "win",
+                "rank": "Master",
+                "dp": "1000",
+            },
         ).json()["id"]
         queue = client.post(
             "/queue/items",
@@ -236,6 +245,10 @@ class MatchMetadataApiTests(unittest.TestCase):
         self.assertEqual(uploaded.status_code, 200)
         self.assertEqual(uploaded.json()["item"]["state"], "uploaded")
         self.assertEqual(uploaded.json()["upload_metadata"]["match_id"], match_id)
+        self.assertEqual(uploaded.json()["upload_metadata"]["deck_name"], "Vanquish Soul")
+        self.assertEqual(uploaded.json()["upload_metadata"]["opponent_deck"], "Tearlaments")
+        self.assertEqual(uploaded.json()["upload_metadata"]["rank"], "Master")
+        self.assertEqual(uploaded.json()["upload_metadata"]["dp"], "1000")
         self.assertIn("Tearlaments", uploaded.json()["upload_metadata"]["title"])
         self.assertEqual(uploaded.json()["upload_metadata"]["privacy_status"], "private")
 
