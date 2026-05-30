@@ -38,7 +38,7 @@ This directory is the documentation entry point for OBS Duel Recorder.
 - [v1.1.4 consolidated Dock, YouTube, and automatic recording readiness checklist](release/v1.1.4-consolidated-dock-youtube-automatic-recording-readiness.md)
 - [v1.1.4 OBS smoke evidence](release/v1.1.4-obs-smoke.md)
 - [v1.1.7 release summary](release/v1.1.7-release-summary.md)
-- [v1.1.8 current Dock usability tracking](https://github.com/Tao-pyth/obs-duel-recorder/issues/595)
+- [v1.1.8 release summary](release/v1.1.8-release-summary.md)
 - [legacy v1.0 release readiness checklist](release/v1.0-release-readiness.md)
 - [legacy v1.1 release readiness checklist](release/v1.1-release-readiness.md)
 - [v1.2 release readiness checklist](release/v1.2-release-readiness.md)

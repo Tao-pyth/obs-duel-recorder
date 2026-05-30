@@ -386,9 +386,19 @@ The version tracking issue may contain the working release summary, but finalize
 - Version tracking issue: #595
 - Child issues: #596, #597, #598, #599, #600, #601
 - Previous released user-ready version: `v1.1.7`
+- Tag: `v1.1.8`
+- Tag target: `9d26647f3f14ff024edce277b1e906f277e952aa`
+- Release finalized at: `2026-05-31T02:38:00+09:00`
+- GitHub Release: `https://github.com/Tao-pyth/obs-duel-recorder/releases/tag/v1.1.8`
 - Release summary: `docs/release/v1.1.8-release-summary.md`
+- Major PR: #602 - `Polish v1.1.8 Dock usability`
+- Final ZIP evidence: `build/release-v1.1.8/obs-duel-recorder-v1.1.8.zip`
+- Final ZIP SHA256: `F1DAF94D0F09DF249AB3F02F4B6E91BC6AA17171E86FC02A03674AD3E3ACDDD2`
+- Rebuilt Plugin DLL SHA256: `CC994965E471B179AD4EC2CD691C1CBF64F9F355B7D344524023327B4AE96D01`
+- Rebuilt Worker EXE SHA256: `B9CCD48F0228B0B618A81A649825E723816B360C2656F85F7AA44B2C961E7269`
 - Scope: fixes real OBS Dock readability issues found in screenshots, including truncated Record/Upload action buttons, duplicate preview/settings surfaces, misleading frame selector arrows, and cramped upload template editing.
-- Status: active implementation target until the v1.1.8 package and GitHub Release are published.
+- Validation evidence: Worker unit tests passed; Markdown link validation passed; C++ Plugin build passed; Worker EXE build passed; final release package validation passed.
+- Status: released user-ready OBS Plugin package
 
 ### Legacy tag v1.0.0 - YouTube Upload MVP
 
