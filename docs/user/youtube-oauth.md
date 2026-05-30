@@ -27,23 +27,29 @@ issue attachments.
 ## Setup Steps
 
 1. Create or choose a Google OAuth desktop client that is allowed to use the
-   YouTube Data API upload scope.
-2. Save the downloaded JSON as:
+   YouTube Data API upload scope. Google documents this flow in the Google
+   Cloud Console help for OAuth clients:
+   <https://support.google.com/cloud/answer/6158849>
+2. Download the OAuth client JSON from Google Cloud Console.
+3. In the OBS Duel Recorder Dock, open the Upload tab and choose
+   `Select Auth File`. Select the downloaded JSON file. The Dock copies it as:
 
    ```text
    user_data/config/secrets/youtube-client-secret.json
    ```
 
-3. Start OBS Duel Recorder and confirm the Worker is running.
-4. Request an authorization URL:
+   If you prefer manual placement, choose `Open Auth Folder` and copy the file
+   into that folder with the exact name above.
+4. Start OBS Duel Recorder and confirm the Worker is running.
+5. Request an authorization URL:
 
    ```powershell
    Invoke-WebRequest http://127.0.0.1:8787/upload/oauth/authorization-url -Method Post -ContentType "application/json" -Body '{}' | Select-Object -ExpandProperty Content
    ```
 
-5. Open the returned `authorization_url` in a browser and approve the YouTube
+6. Open the returned `authorization_url` in a browser and approve the YouTube
    upload scope.
-6. Let the browser return to:
+7. Let the browser return to:
 
    ```text
    http://127.0.0.1:8787/upload/oauth/callback
@@ -56,7 +62,7 @@ issue attachments.
    Invoke-WebRequest http://127.0.0.1:8787/upload/oauth/exchange-code -Method Post -ContentType "application/json" -Body '{"code":"PASTE_CODE_HERE"}' | Select-Object -ExpandProperty Content
    ```
 
-7. Check readiness:
+8. Check readiness:
 
    ```powershell
    Invoke-WebRequest http://127.0.0.1:8787/upload/status | Select-Object -ExpandProperty Content
@@ -70,7 +76,7 @@ Use `readiness_state` as the main upload readiness value. Use
 | State | Meaning | Next action |
 |---|---|---|
 | `ready` | Upload prerequisites are satisfied. | Upload can proceed. |
-| `client_secret_missing` | The OAuth client file is missing. | Place `youtube-client-secret.json` under `user_data/config/secrets/`. |
+| `client_secret_missing` | The OAuth client file is missing. | Use `Select Auth File` in the Dock, or place `youtube-client-secret.json` under `user_data/config/secrets/`. |
 | `token_missing` | Authorization has not produced a token yet. | Complete browser authorization. |
 | `token_invalid` | The token is invalid, incomplete, or cannot be refreshed. | Reauthorize and replace `youtube-token.json`. |
 | `token_expired_refreshable` | The token is expired but has a refresh token. | Refresh the token. |

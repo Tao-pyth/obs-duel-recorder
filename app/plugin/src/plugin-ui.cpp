@@ -14,10 +14,12 @@
 #include <QDialog>
 #include <QDialogButtonBox>
 #include <QComboBox>
+#include <QDir>
 #include <QDoubleSpinBox>
 #include <QElapsedTimer>
 #include <QEventLoop>
 #include <QFile>
+#include <QFileDialog>
 #include <QFileInfo>
 #include <QFormLayout>
 #include <QFrame>
@@ -468,7 +470,7 @@ std::string localized_upload_next_action(const std::string &language, const std:
 		return fallback.empty() ? "No action required." : fallback;
 	}
 	if (state == "client_secret_missing") {
-		return "user_data/config/secrets/youtube-client-secret.json を配置してください。";
+		return "Google OAuthクライアントJSONを認証ファイルとして選択してください。保存先フォルダを開いて手動配置することもできます。";
 	}
 	if (state == "token_missing") {
 		return "YouTube認証を実行してください。";
@@ -993,18 +995,35 @@ void PluginUiController::register_ui()
 
 	auto *oauth_controls = new QHBoxLayout;
 	oauth_authorize_button_ = new QPushButton(ui_text(ui_language_, "Authorize YouTube", "YouTube認証"));
+	select_oauth_client_secret_button_ = new QPushButton(
+		ui_text(ui_language_, "Select Auth File", "認証ファイルを選択"));
+	open_oauth_secrets_folder_button_ = new QPushButton(
+		ui_text(ui_language_, "Open Auth Folder", "保存先フォルダを開く"));
 	oauth_refresh_button_ = new QPushButton(ui_text(ui_language_, "Refresh Token", "トークン更新"));
 	oauth_help_button_ = new QPushButton(ui_text(ui_language_, "OAuth Help", "OAuthヘルプ"));
 	QObject::connect(oauth_authorize_button_, &QPushButton::clicked,
 			 [this]() { request_upload_oauth_authorization(); });
+	QObject::connect(select_oauth_client_secret_button_, &QPushButton::clicked,
+			 [this]() { request_select_upload_client_secret(); });
+	QObject::connect(open_oauth_secrets_folder_button_, &QPushButton::clicked,
+			 [this]() { request_open_upload_secrets_folder(); });
 	QObject::connect(oauth_refresh_button_, &QPushButton::clicked, [this]() { request_upload_oauth_refresh(); });
 	QObject::connect(oauth_help_button_, &QPushButton::clicked, [this]() { request_upload_oauth_help(); });
 	style_button(oauth_authorize_button_, "#1b5e20", "#ffffff");
+	style_button(select_oauth_client_secret_button_, "#2e7d32", "#ffffff");
+	style_button(open_oauth_secrets_folder_button_, "#6b7280", "#ffffff");
 	style_button(oauth_refresh_button_, "#388e3c", "#ffffff");
 	style_button(oauth_help_button_, "#6b7280", "#ffffff");
 	decorate_button(oauth_authorize_button_, QStyle::SP_ComputerIcon,
 			ui_text(ui_language_, "Open the YouTube OAuth authorization URL in your browser.",
 				"YouTube OAuth認証URLをブラウザで開きます。"));
+	decorate_button(select_oauth_client_secret_button_, QStyle::SP_DialogOpenButton,
+			ui_text(ui_language_,
+				"Copy a Google OAuth client JSON into the local OBS Duel Recorder secrets folder.",
+				"Google OAuthクライアントJSONをローカルの認証ファイル保存先へコピーします。"));
+	decorate_button(open_oauth_secrets_folder_button_, QStyle::SP_DirOpenIcon,
+			ui_text(ui_language_, "Open the local folder that stores YouTube OAuth files.",
+				"YouTube OAuthファイルのローカル保存先フォルダを開きます。"));
 	decorate_button(oauth_refresh_button_, QStyle::SP_BrowserReload,
 			ui_text(ui_language_, "Refresh the stored YouTube OAuth token.",
 				"保存済みのYouTube OAuthトークンを更新します。"));
@@ -1012,6 +1031,8 @@ void PluginUiController::register_ui()
 			ui_text(ui_language_, "Open the YouTube OAuth setup guide.",
 				"YouTube OAuth設定ガイドを開きます。"));
 	oauth_controls->addWidget(oauth_authorize_button_);
+	oauth_controls->addWidget(select_oauth_client_secret_button_);
+	oauth_controls->addWidget(open_oauth_secrets_folder_button_);
 	oauth_controls->addWidget(oauth_refresh_button_);
 	oauth_controls->addWidget(oauth_help_button_);
 	upload_layout->addLayout(oauth_controls);
@@ -1280,6 +1301,12 @@ void PluginUiController::apply_dock_theme(const std::string &theme)
 	if (open_youtube_button_) {
 		style_button(open_youtube_button_, palette.settings_bg, palette.settings_fg);
 	}
+	if (select_oauth_client_secret_button_) {
+		style_button(select_oauth_client_secret_button_, palette.header_bg, "#ffffff");
+	}
+	if (open_oauth_secrets_folder_button_) {
+		style_button(open_oauth_secrets_folder_button_, palette.secondary_bg, palette.secondary_fg);
+	}
 	if (edit_metadata_button_) {
 		style_button(edit_metadata_button_, palette.metadata_bg_button, palette.metadata_fg_button);
 	}
@@ -1443,6 +1470,13 @@ void PluginUiController::apply_ui_language()
 	if (oauth_authorize_button_) {
 		oauth_authorize_button_->setText(ui_text(ui_language_, "Authorize YouTube", "YouTube認証"));
 	}
+	if (select_oauth_client_secret_button_) {
+		select_oauth_client_secret_button_->setText(ui_text(ui_language_, "Select Auth File", "認証ファイルを選択"));
+	}
+	if (open_oauth_secrets_folder_button_) {
+		open_oauth_secrets_folder_button_->setText(
+			ui_text(ui_language_, "Open Auth Folder", "保存先フォルダを開く"));
+	}
 	if (oauth_refresh_button_) {
 		oauth_refresh_button_->setText(ui_text(ui_language_, "Refresh Token", "トークン更新"));
 	}
@@ -1495,6 +1529,13 @@ void PluginUiController::apply_ui_language()
 	decorate_button(oauth_authorize_button_, QStyle::SP_ComputerIcon,
 			ui_text(ui_language_, "Open the YouTube OAuth authorization URL in your browser.",
 				"YouTube OAuth認証URLをブラウザで開きます。"));
+	decorate_button(select_oauth_client_secret_button_, QStyle::SP_DialogOpenButton,
+			ui_text(ui_language_,
+				"Copy a Google OAuth client JSON into the local OBS Duel Recorder secrets folder.",
+				"Google OAuthクライアントJSONをローカルの認証ファイル保存先へコピーします。"));
+	decorate_button(open_oauth_secrets_folder_button_, QStyle::SP_DirOpenIcon,
+			ui_text(ui_language_, "Open the local folder that stores YouTube OAuth files.",
+				"YouTube OAuthファイルのローカル保存先フォルダを開きます。"));
 	decorate_button(oauth_refresh_button_, QStyle::SP_BrowserReload,
 			ui_text(ui_language_, "Refresh the stored YouTube OAuth token.",
 				"保存済みのYouTube OAuthトークンを更新します。"));
@@ -1684,6 +1725,16 @@ void PluginUiController::refresh()
 		const bool primary = snapshot.upload_status.readiness_state == "token_missing" ||
 				     snapshot.upload_status.readiness_state == "token_invalid";
 		style_button(oauth_authorize_button_, primary ? "#1b5e20" : "#6b7280", "#ffffff");
+	}
+	if (select_oauth_client_secret_button_) {
+		const bool client_secret_needed = snapshot.upload_status.readiness_state == "client_secret_missing" ||
+						  !snapshot.upload_status.client_secret_configured;
+		select_oauth_client_secret_button_->setEnabled(worker_running && !snapshot.user_data_dir.empty());
+		style_button(select_oauth_client_secret_button_, client_secret_needed ? "#1b5e20" : "#2e7d32",
+			     "#ffffff");
+	}
+	if (open_oauth_secrets_folder_button_) {
+		open_oauth_secrets_folder_button_->setEnabled(!snapshot.user_data_dir.empty());
 	}
 	if (oauth_refresh_button_) {
 		const bool refresh_needed = snapshot.upload_status.readiness_state == "token_expired_refreshable" ||
@@ -2091,6 +2142,126 @@ void PluginUiController::request_upload_to_youtube()
 			},
 			Qt::QueuedConnection);
 	}).detach();
+}
+
+bool PluginUiController::ensure_upload_secrets_dir(QString &secrets_dir)
+{
+	const WorkerStatusSnapshot snapshot = worker_manager_.status_snapshot();
+	if (snapshot.user_data_dir.empty()) {
+		QMessageBox::warning(dock_widget_,
+				     ui_text(ui_language_, "YouTube OAuth setup", "YouTube OAuth設定"),
+				     ui_text(ui_language_,
+					     "user_data_dir is not configured. Open Settings, set the user data folder, then save.",
+					     "user_data_dirが未設定です。設定でユーザーデータフォルダを指定して保存してください。"));
+		return false;
+	}
+
+	secrets_dir = QDir(qstr_wide(snapshot.user_data_dir)).filePath(QStringLiteral("config/secrets"));
+	if (QDir(secrets_dir).exists()) {
+		return true;
+	}
+	if (QDir().mkpath(secrets_dir)) {
+		return true;
+	}
+
+	QMessageBox::warning(
+		dock_widget_,
+		ui_text(ui_language_, "YouTube OAuth setup", "YouTube OAuth設定"),
+		ui_text(ui_language_, "Could not create the YouTube OAuth secrets folder:\n\n",
+			"YouTube OAuth認証ファイルの保存先フォルダを作成できませんでした:\n\n") +
+			QDir::toNativeSeparators(secrets_dir));
+	return false;
+}
+
+void PluginUiController::request_select_upload_client_secret()
+{
+	QString secrets_dir;
+	if (!ensure_upload_secrets_dir(secrets_dir)) {
+		return;
+	}
+
+	const QString source = QFileDialog::getOpenFileName(
+		dock_widget_,
+		ui_text(ui_language_, "Select Google OAuth client JSON", "Google OAuthクライアントJSONを選択"),
+		QString(),
+		ui_text(ui_language_, "JSON files (*.json);;All files (*)", "JSONファイル (*.json);;すべてのファイル (*)"));
+	if (source.isEmpty()) {
+		return;
+	}
+
+	const QFileInfo source_info(source);
+	if (!source_info.isFile()) {
+		QMessageBox::warning(dock_widget_,
+				     ui_text(ui_language_, "YouTube OAuth setup", "YouTube OAuth設定"),
+				     ui_text(ui_language_, "Select a JSON file downloaded from Google Cloud Console.",
+					     "Google Cloud Consoleから取得したJSONファイルを選択してください。"));
+		return;
+	}
+
+	const QString destination = QDir(secrets_dir).filePath(QStringLiteral("youtube-client-secret.json"));
+	const QFileInfo destination_info(destination);
+	if (source_info.absoluteFilePath() == destination_info.absoluteFilePath()) {
+		if (upload_result_value_) {
+			upload_result_value_->setText(ui_text(ui_language_,
+							      "YouTube auth file is already configured.",
+							      "YouTube認証ファイルは既に設定されています。"));
+		}
+		refresh();
+		return;
+	}
+
+	if (destination_info.exists()) {
+		const QMessageBox::StandardButton answer = QMessageBox::question(
+			dock_widget_,
+			ui_text(ui_language_, "Overwrite YouTube auth file?", "YouTube認証ファイルを上書きしますか？"),
+			ui_text(ui_language_,
+				"youtube-client-secret.json already exists. Replace it with the selected file?",
+				"youtube-client-secret.jsonは既に存在します。選択したファイルで置き換えますか？"),
+			QMessageBox::Yes | QMessageBox::No,
+			QMessageBox::No);
+		if (answer != QMessageBox::Yes) {
+			return;
+		}
+		if (!QFile::remove(destination)) {
+			QMessageBox::warning(
+				dock_widget_,
+				ui_text(ui_language_, "YouTube OAuth setup", "YouTube OAuth設定"),
+				ui_text(ui_language_, "Could not replace the existing YouTube auth file.",
+					"既存のYouTube認証ファイルを置き換えられませんでした。"));
+			return;
+		}
+	}
+
+	if (!QFile::copy(source, destination)) {
+		QMessageBox::warning(
+			dock_widget_,
+			ui_text(ui_language_, "YouTube OAuth setup", "YouTube OAuth設定"),
+			ui_text(ui_language_, "Could not copy the selected JSON file into the secrets folder.",
+				"選択したJSONファイルを認証ファイル保存先へコピーできませんでした。"));
+		return;
+	}
+
+	if (upload_result_value_) {
+		upload_result_value_->setText(ui_text(ui_language_,
+						      "YouTube auth file was saved as youtube-client-secret.json.",
+						      "YouTube認証ファイルをyoutube-client-secret.jsonとして保存しました。"));
+	}
+	refresh();
+}
+
+void PluginUiController::request_open_upload_secrets_folder()
+{
+	QString secrets_dir;
+	if (!ensure_upload_secrets_dir(secrets_dir)) {
+		return;
+	}
+	if (!QDesktopServices::openUrl(QUrl::fromLocalFile(secrets_dir))) {
+		QMessageBox::information(
+			dock_widget_,
+			ui_text(ui_language_, "YouTube OAuth folder", "YouTube OAuthフォルダ"),
+			ui_text(ui_language_, "Open this folder manually:\n\n", "次のフォルダを手動で開いてください:\n\n") +
+				QDir::toNativeSeparators(secrets_dir));
+	}
 }
 
 void PluginUiController::request_upload_oauth_authorization()

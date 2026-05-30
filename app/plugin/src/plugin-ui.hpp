@@ -6,6 +6,7 @@
 #include <string>
 
 class QLabel;
+class QString;
 class QPushButton;
 class QComboBox;
 class QCheckBox;
@@ -42,9 +43,12 @@ private:
 	void request_upload_to_youtube();
 	void request_save_upload_privacy();
 	void request_open_uploaded_youtube();
+	void request_select_upload_client_secret();
+	void request_open_upload_secrets_folder();
 	void request_upload_oauth_authorization();
 	void request_upload_oauth_refresh();
 	void request_upload_oauth_help();
+	bool ensure_upload_secrets_dir(QString &secrets_dir);
 	UploadTargetPayload selected_upload_target(const WorkerStatusSnapshot &snapshot) const;
 	bool has_selected_upload_target(const WorkerStatusSnapshot &snapshot) const;
 	void refresh_upload_queue_selector(const WorkerStatusSnapshot &snapshot);
@@ -158,6 +162,8 @@ private:
 	QPushButton *upload_to_youtube_button_ = nullptr;
 	QPushButton *save_upload_privacy_button_ = nullptr;
 	QPushButton *open_youtube_button_ = nullptr;
+	QPushButton *select_oauth_client_secret_button_ = nullptr;
+	QPushButton *open_oauth_secrets_folder_button_ = nullptr;
 	QPushButton *oauth_authorize_button_ = nullptr;
 	QPushButton *oauth_refresh_button_ = nullptr;
 	QPushButton *oauth_help_button_ = nullptr;

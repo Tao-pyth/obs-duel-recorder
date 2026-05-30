@@ -513,15 +513,15 @@ class UploadApiTests(unittest.TestCase):
 
     def test_upload_readiness_reports_actionable_auth_states(self) -> None:
         client, runtime_dirs = self._client()
+        secrets_dir = runtime_dirs.config_dir / "secrets"
+        self.assertTrue(secrets_dir.is_dir())
+        self.assertFalse((secrets_dir / "youtube-client-secret.json").exists())
 
         missing = client.get("/upload/status")
         self.assertEqual(missing.status_code, 200)
         self.assertEqual(missing.json()["readiness"]["state"], "client_secret_missing")
         self.assertEqual(missing.json()["readiness_state"], "client_secret_missing")
         self.assertEqual(missing.json()["readiness"]["auth_state"], "client_secret_missing")
-
-        secrets_dir = runtime_dirs.config_dir / "secrets"
-        secrets_dir.mkdir(parents=True, exist_ok=True)
         (secrets_dir / "youtube-client-secret.json").write_text('{"client_secret":"secret"}', encoding="utf-8")
         client, _ = self._client_for_runtime(runtime_dirs)
         token_missing = client.get("/upload/status")
