@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <string>
+#include <vector>
 
 namespace odr::plugin {
 
@@ -148,6 +149,12 @@ enum class UploadTargetFetchStatus {
 	invalid_response,
 };
 
+enum class UploadItemsFetchStatus {
+	reachable,
+	unavailable,
+	invalid_response,
+};
+
 enum class UploadProcessStatus {
 	accepted,
 	unavailable,
@@ -213,10 +220,16 @@ struct RecordingStateFetchResult {
 
 struct QueueActionItemPayload {
 	int id = 0;
+	int match_id = 0;
 	std::string state;
 	std::string video_path;
+	std::string youtube_video_id;
+	std::string youtube_url;
 	std::string manual_review_reason;
 	std::string last_error_code;
+	std::string last_error_message;
+	std::string created_at;
+	std::string updated_at;
 };
 
 struct QueueActionFetchResult {
@@ -286,6 +299,11 @@ struct MetadataUpdateResult {
 
 struct UploadMetadataPreviewPayload {
 	int match_id = 0;
+	std::string deck_name;
+	std::string opponent_deck;
+	std::string result;
+	std::string rank;
+	std::string dp;
 	std::string title;
 	std::string description;
 	std::string tags;
@@ -316,8 +334,23 @@ struct UploadTargetPayload {
 	std::string resolved_video_path;
 	bool video_exists = false;
 	bool can_upload = false;
+	bool metadata_confirmed = false;
 	UploadMetadataPreviewPayload upload_metadata;
+	std::string metadata_missing_fields;
 	std::string blocking_reasons;
+};
+
+struct UploadItemsFetchResult {
+	UploadItemsFetchStatus status = UploadItemsFetchStatus::unavailable;
+	unsigned long http_status = 0;
+	std::vector<UploadTargetPayload> items;
+	std::string error;
+	std::string body;
+
+	bool reachable() const
+	{
+		return status == UploadItemsFetchStatus::reachable;
+	}
 };
 
 struct UploadTargetFetchResult {
@@ -423,10 +456,12 @@ public:
 						      const std::string &video_path = {}) const;
 	QueueCommandResult send_queue_command(const WorkerEndpoint &endpoint, int item_id, const std::string &action,
 					      const std::string &youtube_video_id = {}) const;
+	MatchFetchResult fetch_match(const WorkerEndpoint &endpoint, int match_id) const;
 	MatchFetchResult fetch_latest_match(const WorkerEndpoint &endpoint) const;
 	MetadataUpdateResult update_match_metadata(const WorkerEndpoint &endpoint,
 						   const MatchMetadataPayload &metadata) const;
 	UploadMetadataPreviewResult fetch_upload_metadata_preview(const WorkerEndpoint &endpoint, int match_id) const;
+	UploadItemsFetchResult fetch_upload_items(const WorkerEndpoint &endpoint) const;
 	UploadTargetFetchResult fetch_next_upload_target(const WorkerEndpoint &endpoint) const;
 	UploadProcessResult process_upload_item(const WorkerEndpoint &endpoint, int item_id,
 						const std::string &provider) const;

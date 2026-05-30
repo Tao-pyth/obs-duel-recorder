@@ -47,6 +47,7 @@ struct WorkerStatusSnapshot {
 	WorkerEndpoint endpoint;
 	OverlayStatePayload overlay_state;
 	UploadStatusResult upload_status;
+	UploadItemsFetchResult upload_items;
 	QueueActionFetchResult queue_action_item;
 	UploadTargetFetchResult upload_next_target;
 	std::wstring user_data_dir;
@@ -71,6 +72,7 @@ struct WorkerStatusSnapshot {
 	bool recording_state_available = false;
 	bool overlay_state_available = false;
 	bool upload_status_available = false;
+	bool upload_items_available = false;
 	bool queue_action_item_available = false;
 	bool upload_next_target_available = false;
 };
@@ -89,9 +91,11 @@ public:
 						      const std::string &video_path = {});
 	QueueCommandResult send_queue_command(int item_id, const std::string &action,
 					      const std::string &youtube_video_id = {});
+	MatchFetchResult fetch_match(int match_id);
 	MatchFetchResult fetch_latest_match();
 	MetadataUpdateResult update_match_metadata(const MatchMetadataPayload &metadata);
 	UploadMetadataPreviewResult fetch_upload_metadata_preview(int match_id);
+	UploadItemsFetchResult fetch_upload_items();
 	UploadTargetFetchResult fetch_next_upload_target();
 	UploadProcessResult process_upload_item(int item_id, const std::string &provider);
 	UploadSettingsResult update_upload_settings(const std::string &privacy_status);
@@ -118,6 +122,7 @@ private:
 			   const WorkerProbeResult *probe = nullptr, unsigned int consecutive_failures = 0,
 			   const OverlayFetchResult *overlay = nullptr,
 			   const UploadStatusResult *upload = nullptr,
+			   const UploadItemsFetchResult *upload_items = nullptr,
 			   const RecordingStateFetchResult *recording = nullptr,
 			   const QueueActionFetchResult *queue_action = nullptr,
 			   const UploadTargetFetchResult *upload_next_target = nullptr);

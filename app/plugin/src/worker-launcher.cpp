@@ -538,11 +538,12 @@ void WorkerProcessManager::monitor_heartbeat(const WorkerLaunchConfig &config, c
 			timeout_reported = false;
 			OverlayFetchResult overlay = api_client_.fetch_overlay_state(config.endpoint);
 			UploadStatusResult upload = api_client_.fetch_upload_status(config.endpoint);
+			UploadItemsFetchResult upload_items = api_client_.fetch_upload_items(config.endpoint);
 			RecordingStateFetchResult recording = api_client_.fetch_recording_state(config.endpoint);
 			QueueActionFetchResult queue_action = api_client_.fetch_queue_action_item(config.endpoint);
 			UploadTargetFetchResult upload_next_target = api_client_.fetch_next_upload_target(config.endpoint);
 			update_status(WorkerDiagnosticState::running, config, current_ownership(), {}, &probe, 0,
-				      &overlay, &upload, &recording, &queue_action, &upload_next_target);
+				      &overlay, &upload, &upload_items, &recording, &queue_action, &upload_next_target);
 
 			if (!replacement_reported && identity_changed(baseline, probe)) {
 				replacement_reported = true;
@@ -583,6 +584,7 @@ void WorkerProcessManager::update_status(WorkerDiagnosticState state, const Work
 					 WorkerOwnership ownership, const std::string &error,
 					 const WorkerProbeResult *probe, unsigned int consecutive_failures,
 					 const OverlayFetchResult *overlay, const UploadStatusResult *upload,
+					 const UploadItemsFetchResult *upload_items,
 					 const RecordingStateFetchResult *recording,
 					 const QueueActionFetchResult *queue_action,
 					 const UploadTargetFetchResult *upload_next_target)
@@ -617,6 +619,10 @@ void WorkerProcessManager::update_status(WorkerDiagnosticState state, const Work
 	if (upload) {
 		status_.upload_status = *upload;
 		status_.upload_status_available = upload->status == UploadStatusFetchStatus::reachable;
+	}
+	if (upload_items) {
+		status_.upload_items = *upload_items;
+		status_.upload_items_available = upload_items->reachable();
 	}
 	if (recording) {
 		status_.recording_state_available = recording->reachable();
@@ -727,6 +733,22 @@ MatchFetchResult WorkerProcessManager::fetch_latest_match()
 	return api_client_.fetch_latest_match(endpoint);
 }
 
+MatchFetchResult WorkerProcessManager::fetch_match(int match_id)
+{
+	WorkerEndpoint endpoint;
+	{
+		std::lock_guard<std::mutex> lock(mutex_);
+		endpoint = status_.endpoint;
+		if (status_.state != WorkerDiagnosticState::running) {
+			MatchFetchResult result;
+			result.status = MatchFetchStatus::unavailable;
+			result.error = "Worker is not running";
+			return result;
+		}
+	}
+	return api_client_.fetch_match(endpoint, match_id);
+}
+
 MetadataUpdateResult WorkerProcessManager::update_match_metadata(const MatchMetadataPayload &metadata)
 {
 	WorkerEndpoint endpoint;
@@ -757,6 +779,22 @@ UploadMetadataPreviewResult WorkerProcessManager::fetch_upload_metadata_preview(
 		}
 	}
 	return api_client_.fetch_upload_metadata_preview(endpoint, match_id);
+}
+
+UploadItemsFetchResult WorkerProcessManager::fetch_upload_items()
+{
+	WorkerEndpoint endpoint;
+	{
+		std::lock_guard<std::mutex> lock(mutex_);
+		endpoint = status_.endpoint;
+		if (status_.state != WorkerDiagnosticState::running) {
+			UploadItemsFetchResult result;
+			result.status = UploadItemsFetchStatus::unavailable;
+			result.error = "Worker is not running";
+			return result;
+		}
+	}
+	return api_client_.fetch_upload_items(endpoint);
 }
 
 UploadTargetFetchResult WorkerProcessManager::fetch_next_upload_target()

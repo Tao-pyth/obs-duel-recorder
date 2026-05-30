@@ -145,6 +145,11 @@ requests can also consume quota.
 The preview endpoint and real upload path use the same Worker-rendered metadata
 fields:
 
+- `deck_name`
+- `opponent_deck`
+- `result`
+- `rank`
+- `dp`
 - `title`
 - `description`
 - `tags`
@@ -156,6 +161,13 @@ The Google provider sends those rendered `title`, `description`, and `tags` to
 `videos.insert` with `status.privacyStatus`. The preview dialog must show
 `privacy_status` before upload so the operator can confirm that the upload is
 `private` or explicitly `unlisted`.
+
+Upload execution is blocked when required match metadata is missing. The
+required fields for the current Dock upload UX are `deck_name`,
+`opponent_deck`, `result`, `rank`, and `dp`. The Worker returns
+`metadata_confirmed`, `metadata_missing_fields`, and target-level
+`blocking_reasons` so the Plugin can disable the primary upload action and show
+the operator what must be fixed before upload.
 
 ---
 
@@ -225,6 +237,35 @@ For production upload, select the optional Google provider:
 The Google provider calls YouTube `videos.insert`. Missing OAuth files, missing
 optional dependencies, auth failures, quota failures, network failures, and
 ambiguous outcomes are mapped back to stable queue states.
+
+### `GET /upload/items`
+
+Returns UI-ready upload targets for the Dock Upload tab. Items are sorted with
+active work first and uploaded/discarded history last:
+
+1. `ready_upload`
+2. `upload_failed`
+3. `need_manual_review`
+4. `quota_waiting`
+5. `uploading`
+6. `uploaded`
+7. `discarded`
+
+Each target includes compact queue identity, state, video existence, rendered
+upload metadata, `metadata_confirmed`, `metadata_missing_fields`,
+`blocking_reasons`, and `can_upload`.
+
+### `GET /upload/targets/next`
+
+Returns the first non-terminal upload target after applying the same UI sort.
+This endpoint is kept for simple Dock summaries. The full Upload tab should use
+`GET /upload/items` so the operator can choose the exact queue item.
+
+### `POST /upload/items/{item_id}/process`
+
+Processes the selected queue item through the same upload boundary as
+`POST /upload/process-next`. The endpoint exists so the Dock never uploads a
+different item from the one shown in the selected target preview.
 
 ### `POST /upload/oauth/authorization-url`
 
