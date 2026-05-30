@@ -71,6 +71,10 @@ struct UploadStatusResult {
 	std::string body;
 	std::string readiness_state;
 	std::string readiness_next_action;
+	std::string privacy_status;
+	std::string token_state;
+	std::string token_expiry;
+	std::string provider_default;
 	int ready_upload = 0;
 	int uploading = 0;
 	int uploaded = 0;
@@ -78,6 +82,12 @@ struct UploadStatusResult {
 	int quota_waiting = 0;
 	int need_manual_review = 0;
 	int discarded = 0;
+	bool client_secret_configured = false;
+	bool token_configured = false;
+	bool auth_ready = false;
+	bool token_expired = false;
+	bool token_refreshable = false;
+	bool google_dependencies_available = false;
 
 	bool reachable() const
 	{
