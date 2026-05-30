@@ -184,6 +184,57 @@ Goals:
   - `docs/requirements/requirements.md` -> Setup Rules / Upload Rules / Detection Rules / Runtime Rules / Update Rules / OAuth Rules
   - `AGENTS.md` -> Responsibility Separation / Runtime Directory Rules / Asset Distribution Rules / Documentation Rules / Recovery Rules
 
+### v1.1.5 - Video Preview Crash Hotfix
+
+- Release tag: `v1.1.5`
+- Release commit: `7cc253731d3c9b33aad0a1d059ec9714f90293ec`
+- Release PR: `#506` - `Fix OBS crash when parsing video preview`
+- Previous released user-ready version: `v1.1.4`
+- Target version: `v1.1.5`
+- Scope:
+  - Prevent OBS crash when parsing large or malformed video preview payloads.
+  - Preserve the `v1.1.4` package layout and runtime-data separation.
+- Requirements (relevant sections):
+  - `docs/requirements/requirements.md` -> Runtime Rules / Recovery Rules
+  - `AGENTS.md` -> Recovery Rules / Responsibility Separation
+
+### v1.1.6 - Installed Binary Verification Hotfix
+
+- Release tag: `v1.1.6`
+- Release commit: `1bc4cd278e003b9e284529e4c10988bdc3a7c248`
+- Release PR: `#507` - `Verify installed OBS binaries match release package`
+- Previous released user-ready version: `v1.1.5`
+- Target version: `v1.1.6`
+- Scope:
+  - Verify that the installed OBS Plugin DLL hash matches the release package.
+  - Verify that the installed Worker executable hash matches the release package.
+  - Detect the known wrong Worker placement under `obs-plugins\64bit\worker`.
+- Requirements (relevant sections):
+  - `docs/requirements/requirements.md` -> Packaging Rules / Update Rules / Runtime Rules
+  - `AGENTS.md` -> Runtime Directory Rules / Update Rules / Recovery Rules
+
+### v1.1.7 - Stabilization, Documentation, Install Safety, And YouTube Upload UX
+
+- Version tracking issue: `#584` - `[v1.1.7] Current stabilization, documentation, install safety, and YouTube upload UX tracking`
+- Documentation synchronization: `#579`
+- Install/update verification safety: `#580`
+- Automatic GitHub Issue error reporting boundary: `#581`
+- Issue prioritization/order: `#582`
+- Stale tracking cleanup: `#583`
+- YouTube upload UX parent: `#508`
+- YouTube upload UX child issues: `#509` through `#578`
+- Previous released user-ready version: `v1.1.6`
+- Target version: `v1.1.7`
+- Scope:
+  - Make README, traceability, release history, and user docs match the actual current state.
+  - Keep ZIP install/update recovery-safe and prove installed OBS binaries match the package.
+  - Complete the post-recording flow from recording target review to metadata confirmation, upload text preview, selected YouTube upload, and recovery.
+  - State clearly whether automatic GitHub Issue error reporting is shipped or remains a relay-owned architecture contract.
+  - Reconcile older tracking issues so they do not compete with the current v1.1.7 parent.
+- Requirements (relevant sections):
+  - `docs/requirements/requirements.md` -> Packaging Rules / Upload Rules / OAuth Rules / Update Rules / Runtime Rules
+  - `AGENTS.md` -> Responsibility Separation / Runtime Directory Rules / Documentation Rules / Recovery Rules
+
 ---
 
 ## Legacy Implementation Records

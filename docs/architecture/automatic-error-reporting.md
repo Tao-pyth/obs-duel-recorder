@@ -206,3 +206,18 @@ Minimum rule:
 Shipping a hosted relay API, private reporting repository, and end-user opt-in
 UX requires maintainer infrastructure and must not be implied by the release ZIP
 unless that deployment is explicitly configured and documented.
+
+## v1.1.7 Status
+
+As of the `v1.1.7` stabilization target, this document is still a contract and
+boundary definition. The distributed OBS Plugin and Worker do not create GitHub
+Issues directly, and no GitHub token is packaged with the release.
+
+The implementation decision is tracked by #581:
+
+- If automatic reporting ships, it must use a relay/API or another controlled
+  server-side path that owns GitHub authentication.
+- If GitHub Actions reports validation failures, the workflow must explicitly
+  request `issues: write` and must redact sensitive details.
+- If no relay or controlled reporting path is deployed, user documentation must
+  say that automatic GitHub Issue creation is not shipped.

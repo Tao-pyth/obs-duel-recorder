@@ -143,7 +143,10 @@ install command.
 The verifier checks that `obs-duel-recorder.dll` is under
 `obs-plugins\64bit\`, that the full Worker bundle is under
 `obs-plugins\worker\odr-worker\`, and that the known wrong
-`obs-plugins\64bit\worker\` placement is absent.
+`obs-plugins\64bit\worker\` placement is absent. As of `v1.1.6`, it also
+compares the installed Plugin DLL and Worker executable SHA256 hashes against
+the selected release package. This prevents a partial update from being
+mistaken for a successful install when OBS is still loading an older binary.
 
 ## Worker Executable Bundle Decision
 

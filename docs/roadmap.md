@@ -5,7 +5,7 @@
 This roadmap uses one version sequence based on user-visible usability.
 
 - The project reached its first user-ready OBS Plugin release at `v1.0.1`.
-- The latest completed active development target is `v1.1.3`; the next target is `v1.1.4`.
+- The latest tagged user-ready release is `v1.1.6`; the current active target is `v1.1.7`.
 - Existing `v1.x` and `v2.x` tags are legacy non-product tags from before this rule.
 - The `v0.11` gate completed built OBS Plugin DLL, real OBS load smoke evidence, Dock visibility, Worker heartbeat, and basic recording control evidence.
 - The `v0.12` gate completed packaging workflow, release asset automation path, SHA256 checksum generation, and package layout validation.
@@ -15,6 +15,9 @@ This roadmap uses one version sequence based on user-visible usability.
 - The `v1.1.1` target followed #415 and completed UI, documentation, verification, packaging validation, and release-record handoff through #440.
 - The `v1.1.2` target was coordinated through #457 and covers recovery reporting documentation, release package Worker executable validation, compact Dock navigation, and Japanese/English UI language selection.
 - The `v1.1.3` target was coordinated through #470 and covers Dock workflow order, direct metadata editing, upload text templates, UI state presentation, and Material-inspired color-role documentation.
+- The `v1.1.4` target was coordinated through #473 and covers the consolidated Dock, YouTube readiness, and guided automatic recording update.
+- The `v1.1.5` and `v1.1.6` tags are hotfix releases for video-preview crash recovery and installed-binary verification.
+- The `v1.1.7` target is coordinated through #584 and covers documentation synchronization, install safety, automatic reporting boundary clarity, and completion of the post-recording YouTube upload UX issue set.
 - Existing legacy tags must not be moved or overwritten. Because a legacy `v1.1.0` tag exists, v1.1.x publication decisions must be recorded before release.
 
 ---
@@ -417,6 +420,95 @@ Previous release: `v1.1.3`
 #473 closes only after the #473-#504 scope is complete or explicitly deferred
 with maintainer approval, documentation matches the implemented behavior, and
 the `v1.1.4` release is published.
+
+---
+
+## v1.1.5 - Video Preview Crash Hotfix
+
+### Goals
+
+Prevent OBS from crashing when the Dock parses video preview data.
+
+Tracking issue: hotfix follow-up after #473
+
+Previous release: `v1.1.4`
+
+### Deliverables
+
+- video preview parsing crash fix
+- `v1.1.5` tag
+- package evidence preserved under `build/release-v1.1.5`
+
+### Release Note
+
+The `v1.1.5` tag points to PR #506 and is complete as a hotfix release.
+
+---
+
+## v1.1.6 - Installed Binary Verification Hotfix
+
+### Goals
+
+Make it obvious when the OBS install directory still contains an older Plugin
+DLL or Worker executable after an attempted update.
+
+Tracking issue: hotfix follow-up after #506
+
+Previous release: `v1.1.5`
+
+### Deliverables
+
+- package-vs-installed Plugin DLL hash verification
+- package-vs-installed Worker executable hash verification
+- wrong Worker placement detection
+- `v1.1.6` tag
+- package evidence preserved under `build/release-v1.1.6`
+
+### Release Note
+
+The `v1.1.6` tag points to PR #507 and is complete as a hotfix release.
+
+---
+
+## v1.1.7 - Stabilization, Documentation, Install Safety, And YouTube Upload UX
+
+### Goals
+
+Complete the current stabilization target so documentation, install/update
+verification, diagnostics expectations, and the post-recording YouTube upload
+operator flow are aligned.
+
+Tracking issue: #584
+
+Previous release: `v1.1.6`
+
+### Planned
+
+- synchronize README, traceability, release history, roadmap, and user docs
+  with the actual current state (#579)
+- keep OBS ZIP install/update verification recovery-safe and documented (#580)
+- state clearly whether automatic GitHub Issue error reporting is shipped or
+  remains a relay-owned contract (#581)
+- prioritize and phase the current open issue set so multiple agents can work
+  without conflicting changes (#582)
+- reconcile stale tracking issues and duplicate release-state records (#583)
+- complete, explicitly supersede, or explicitly defer the #508 / #509-#578
+  post-recording YouTube upload UX issue set
+
+### Deliverables
+
+- v1.1.7 documentation and traceability records
+- install/update verification evidence
+- explicit automatic error reporting release boundary
+- prioritized implementation order for #508 child issues
+- completed YouTube upload operator flow or explicit deferral record
+- package, validation, tag, and release records for `v1.1.7`
+
+### Release Note
+
+#584 closes only after the open v1.1.7 issue set is complete or explicitly
+deferred, documentation matches the implemented behavior, and the `v1.1.7`
+release is packaged, validated, tagged, and recorded.
 
 ---
 
