@@ -321,20 +321,75 @@ class UploadStore:
             "manual_actions": ["retry", "discard", "mark_uploaded"],
         }
 
+    def list_upload_items(self) -> dict[str, object]:
+        items = self.queue_store.list_items()
+        return {
+            "items": [self.upload_target_payload(item) for item in _sort_upload_items_for_ui(items)],
+            "queue_counts": self.queue_store.count_by_state(),
+        }
+
+    def next_upload_target(self) -> dict[str, object]:
+        for item in _sort_upload_items_for_ui(self.queue_store.list_items()):
+            if item.state not in {"uploaded", "discarded"}:
+                return {"found": True, "target": self.upload_target_payload(item)}
+        return {"found": False, "reason": "no_upload_targets"}
+
+    def upload_target_payload(self, item: QueueItem) -> dict[str, object]:
+        upload_metadata = self._upload_metadata(item)
+        blocking_reasons = self._blocking_reasons(item, upload_metadata)
+        return {
+            "item": item.as_payload(),
+            "queue_item_id": item.id,
+            "match_id": item.match_id,
+            "state": item.state,
+            "video_path": item.video_path,
+            "resolved_video_path": str(self._resolve_video_path(item.video_path)) if item.video_path else "",
+            "video_exists": self._video_exists(self._resolve_video_path(item.video_path)) if item.video_path else False,
+            "upload_metadata": upload_metadata,
+            "blocking_reasons": blocking_reasons,
+            "can_upload": not blocking_reasons,
+        }
+
     def process_next(self, payload: dict[str, Any] | None = None) -> dict[str, object]:
         payload = payload or {}
         if not isinstance(payload, dict):
             raise UploadCommandError("upload_payload_invalid", {"payload": "must_be_object"})
+        provider = self._validate_process_payload(payload)
+
+        item = self._next_ready_item()
+        if item is None:
+            return {"processed": False, "reason": "no_ready_upload_items"}
+        return self._process_item(item, payload, provider=provider)
+
+    def process_item(self, item_id: int, payload: dict[str, Any] | None = None) -> dict[str, object]:
+        payload = payload or {}
+        if not isinstance(payload, dict):
+            raise UploadCommandError("upload_payload_invalid", {"payload": "must_be_object"})
+        provider = self._validate_process_payload(payload)
+        item = self.queue_store.get_item(item_id)
+        return self._process_item(item, payload, provider=provider)
+
+    def _validate_process_payload(self, payload: dict[str, Any]) -> str:
         provider = _string(payload, "provider", "mock")
         if provider not in UPLOAD_PROVIDERS:
             raise UploadCommandError("upload_payload_invalid", {"provider": "unsupported_provider"})
         if provider == "mock" and _string(payload, "mock_result", "success") not in MOCK_RESULTS:
             raise UploadCommandError("upload_payload_invalid", {"mock_result": "unknown_result"})
+        return provider
 
-        item = self._next_ready_item()
-        if item is None:
-            return {"processed": False, "reason": "no_ready_upload_items"}
-
+    def _process_item(self, item: QueueItem, payload: dict[str, Any], *, provider: str) -> dict[str, object]:
+        if item.state in {"uploaded", "discarded"} or item.youtube_video_id:
+            return {
+                "processed": False,
+                "reason": "upload_blocked",
+                "target": self.upload_target_payload(item),
+            }
+        if item.state not in {"ready_upload", "upload_failed"}:
+            return {
+                "processed": False,
+                "reason": "upload_blocked",
+                "target": self.upload_target_payload(item),
+            }
         video_path = self._resolve_video_path(item.video_path)
         if not self._video_exists(video_path):
             discarded = self.queue_store.apply_command(
@@ -349,6 +404,9 @@ class UploadStore:
                 "processed": True,
                 "outcome": "discarded_missing_file",
                 "item": discarded.as_payload(),
+                "queue_item_id": discarded.id,
+                "match_id": discarded.match_id,
+                "target": self.upload_target_payload(discarded),
             }
 
         uploading = self.queue_store.apply_command(item.id, {"action": "start_upload"})
@@ -363,6 +421,11 @@ class UploadStore:
             "processed": True,
             "outcome": outcome.outcome,
             "item": final_item.as_payload(),
+            "queue_item_id": final_item.id,
+            "match_id": final_item.match_id,
+            "youtube_video_id": final_item.youtube_video_id,
+            "youtube_url": final_item.youtube_url,
+            "target": self.upload_target_payload(final_item),
         }
         if upload_metadata is not None:
             result["upload_metadata"] = upload_metadata
@@ -391,6 +454,28 @@ class UploadStore:
 
     def _video_exists(self, path: Path) -> bool:
         return path.exists() and path.is_file()
+
+    def _blocking_reasons(self, item: QueueItem, upload_metadata: dict[str, object] | None) -> list[str]:
+        reasons: list[str] = []
+        if item.state in {"uploaded", "discarded"}:
+            reasons.append(f"queue_state_{item.state}")
+        elif item.state not in {"ready_upload", "upload_failed"}:
+            reasons.append(f"queue_state_{item.state}_not_uploadable")
+        if item.youtube_video_id:
+            reasons.append("youtube_video_id_already_present")
+        if not item.video_path:
+            reasons.append("video_path_missing")
+        elif not self._video_exists(self._resolve_video_path(item.video_path)):
+            reasons.append("local_video_missing")
+        if upload_metadata is not None:
+            if not str(upload_metadata.get("title", "")).strip():
+                reasons.append("upload_title_missing")
+            if not str(upload_metadata.get("description", "")).strip():
+                reasons.append("upload_description_missing")
+            tags = upload_metadata.get("tags", [])
+            if not isinstance(tags, list) or not [tag for tag in tags if isinstance(tag, str) and tag.strip()]:
+                reasons.append("upload_tags_missing")
+        return reasons
 
     def _apply_outcome(self, item: QueueItem, outcome: UploadOutcome) -> QueueItem:
         if outcome.outcome == "success":
@@ -455,6 +540,19 @@ def build_upload_settings(*, user_data_dir: Path, privacy_status: str = DEFAULT_
         client_secret_configured=client_secret_path.exists(),
         token_configured=token_path.exists(),
     )
+
+
+def _sort_upload_items_for_ui(items: list[QueueItem]) -> list[QueueItem]:
+    priority = {
+        "ready_upload": 0,
+        "upload_failed": 1,
+        "need_manual_review": 2,
+        "quota_waiting": 3,
+        "uploading": 4,
+        "uploaded": 5,
+        "discarded": 6,
+    }
+    return sorted(items, key=lambda item: (priority.get(item.state, 99), item.id))
 
 
 def build_oauth_status(settings: UploadSettings) -> dict[str, object]:
