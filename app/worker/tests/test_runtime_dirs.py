@@ -30,6 +30,38 @@ class RuntimeDirsTests(unittest.TestCase):
 
 
 class WorkerConfigTests(unittest.TestCase):
+    def test_worker_config_loads_and_saves_upload_privacy_status(self) -> None:
+        from odr_worker.config import WorkerConfig, load_worker_config, save_worker_config
+        from odr_worker.runtime_dirs import ensure_runtime_dirs
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            dirs = ensure_runtime_dirs(user_data_dir=root)
+
+            saved_path = save_worker_config(
+                user_data_dir=root,
+                config=WorkerConfig(host="127.0.0.1", port=8787, upload_privacy_status="unlisted"),
+            )
+            loaded = load_worker_config(user_data_dir=root)
+
+            self.assertEqual(saved_path.name, "worker.toml")
+            self.assertTrue(saved_path.exists())
+            self.assertTrue(loaded.config_loaded)
+            self.assertEqual(loaded.config.upload_privacy_status, "unlisted")
+
+    def test_invalid_upload_privacy_status_returns_clear_error(self) -> None:
+        from odr_worker.config import WorkerConfigError, load_worker_config
+        from odr_worker.runtime_dirs import ensure_runtime_dirs
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            dirs = ensure_runtime_dirs(user_data_dir=root)
+            config_path = dirs.config_dir / "worker.toml"
+            config_path.write_text('[upload]\nprivacy_status = "public"\n', encoding="utf-8")
+
+            with self.assertRaisesRegex(WorkerConfigError, "privacy_status"):
+                load_worker_config(user_data_dir=root)
+
     def test_invalid_config_returns_clear_error(self) -> None:
         from odr_worker.config import WorkerConfigError, load_worker_config
         from odr_worker.runtime_dirs import ensure_runtime_dirs

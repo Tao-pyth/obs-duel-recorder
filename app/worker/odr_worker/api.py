@@ -6,7 +6,7 @@ from pathlib import Path
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
-from .config import LoadedWorkerConfig, get_repo_root
+from .config import LoadedWorkerConfig, WorkerConfig, get_repo_root, save_worker_config
 from .db import DbInfo
 from .detection import DetectionRuntime, TemplateConfigError, load_template_config, load_templates
 from .exports import ExportError, ExportStore
@@ -110,6 +110,7 @@ def create_app(*, runtime_dirs: RuntimeDirs, loaded_config: LoadedWorkerConfig, 
 
     app.state.paths = worker_paths
     app.state.config_loaded = loaded_config.config_loaded
+    app.state.worker_config = loaded_config.config
     app.state.overlay_state = OverlayState()
     app.state.recording_state_path = recording_state_path(runtime_dirs.data_dir)
     app.state.recording_state = initialize_recording_state(app.state.recording_state_path)
@@ -148,10 +149,19 @@ def create_app(*, runtime_dirs: RuntimeDirs, loaded_config: LoadedWorkerConfig, 
         app.state.upload_store = UploadStore(
             queue_store=app.state.queue_store,
             videos_dir=runtime_dirs.videos_dir,
-            settings=build_upload_settings(user_data_dir=runtime_dirs.user_data_dir),
+            settings=build_upload_settings(
+                user_data_dir=runtime_dirs.user_data_dir,
+                privacy_status=app.state.worker_config.upload_privacy_status,
+            ),
             metadata_store=app.state.metadata_store,
         )
         app.state.export_store = ExportStore(db_path=db_info.db_path, runtime_dirs=runtime_dirs)
+
+    def _upload_settings():
+        return build_upload_settings(
+            user_data_dir=runtime_dirs.user_data_dir,
+            privacy_status=app.state.worker_config.upload_privacy_status,
+        )
 
     @app.get("/health")
     def health() -> dict[str, object]:
@@ -707,6 +717,7 @@ def create_app(*, runtime_dirs: RuntimeDirs, loaded_config: LoadedWorkerConfig, 
         try:
             preview = app.state.metadata_store.render_upload_metadata(match_id)
             if app.state.upload_store is not None:
+                app.state.upload_store.update_settings(_upload_settings())
                 preview["privacy_status"] = app.state.upload_store.settings.privacy_status
             return preview
         except MetadataError as exc:
@@ -1044,7 +1055,7 @@ def create_app(*, runtime_dirs: RuntimeDirs, loaded_config: LoadedWorkerConfig, 
                 message="Upload storage is unavailable",
             )
         try:
-            app.state.upload_store.update_settings(build_upload_settings(user_data_dir=runtime_dirs.user_data_dir))
+            app.state.upload_store.update_settings(_upload_settings())
             return app.state.upload_store.status()
         except QueueCommandError as exc:
             return _error_response(
@@ -1063,7 +1074,7 @@ def create_app(*, runtime_dirs: RuntimeDirs, loaded_config: LoadedWorkerConfig, 
                 message="Upload storage is unavailable",
             )
         try:
-            app.state.upload_store.update_settings(build_upload_settings(user_data_dir=runtime_dirs.user_data_dir))
+            app.state.upload_store.update_settings(_upload_settings())
             return app.state.upload_store.list_upload_items()
         except (QueueCommandError, MetadataError) as exc:
             return _error_response(
@@ -1082,7 +1093,7 @@ def create_app(*, runtime_dirs: RuntimeDirs, loaded_config: LoadedWorkerConfig, 
                 message="Upload storage is unavailable",
             )
         try:
-            app.state.upload_store.update_settings(build_upload_settings(user_data_dir=runtime_dirs.user_data_dir))
+            app.state.upload_store.update_settings(_upload_settings())
             return app.state.upload_store.next_upload_target()
         except (QueueCommandError, MetadataError) as exc:
             return _error_response(
@@ -1101,7 +1112,7 @@ def create_app(*, runtime_dirs: RuntimeDirs, loaded_config: LoadedWorkerConfig, 
             redirect_uri = payload.get("redirect_uri", "http://127.0.0.1:8787/upload/oauth/callback")
             if not isinstance(redirect_uri, str) or not redirect_uri:
                 raise UploadCommandError("oauth_payload_invalid", {"redirect_uri": "required_string"})
-            workflow = YouTubeOAuthWorkflow(build_upload_settings(user_data_dir=runtime_dirs.user_data_dir))
+            workflow = YouTubeOAuthWorkflow(_upload_settings())
             return workflow.authorization_url(redirect_uri=redirect_uri)
         except UploadCommandError as exc:
             return _error_response(
@@ -1135,11 +1146,11 @@ def create_app(*, runtime_dirs: RuntimeDirs, loaded_config: LoadedWorkerConfig, 
             )
         try:
             redirect_uri = str(request.url.replace(query=""))
-            settings = build_upload_settings(user_data_dir=runtime_dirs.user_data_dir)
+            settings = _upload_settings()
             workflow = YouTubeOAuthWorkflow(settings)
             result = workflow.exchange_code(code=code, redirect_uri=redirect_uri)
             if app.state.upload_store is not None:
-                app.state.upload_store.update_settings(build_upload_settings(user_data_dir=runtime_dirs.user_data_dir))
+                app.state.upload_store.update_settings(_upload_settings())
             return result
         except UploadCommandError as exc:
             return _error_response(
@@ -1161,11 +1172,11 @@ def create_app(*, runtime_dirs: RuntimeDirs, loaded_config: LoadedWorkerConfig, 
                 raise UploadCommandError("oauth_payload_invalid", {"code": "must_be_string"})
             if not isinstance(redirect_uri, str) or not redirect_uri:
                 raise UploadCommandError("oauth_payload_invalid", {"redirect_uri": "required_string"})
-            settings = build_upload_settings(user_data_dir=runtime_dirs.user_data_dir)
+            settings = _upload_settings()
             workflow = YouTubeOAuthWorkflow(settings)
             result = workflow.exchange_code(code=code, redirect_uri=redirect_uri)
             if app.state.upload_store is not None:
-                app.state.upload_store.update_settings(build_upload_settings(user_data_dir=runtime_dirs.user_data_dir))
+                app.state.upload_store.update_settings(_upload_settings())
             return result
         except UploadCommandError as exc:
             return _error_response(
@@ -1184,11 +1195,11 @@ def create_app(*, runtime_dirs: RuntimeDirs, loaded_config: LoadedWorkerConfig, 
     @app.post("/upload/oauth/refresh")
     def post_upload_oauth_refresh():
         try:
-            settings = build_upload_settings(user_data_dir=runtime_dirs.user_data_dir)
+            settings = _upload_settings()
             workflow = YouTubeOAuthWorkflow(settings)
             result = workflow.refresh_token()
             if app.state.upload_store is not None:
-                app.state.upload_store.update_settings(build_upload_settings(user_data_dir=runtime_dirs.user_data_dir))
+                app.state.upload_store.update_settings(_upload_settings())
             return result
         except UploadCommandError as exc:
             return _error_response(
@@ -1196,6 +1207,39 @@ def create_app(*, runtime_dirs: RuntimeDirs, loaded_config: LoadedWorkerConfig, 
                 code=exc.code,
                 message="OAuth token refresh is invalid",
                 details=exc.details,
+            )
+
+    @app.put("/upload/settings")
+    async def put_upload_settings(request: Request):
+        try:
+            payload = await request.json()
+            if not isinstance(payload, dict):
+                raise ValueError
+            privacy_status = payload.get("privacy_status", app.state.worker_config.upload_privacy_status)
+            if not isinstance(privacy_status, str):
+                raise UploadCommandError("upload_privacy_invalid", {"privacy_status": "must_be_string"})
+            settings = build_upload_settings(user_data_dir=runtime_dirs.user_data_dir, privacy_status=privacy_status)
+            app.state.worker_config = WorkerConfig(
+                host=app.state.worker_config.host,
+                port=app.state.worker_config.port,
+                upload_privacy_status=settings.privacy_status,
+            )
+            save_worker_config(user_data_dir=runtime_dirs.user_data_dir, config=app.state.worker_config)
+            if app.state.upload_store is not None:
+                app.state.upload_store.update_settings(settings)
+            return {"settings": settings.as_payload(), "config_path": str(runtime_dirs.config_dir / "worker.toml")}
+        except UploadCommandError as exc:
+            return _error_response(
+                status_code=400,
+                code=exc.code,
+                message="Upload settings are invalid",
+                details=exc.details,
+            )
+        except ValueError:
+            return _error_response(
+                status_code=400,
+                code="upload_settings_invalid",
+                message="Upload settings payload must be JSON object",
             )
 
     @app.post("/upload/process-next")
