@@ -1054,6 +1054,44 @@ def create_app(*, runtime_dirs: RuntimeDirs, loaded_config: LoadedWorkerConfig, 
                 details=exc.details,
             )
 
+    @app.get("/upload/items")
+    def get_upload_items() -> dict[str, object]:
+        if app.state.upload_store is None:
+            return _error_response(
+                status_code=503,
+                code="upload_unavailable",
+                message="Upload storage is unavailable",
+            )
+        try:
+            app.state.upload_store.update_settings(build_upload_settings(user_data_dir=runtime_dirs.user_data_dir))
+            return app.state.upload_store.list_upload_items()
+        except (QueueCommandError, MetadataError) as exc:
+            return _error_response(
+                status_code=400,
+                code=exc.code,
+                message="Upload items request is invalid",
+                details=exc.details,
+            )
+
+    @app.get("/upload/targets/next")
+    def get_upload_next_target() -> dict[str, object]:
+        if app.state.upload_store is None:
+            return _error_response(
+                status_code=503,
+                code="upload_unavailable",
+                message="Upload storage is unavailable",
+            )
+        try:
+            app.state.upload_store.update_settings(build_upload_settings(user_data_dir=runtime_dirs.user_data_dir))
+            return app.state.upload_store.next_upload_target()
+        except (QueueCommandError, MetadataError) as exc:
+            return _error_response(
+                status_code=400,
+                code=exc.code,
+                message="Upload target request is invalid",
+                details=exc.details,
+            )
+
     @app.post("/upload/oauth/authorization-url")
     async def post_upload_oauth_authorization_url(request: Request):
         try:
@@ -1188,6 +1226,50 @@ def create_app(*, runtime_dirs: RuntimeDirs, loaded_config: LoadedWorkerConfig, 
                 status_code=status_code,
                 code=exc.code,
                 message="Upload queue transition is invalid",
+                details=exc.details,
+            )
+        except ValueError:
+            return _error_response(
+                status_code=400,
+                code="upload_payload_invalid",
+                message="Upload payload must be JSON object",
+            )
+
+    @app.post("/upload/items/{item_id}/process")
+    async def post_upload_process_item(item_id: int, request: Request):
+        if app.state.upload_store is None:
+            return _error_response(
+                status_code=503,
+                code="upload_unavailable",
+                message="Upload storage is unavailable",
+            )
+        try:
+            payload = await request.json()
+            if not isinstance(payload, dict):
+                raise ValueError
+            return app.state.upload_store.process_item(item_id, payload)
+        except UploadCommandError as exc:
+            return _error_response(
+                status_code=400,
+                code=exc.code,
+                message="Upload request is invalid",
+                details=exc.details,
+            )
+        except QueueCommandError as exc:
+            status_code = 409 if exc.code == "queue_transition_invalid" else 400
+            if exc.code == "queue_item_not_found":
+                status_code = 404
+            return _error_response(
+                status_code=status_code,
+                code=exc.code,
+                message="Upload queue transition is invalid",
+                details=exc.details,
+            )
+        except MetadataError as exc:
+            return _error_response(
+                status_code=404 if exc.code == "match_not_found" else 400,
+                code=exc.code,
+                message="Upload metadata is invalid",
                 details=exc.details,
             )
         except ValueError:
