@@ -391,6 +391,7 @@ The version tracking issue may contain the working release summary, but finalize
 - Release finalized at: `2026-05-31T02:38:00+09:00`
 - GitHub Release: `https://github.com/Tao-pyth/obs-duel-recorder/releases/tag/v1.1.8`
 - Release summary: `docs/release/v1.1.8-release-summary.md`
+- OBS smoke evidence: `docs/release/v1.1.8-obs-smoke.md`
 - Major PR: #602 - `Polish v1.1.8 Dock usability`
 - Final ZIP evidence: `build/release-v1.1.8/obs-duel-recorder-v1.1.8.zip`
 - Final ZIP SHA256: `F1DAF94D0F09DF249AB3F02F4B6E91BC6AA17171E86FC02A03674AD3E3ACDDD2`
