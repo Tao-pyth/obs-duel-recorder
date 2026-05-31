@@ -237,7 +237,7 @@ class MatchMetadataStore:
         tags = _tags(_render_template(tags_template, values))
         missing_fields = [
             field
-            for field in ("deck_name", "opponent_deck", "result", "rank", "dp")
+            for field in ("deck_name", "opponent_deck", "result")
             if not getattr(record, field)
         ]
         warnings = _upload_warnings(

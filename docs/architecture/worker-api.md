@@ -161,6 +161,23 @@ Error behavior:
 - Missing items return HTTP 404 with `code=queue_item_not_found`.
 - Invalid transitions return HTTP 409 with `code=queue_transition_invalid`.
 
+### `POST /queue/reset`
+
+Purpose:
+- Clear upload queue rows from the Worker-owned queue store.
+- Preserve match metadata, videos, screenshots, OAuth tokens, logs, and settings.
+- Support a Manage-tab operator recovery action when the queue should be rebuilt
+  from future recordings.
+
+Response fields:
+- `status`: `reset`
+- `removed_count`: total queue rows removed
+- `removed_by_state`: previous queue counts by state
+- `updated_at`: UTC timestamp for the reset
+
+Beginner note: this endpoint resets the upload waiting list. It does not delete
+recorded video files or the match metadata table.
+
 The v0.7 queue API is defined by:
 - `docs/architecture/queue.md`
 - `docs/requirements/v0.7-queue-recovery-system-acceptance.md`

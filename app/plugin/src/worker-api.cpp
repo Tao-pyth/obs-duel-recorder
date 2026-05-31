@@ -1656,4 +1656,76 @@ WorkerActionResult LocalhostApiClient::refresh_upload_oauth_token(const WorkerEn
 #endif
 }
 
+WorkerActionResult LocalhostApiClient::reset_upload_queue(const WorkerEndpoint &endpoint) const
+{
+	WorkerActionResult result;
+
+#ifdef _WIN32
+	const HttpResponse response = http_post_json(endpoint, L"/queue/reset", "{}");
+	result.http_status = response.status;
+	result.body = response.body;
+	if (!response.ok) {
+		result.status = WorkerActionStatus::unavailable;
+		result.error = response.error;
+		return result;
+	}
+	if (response.status == 400 || response.status == 409) {
+		result.status = WorkerActionStatus::rejected;
+		result.error = extract_json_string(response.body, "message");
+		if (result.error.empty()) {
+			result.error = "POST /queue/reset rejected queue reset";
+		}
+		return result;
+	}
+	if (response.status != 200) {
+		result.status = WorkerActionStatus::invalid_response;
+		result.error = "POST /queue/reset returned non-200 status";
+		return result;
+	}
+	result.status = WorkerActionStatus::accepted;
+	return result;
+#else
+	result.status = WorkerActionStatus::unavailable;
+	result.error = "Queue reset is only implemented on Windows";
+	return result;
+#endif
+}
+
+WorkerActionResult LocalhostApiClient::export_registration_csv(const WorkerEndpoint &endpoint,
+							       const std::string &save_dir) const
+{
+	WorkerActionResult result;
+
+#ifdef _WIN32
+	const std::string body = "{\"save_dir\":\"" + json_escape(save_dir) + "\"}";
+	const HttpResponse response = http_post_json(endpoint, L"/exports/registration-csv", body);
+	result.http_status = response.status;
+	result.body = response.body;
+	if (!response.ok) {
+		result.status = WorkerActionStatus::unavailable;
+		result.error = response.error;
+		return result;
+	}
+	if (response.status == 400 || response.status == 409) {
+		result.status = WorkerActionStatus::rejected;
+		result.error = extract_json_string(response.body, "message");
+		if (result.error.empty()) {
+			result.error = "POST /exports/registration-csv rejected CSV export";
+		}
+		return result;
+	}
+	if (response.status != 200) {
+		result.status = WorkerActionStatus::invalid_response;
+		result.error = "POST /exports/registration-csv returned non-200 status";
+		return result;
+	}
+	result.status = WorkerActionStatus::accepted;
+	return result;
+#else
+	result.status = WorkerActionStatus::unavailable;
+	result.error = "CSV export is only implemented on Windows";
+	return result;
+#endif
+}
+
 } // namespace odr::plugin

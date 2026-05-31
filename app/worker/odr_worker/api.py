@@ -485,6 +485,24 @@ def create_app(*, runtime_dirs: RuntimeDirs, loaded_config: LoadedWorkerConfig, 
                 details=exc.details,
             )
 
+    @app.post("/queue/reset")
+    def post_queue_reset():
+        if app.state.queue_store is None:
+            return _error_response(
+                status_code=503,
+                code="queue_unavailable",
+                message="Queue storage is unavailable",
+            )
+        try:
+            return app.state.queue_store.reset_items()
+        except QueueCommandError as exc:
+            return _error_response(
+                status_code=400,
+                code=exc.code,
+                message="Queue reset is invalid",
+                details=exc.details,
+            )
+
     @app.post("/queue/items/{item_id}/command")
     async def post_queue_item_command(item_id: int, request: Request):
         if app.state.queue_store is None:
@@ -1358,6 +1376,33 @@ def create_app(*, runtime_dirs: RuntimeDirs, loaded_config: LoadedWorkerConfig, 
                 status_code=400,
                 code="export_payload_invalid",
                 message="Export payload must be JSON object",
+            )
+
+    @app.post("/exports/registration-csv")
+    async def post_registration_csv_export(request: Request):
+        if app.state.export_store is None:
+            return _error_response(
+                status_code=503,
+                code="export_unavailable",
+                message="Export storage is unavailable",
+            )
+        try:
+            payload = await request.json()
+            if not isinstance(payload, dict):
+                raise ValueError
+            return app.state.export_store.create_registration_csv(payload)
+        except ExportError as exc:
+            return _error_response(
+                status_code=400,
+                code=exc.code,
+                message="CSV export request is invalid",
+                details=exc.details,
+            )
+        except ValueError:
+            return _error_response(
+                status_code=400,
+                code="export_payload_invalid",
+                message="CSV export payload must be JSON object",
             )
 
     @app.exception_handler(Exception)

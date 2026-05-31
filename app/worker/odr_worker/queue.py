@@ -222,6 +222,27 @@ class QueueStore:
         finally:
             conn.close()
 
+    def reset_items(self) -> dict[str, object]:
+        """Clear queue rows while preserving matches, videos, screenshots, and settings."""
+        conn = self._connect()
+        try:
+            counts = self.count_by_state()
+            total = sum(counts.values())
+            now = _utc_now_iso()
+            conn.execute(
+                """
+                UPDATE screenshots
+                SET queue_item_id = NULL, updated_at = ?
+                WHERE queue_item_id IS NOT NULL;
+                """,
+                (now,),
+            )
+            conn.execute("DELETE FROM upload_queue;")
+            conn.commit()
+            return {"status": "reset", "removed_count": total, "removed_by_state": counts, "updated_at": now}
+        finally:
+            conn.close()
+
     def next_ready_item(self) -> QueueItem | None:
         conn = self._connect()
         try:

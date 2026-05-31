@@ -48,6 +48,8 @@ private:
 	void request_upload_oauth_authorization();
 	void request_upload_oauth_refresh();
 	void request_upload_oauth_help();
+	void request_reset_upload_queue();
+	void request_export_registration_csv();
 	bool ensure_upload_secrets_dir(QString &secrets_dir);
 	UploadTargetPayload selected_upload_target(const WorkerStatusSnapshot &snapshot) const;
 	bool has_selected_upload_target(const WorkerStatusSnapshot &snapshot) const;
@@ -145,11 +147,14 @@ private:
 	QLineEdit *settings_host_input_ = nullptr;
 	QLineEdit *settings_port_input_ = nullptr;
 	QLineEdit *settings_user_data_input_ = nullptr;
+	QLineEdit *settings_csv_export_dir_input_ = nullptr;
 	QComboBox *settings_theme_input_ = nullptr;
 	QComboBox *settings_language_input_ = nullptr;
 	QComboBox *upload_privacy_input_ = nullptr;
 	QComboBox *upload_queue_input_ = nullptr;
 	QCheckBox *automatic_detection_enabled_input_ = nullptr;
+	QCheckBox *rank_input_enabled_input_ = nullptr;
+	QCheckBox *dp_input_enabled_input_ = nullptr;
 	QSpinBox *automatic_detection_interval_input_ = nullptr;
 	QPushButton *help_button_ = nullptr;
 	QPushButton *automatic_setup_button_ = nullptr;
@@ -166,6 +171,8 @@ private:
 	QPushButton *oauth_authorize_button_ = nullptr;
 	QPushButton *oauth_refresh_button_ = nullptr;
 	QPushButton *oauth_help_button_ = nullptr;
+	QPushButton *reset_upload_queue_button_ = nullptr;
+	QPushButton *export_registration_csv_button_ = nullptr;
 	QPushButton *edit_upload_metadata_button_ = nullptr;
 	QPushButton *edit_metadata_button_ = nullptr;
 	QPushButton *go_upload_button_ = nullptr;

@@ -60,8 +60,9 @@ user can recover if the UI is changed to an unfamiliar language.
 ## Match Memo
 
 Users can:
-- edit deck name, opponent deck, result, rank, DP, and memo directly from the Dock
-- select or type deck and opponent deck names
+- edit deck name, opponent deck, result, and memo directly from the Dock
+- enable rank and DP inputs from Manage when those fields are needed
+- select or type deck and opponent deck names from separate histories
 - reuse previous deck, opponent deck, rank, and DP values when the next match starts empty
 - add notes
 - edit upload title, description, and tag templates before upload

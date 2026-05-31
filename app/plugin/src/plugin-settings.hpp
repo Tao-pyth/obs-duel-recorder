@@ -33,6 +33,9 @@ struct PluginSettings {
 	std::string last_opponent_deck;
 	std::string last_rank;
 	std::string last_dp;
+	bool rank_input_enabled = false;
+	bool dp_input_enabled = false;
+	std::wstring csv_export_dir;
 	std::string upload_title_template = "Duel {match_id} vs {opponent_deck} - {result}";
 	std::string upload_description_template =
 		"OBS Duel Recorder Archive\n\nMatch ID: {match_id}\nDeck: {deck_name}\nOpponent: {opponent_deck}\nResult: {result}\nRank: {rank}\nDP: {dp}\nStarted: {started_at}\nEnded: {ended_at}\n\nNotes:\n{memo}";

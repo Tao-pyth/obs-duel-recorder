@@ -6,7 +6,7 @@ The metadata boundary supports:
 
 - opponent deck input
 - match memo input
-- rank and DP input
+- optional rank and DP input
 - result and timestamp editing
 - deterministic title generation
 - deterministic description and notes generation
@@ -138,9 +138,10 @@ Interrupted or failed recordings do not create completed match rows.
 
 ## Dock Editing
 
-The OBS Dock provides an `Edit Metadata` action for the latest completed match
-record. Users can edit deck name, opponent deck, result, rank, DP, and memo
-without calling localhost APIs manually.
+The OBS Dock provides inline metadata fields for the latest completed match
+record. Users can edit deck name, opponent deck, result, and memo without
+calling localhost APIs manually. Rank and DP remain editable only when the
+operator enables those inputs from Manage.
 
 The Dock displays Worker validation failures and leaves the existing metadata
 record unchanged when a value is rejected. OCR and image-recognition candidates

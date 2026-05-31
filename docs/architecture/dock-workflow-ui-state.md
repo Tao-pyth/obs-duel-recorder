@@ -258,3 +258,27 @@ represent three still frames, not chronological navigation buttons.
 The Manage tab uses inline settings plus a single Save Settings action. The
 duplicate Open Settings button is removed from the Dock surface because it
 opened another copy of the same settings controls.
+
+## v1.1.9 Follow-Up Scope
+
+#603 refines the same Dock workflow after additional real OBS review:
+
+- The Record tab keeps direct metadata editing and removes the duplicate
+  `Edit Metadata` dialog button from that surface.
+- The Upload tab keeps a selected-queue metadata path, but the button is placed
+  directly under the queue selector and named `Re-edit Metadata`.
+- `Rank` and `DP` metadata inputs are disabled by default. Manage owns the
+  enable/disable settings so users who do not track those values do not see
+  active required-looking fields.
+- The Record memo field is taller than v1.1.8 because free-form notes need more
+  vertical space than short metadata fields.
+- Template description and preview fields are larger because they represent the
+  actual YouTube text review surface.
+- YouTube OAuth maintenance controls, token refresh, queue reset, CSV export,
+  and save-path settings are Manage operations.
+- The uploaded-video URL action is labeled `View on YouTube` to distinguish it
+  from authorization and upload execution.
+
+Beginner note: these changes do not move upload execution into the Plugin. The
+Plugin only presents controls and calls Worker APIs. Queue reset, CSV export,
+metadata persistence, and YouTube token handling remain Worker-owned behavior.

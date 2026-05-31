@@ -164,7 +164,9 @@ The Google provider sends those rendered `title`, `description`, and `tags` to
 
 Upload execution is blocked when required match metadata is missing. The
 required fields for the current Dock upload UX are `deck_name`,
-`opponent_deck`, `result`, `rank`, and `dp`. The Worker returns
+`opponent_deck`, and `result`. `rank` and `dp` remain supported optional
+metadata fields; the Dock enables their inputs only when the operator turns
+them on from Manage. The Worker returns
 `metadata_confirmed`, `metadata_missing_fields`, and target-level
 `blocking_reasons` so the Plugin can disable the primary upload action and show
 the operator what must be fixed before upload.

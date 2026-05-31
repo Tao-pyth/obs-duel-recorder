@@ -183,6 +183,9 @@ void apply_defaults(obs_data_t *data)
 	obs_data_set_default_string(data, "upload_tags_template", kDefaultUploadTagsTemplate);
 	obs_data_set_default_bool(data, "automatic_detection_enabled", false);
 	obs_data_set_default_int(data, "automatic_detection_interval_ms", kDefaultAutomaticDetectionIntervalMs);
+	obs_data_set_default_bool(data, "rank_input_enabled", false);
+	obs_data_set_default_bool(data, "dp_input_enabled", false);
+	obs_data_set_default_string(data, "csv_export_dir", to_utf8(default_user_data_dir()).c_str());
 }
 
 bool is_valid_dock_theme(const std::string &theme)
@@ -398,6 +401,9 @@ PluginSettings load_plugin_settings()
 	settings.last_opponent_deck = obs_data_get_string(data, "last_opponent_deck");
 	settings.last_rank = obs_data_get_string(data, "last_rank");
 	settings.last_dp = obs_data_get_string(data, "last_dp");
+	settings.rank_input_enabled = obs_data_get_bool(data, "rank_input_enabled");
+	settings.dp_input_enabled = obs_data_get_bool(data, "dp_input_enabled");
+	settings.csv_export_dir = from_utf8(obs_data_get_string(data, "csv_export_dir"));
 	settings.upload_title_template = obs_data_get_string(data, "upload_title_template");
 	settings.upload_description_template = obs_data_get_string(data, "upload_description_template");
 	settings.upload_tags_template = obs_data_get_string(data, "upload_tags_template");
@@ -434,6 +440,9 @@ bool save_plugin_settings(const PluginSettings &settings)
 	obs_data_set_string(data, "last_opponent_deck", settings.last_opponent_deck.c_str());
 	obs_data_set_string(data, "last_rank", settings.last_rank.c_str());
 	obs_data_set_string(data, "last_dp", settings.last_dp.c_str());
+	obs_data_set_bool(data, "rank_input_enabled", settings.rank_input_enabled);
+	obs_data_set_bool(data, "dp_input_enabled", settings.dp_input_enabled);
+	obs_data_set_string(data, "csv_export_dir", to_utf8(settings.csv_export_dir).c_str());
 	obs_data_set_string(data, "upload_title_template",
 			    settings.upload_title_template.empty() ? kDefaultUploadTitleTemplate :
 								    settings.upload_title_template.c_str());

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import csv
 import sys
 import tempfile
 import unittest
@@ -154,6 +155,41 @@ class ExportApiTests(unittest.TestCase):
         self.assertEqual(exported.status_code, 200)
         with zipfile.ZipFile(Path(exported.json()["path"])) as archive:
             self.assertIn("videos/queue-1-duel.mp4", set(archive.namelist()))
+
+    def test_registration_csv_exports_match_and_queue_status(self) -> None:
+        client, runtime_dirs = self._client()
+        match_id = client.post(
+            "/matches",
+            json={
+                "deck_name": "Labrynth",
+                "opponent_deck": "Branded",
+                "result": "win",
+                "rank": "Master",
+                "dp": "12000",
+                "memo": "CSV check",
+            },
+        ).json()["id"]
+        queue = client.post("/queue/items", json={"match_id": match_id, "video_path": "duel.mp4"}).json()
+        save_dir = runtime_dirs.exports_dir / "csv"
+
+        exported = client.post("/exports/registration-csv", json={"save_dir": str(save_dir)})
+
+        self.assertEqual(exported.status_code, 200)
+        body = exported.json()
+        self.assertEqual(body["status"], "completed")
+        self.assertTrue(body["file_name"].startswith("odr-registration-"))
+        self.assertTrue(body["file_name"].endswith(".csv"))
+        csv_path = Path(body["path"])
+        self.assertTrue(csv_path.exists())
+        with csv_path.open("r", encoding="utf-8-sig", newline="") as handle:
+            rows = list(csv.DictReader(handle))
+
+        self.assertEqual(body["row_count"], 1)
+        self.assertEqual(rows[0]["match_id"], str(match_id))
+        self.assertEqual(rows[0]["queue_item_id"], str(queue["id"]))
+        self.assertEqual(rows[0]["deck_name"], "Labrynth")
+        self.assertEqual(rows[0]["queue_status"], "ready_upload")
+        self.assertNotIn("refresh_token", csv_path.read_text(encoding="utf-8-sig"))
 
     def _write_secret_files(self, runtime_dirs) -> None:
         secrets_dir = runtime_dirs.config_dir / "secrets"

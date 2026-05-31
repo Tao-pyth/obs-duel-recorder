@@ -1,6 +1,6 @@
 # YouTube Upload Flow
 
-Status note: This page describes the v1.1.7 Dock upload experience. Real upload
+Status note: This page describes the v1.1.9 Dock upload experience. Real upload
 requires the Worker to be running, a valid YouTube OAuth setup, local video files
 that still exist, and packaged Google upload dependencies.
 
@@ -9,7 +9,8 @@ that still exist, and packaged Google upload dependencies.
 1. Record a duel from the Recording tab.
 2. Confirm the target video thumbnail and representative frames in the Record
    tab.
-3. Fill or confirm Deck, Opponent deck, Result, Rank, DP, and memo.
+3. Fill or confirm Deck, Opponent deck, Result, and memo. Rank and DP are
+   editable only when enabled from the Manage tab.
 4. Save metadata. The linked queue item remains blocked until required metadata
    is present.
 5. Use `Go to Upload`, or open the Upload tab manually.
@@ -19,10 +20,10 @@ that still exist, and packaged Google upload dependencies.
 7. Confirm the selected video name, match ID, final metadata, readiness message,
    blocking reason, and privacy status.
 8. Choose `private` or `unlisted`, then save the privacy setting.
-9. Select `Upload to YouTube`.
+9. Select `Upload`.
 10. Confirm the selected queue item, video name, title, and privacy status before
     the upload starts.
-11. After success, use `Open YouTube` to open the uploaded video URL.
+11. After success, use `View on YouTube` to open the uploaded video URL.
 
 Beginner note: the Plugin only drives the OBS Dock UI and calls the local Worker
 API. The Worker owns the queue, metadata rendering, OAuth files, and YouTube
@@ -34,7 +35,7 @@ The Dock should block upload when any of these conditions are present:
 
 - the queue item is not `ready_upload` or `upload_failed`
 - the local video file is missing
-- Deck, Opponent deck, Result, Rank, or DP is missing
+- Deck, Opponent deck, or Result is missing
 - the title, description, or tags are empty
 - the queue item already has a YouTube video ID
 - the queue item is already uploaded or discarded

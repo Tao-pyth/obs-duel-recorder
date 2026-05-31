@@ -143,6 +143,19 @@ class QueueRecoveryApiTests(unittest.TestCase):
         self.assertEqual(ready.id, first["id"])
         self.assertEqual(ready.video_path, "first.mp4")
 
+    def test_queue_reset_clears_queue_without_deleting_matches(self) -> None:
+        client, _ = self._client()
+        match_id = client.post("/matches", json={"deck_name": "Labrynth"}).json()["id"]
+        client.post("/queue/items", json={"match_id": match_id, "video_path": "duel.mp4"})
+
+        reset = client.post("/queue/reset")
+
+        self.assertEqual(reset.status_code, 200)
+        self.assertEqual(reset.json()["status"], "reset")
+        self.assertEqual(reset.json()["removed_count"], 1)
+        self.assertEqual(client.get("/queue/items").json()["items"], [])
+        self.assertEqual(client.get(f"/matches/{match_id}").json()["deck_name"], "Labrynth")
+
     def test_startup_recovery_moves_interrupted_upload_to_manual_review(self) -> None:
         client, runtime_dirs = self._client()
         item = client.post("/queue/items", json={"video_path": "duel.mp4"}).json()
