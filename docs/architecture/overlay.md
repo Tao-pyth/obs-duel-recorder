@@ -32,7 +32,7 @@ The v0.5 overlay field set is:
 | Field | Default source name | Default empty text | Notes |
 |---|---|---|---|
 | deck name | `ODR Deck Name` | `Deck: -` | User-facing deck label. |
-| sequence number | `ODR Sequence` | `#---` | Display sequence for the current/next recording. |
+| sequence number | `ODR Sequence` | `#---` | Per-own-deck usage sequence for the current/next recording. |
 | result | `ODR Result` | `Result: unknown` | May remain `unknown` until later detection or manual input. |
 | opponent deck | `ODR Opponent Deck` | `Opponent: unknown` | Stable overlay requirement from `docs/requirements/requirements.md`. |
 | recording state | `ODR Recording State` | `Idle` | Display-only in v0.5; authoritative state machine remains v0.6. |
@@ -132,6 +132,26 @@ Routes:
 `PUT /overlay/state` accepts any subset of the overlay fields. Missing fields preserve the previous value. Unknown fields, non-string values, overlong values, and unknown `recording_state` values return `400` with `code: "overlay_payload_invalid"`.
 
 The Plugin polls `GET /overlay/state` through its Worker API client. Actual Text Source writes are handled by the Plugin; the Worker does not call OBS APIs and does not own recording lifecycle decisions.
+
+## Runtime Update Triggers
+
+The overlay update path is intentionally split across the Worker and Plugin:
+
+1. The Worker owns the in-memory overlay state.
+2. The Plugin writes user-initiated Dock changes to OBS Text Sources immediately after Worker accepts the overlay update.
+3. The Plugin also polls `GET /overlay/state` during its normal refresh loop.
+4. The polling path writes to OBS Text Sources only when the fetched payload differs from the last applied payload.
+
+The payload is updated by these actions:
+
+- Worker startup initializes `recording_state` from the persisted recording state.
+- Manual and automatic recording commands update `recording_state`.
+- Dock recording start sends the current own-deck name and next per-deck sequence number to `PUT /overlay/state`, then applies the same payload to OBS Text Sources.
+- Metadata save persists the match and updates `deck_name`, `opponent_deck`, and `sequence_number` in overlay state, then applies the same payload to OBS Text Sources.
+- If recording is active before a `matches` row exists, Dock Save updates OBS Text Sources from the current metadata controls without pretending the DB metadata was persisted.
+- `result` may remain `unknown` until the duel result is reviewed.
+
+`sequence_number` is not the upload queue id and is not the match id. It is the formatted `deck_sequence_number`, assigned per own-deck name by the Worker metadata store. If a match changes to another own-deck name, it receives the next number for that new deck name. Existing sequence numbers are not compacted.
 
 ## Recording-State Boundary
 

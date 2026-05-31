@@ -71,6 +71,51 @@ class MatchMetadataApiTests(unittest.TestCase):
         self.assertEqual(searched.status_code, 200)
         self.assertEqual([item["id"] for item in searched.json()["items"]], [match_id])
 
+    def test_deck_sequence_numbers_are_persisted_per_own_deck(self) -> None:
+        client, _ = self._client()
+
+        first = client.post("/matches", json={"deck_name": "Labrynth"}).json()
+        second = client.post("/matches", json={"deck_name": "Swordsoul"}).json()
+        third = client.post("/matches", json={"deck_name": "Labrynth"}).json()
+
+        self.assertEqual(first["deck_sequence_number"], 1)
+        self.assertEqual(first["sequence_number"], "001")
+        self.assertEqual(second["deck_sequence_number"], 1)
+        self.assertEqual(third["deck_sequence_number"], 2)
+
+        next_sequence = client.get("/matches/deck-sequence/next", params={"deck_name": "Labrynth"})
+        self.assertEqual(next_sequence.status_code, 200)
+        self.assertEqual(next_sequence.json()["deck_sequence_number"], 3)
+        self.assertEqual(next_sequence.json()["sequence_number"], "003")
+
+    def test_deck_sequence_reassigns_when_deck_name_changes_without_compacting_old_numbers(self) -> None:
+        client, _ = self._client()
+        first = client.post("/matches", json={"deck_name": "Labrynth"}).json()
+        second = client.post("/matches", json={"deck_name": "Swordsoul"}).json()
+
+        edited = client.put(f"/matches/{second['id']}/metadata", json={"deck_name": "Labrynth"})
+
+        self.assertEqual(first["deck_sequence_number"], 1)
+        self.assertEqual(edited.status_code, 200)
+        self.assertEqual(edited.json()["deck_sequence_number"], 2)
+        self.assertEqual(edited.json()["sequence_number"], "002")
+
+    def test_metadata_save_updates_overlay_state_for_recording_sources(self) -> None:
+        client, _ = self._client()
+        match = client.post("/matches", json={"deck_name": "Labrynth"}).json()
+
+        updated = client.put(
+            f"/matches/{match['id']}/metadata",
+            json={"deck_name": "Labrynth", "opponent_deck": "Branded"},
+        )
+        overlay = client.get("/overlay/state")
+
+        self.assertEqual(updated.status_code, 200)
+        self.assertEqual(overlay.status_code, 200)
+        self.assertEqual(overlay.json()["deck_name"], "Labrynth")
+        self.assertEqual(overlay.json()["sequence_number"], "001")
+        self.assertEqual(overlay.json()["opponent_deck"], "Branded")
+
     def test_metadata_validation_is_non_destructive(self) -> None:
         client, _ = self._client()
         match_id = client.post("/matches", json={"opponent_deck": "Kashtira"}).json()["id"]

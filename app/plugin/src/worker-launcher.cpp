@@ -690,6 +690,31 @@ RecordingCommandResult WorkerProcessManager::send_recording_command(const std::s
 	return result;
 }
 
+WorkerActionResult WorkerProcessManager::update_overlay_state(const OverlayStatePayload &state)
+{
+	WorkerEndpoint endpoint;
+	{
+		std::lock_guard<std::mutex> lock(mutex_);
+		endpoint = status_.endpoint;
+		if (status_.state != WorkerDiagnosticState::running) {
+			WorkerActionResult result;
+			result.status = WorkerActionStatus::unavailable;
+			result.error = "Worker is not running";
+			return result;
+		}
+	}
+	WorkerActionResult result = api_client_.update_overlay_state(endpoint, state);
+	{
+		std::lock_guard<std::mutex> lock(mutex_);
+		if (result.accepted()) {
+			status_.overlay_state_available = false;
+		} else {
+			status_.overlay_error = result.error.empty() ? "Overlay update failed" : result.error;
+		}
+	}
+	return result;
+}
+
 QueueCommandResult WorkerProcessManager::send_queue_command(int item_id, const std::string &action,
 							    const std::string &youtube_video_id)
 {
@@ -747,6 +772,22 @@ MatchFetchResult WorkerProcessManager::fetch_match(int match_id)
 		}
 	}
 	return api_client_.fetch_match(endpoint, match_id);
+}
+
+DeckSequencePreviewResult WorkerProcessManager::fetch_next_deck_sequence(const std::string &deck_name)
+{
+	WorkerEndpoint endpoint;
+	{
+		std::lock_guard<std::mutex> lock(mutex_);
+		endpoint = status_.endpoint;
+		if (status_.state != WorkerDiagnosticState::running) {
+			DeckSequencePreviewResult result;
+			result.status = WorkerActionStatus::unavailable;
+			result.error = "Worker is not running";
+			return result;
+		}
+	}
+	return api_client_.fetch_next_deck_sequence(endpoint, deck_name);
 }
 
 MetadataUpdateResult WorkerProcessManager::update_match_metadata(const MatchMetadataPayload &metadata)

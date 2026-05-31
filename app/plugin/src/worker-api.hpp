@@ -261,6 +261,8 @@ struct QueueCommandResult {
 struct MatchMetadataPayload {
 	int id = 0;
 	std::string deck_name;
+	int deck_sequence_number = 0;
+	std::string sequence_number;
 	std::string opponent_deck;
 	std::string result;
 	std::string rank;
@@ -437,6 +439,11 @@ struct WorkerActionResult {
 	}
 };
 
+struct DeckSequencePreviewResult : WorkerActionResult {
+	int deck_sequence_number = 0;
+	std::string sequence_number;
+};
+
 struct OAuthAuthorizationUrlResult : WorkerActionResult {
 	std::string authorization_url;
 	std::string redirect_uri;
@@ -448,6 +455,7 @@ public:
 
 	WorkerProbeResult probe_health(const WorkerEndpoint &endpoint, const std::wstring &expected_user_data_dir) const;
 	OverlayFetchResult fetch_overlay_state(const WorkerEndpoint &endpoint) const;
+	WorkerActionResult update_overlay_state(const WorkerEndpoint &endpoint, const OverlayStatePayload &state) const;
 	UploadStatusResult fetch_upload_status(const WorkerEndpoint &endpoint) const;
 	RecordingStateFetchResult fetch_recording_state(const WorkerEndpoint &endpoint) const;
 	QueueActionFetchResult fetch_queue_action_item(const WorkerEndpoint &endpoint) const;
@@ -458,6 +466,8 @@ public:
 					      const std::string &youtube_video_id = {}) const;
 	MatchFetchResult fetch_match(const WorkerEndpoint &endpoint, int match_id) const;
 	MatchFetchResult fetch_latest_match(const WorkerEndpoint &endpoint) const;
+	DeckSequencePreviewResult fetch_next_deck_sequence(const WorkerEndpoint &endpoint,
+							   const std::string &deck_name) const;
 	MetadataUpdateResult update_match_metadata(const WorkerEndpoint &endpoint,
 						   const MatchMetadataPayload &metadata) const;
 	UploadMetadataPreviewResult fetch_upload_metadata_preview(const WorkerEndpoint &endpoint, int match_id) const;

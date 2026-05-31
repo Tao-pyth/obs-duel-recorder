@@ -31,6 +31,7 @@ _MIGRATIONS: tuple[str, ...] = (
     "0008_runtime_optimization_indexes",
     "0009_recording_match_link",
     "0010_upload_metadata_templates",
+    "0011_deck_sequence_numbers",
 )
 
 

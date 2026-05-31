@@ -343,6 +343,9 @@ void populate_match_metadata(MatchMetadataPayload &match, const std::string &bod
 	const std::string id = extract_json_number(body, "id");
 	match.id = id.empty() ? 0 : std::stoi(id);
 	match.deck_name = extract_json_string(body, "deck_name");
+	const std::string deck_sequence_number = extract_json_number(body, "deck_sequence_number");
+	match.deck_sequence_number = deck_sequence_number.empty() ? 0 : std::stoi(deck_sequence_number);
+	match.sequence_number = extract_json_string(body, "sequence_number");
 	match.opponent_deck = extract_json_string(body, "opponent_deck");
 	match.result = extract_json_string(body, "result");
 	match.rank = extract_json_string(body, "rank");
@@ -650,6 +653,53 @@ OverlayFetchResult LocalhostApiClient::fetch_overlay_state(const WorkerEndpoint 
 #else
 	result.status = OverlayFetchStatus::unavailable;
 	result.error = "Overlay state probing is only implemented on Windows";
+	return result;
+#endif
+}
+
+WorkerActionResult LocalhostApiClient::update_overlay_state(const WorkerEndpoint &endpoint,
+							    const OverlayStatePayload &state) const
+{
+	WorkerActionResult result;
+
+#ifdef _WIN32
+	std::string body = "{\"deck_name\":\"" + json_escape(state.deck_name) +
+			   "\",\"sequence_number\":\"" + json_escape(state.sequence_number) +
+			   "\",\"opponent_deck\":\"" + json_escape(state.opponent_deck) + "\"";
+	if (!state.result.empty()) {
+		body += ",\"result\":\"" + json_escape(state.result) + "\"";
+	}
+	if (!state.recording_state.empty()) {
+		body += ",\"recording_state\":\"" + json_escape(state.recording_state) + "\"";
+	}
+	body += "}";
+	const HttpResponse response = http_put_json(endpoint, L"/overlay/state", body);
+	result.http_status = response.status;
+	result.body = response.body;
+
+	if (!response.ok) {
+		result.status = WorkerActionStatus::unavailable;
+		result.error = response.error;
+		return result;
+	}
+	if (response.status == 400) {
+		result.status = WorkerActionStatus::rejected;
+		result.error = extract_json_string(response.body, "message");
+		if (result.error.empty()) {
+			result.error = "PUT /overlay/state rejected overlay payload";
+		}
+		return result;
+	}
+	if (response.status != 200) {
+		result.status = WorkerActionStatus::invalid_response;
+		result.error = "PUT /overlay/state returned non-200 status";
+		return result;
+	}
+	result.status = WorkerActionStatus::accepted;
+	return result;
+#else
+	result.status = WorkerActionStatus::unavailable;
+	result.error = "Overlay updates are only implemented on Windows";
 	return result;
 #endif
 }
@@ -995,6 +1045,47 @@ MatchFetchResult LocalhostApiClient::fetch_match(const WorkerEndpoint &endpoint,
 #else
 	result.status = MatchFetchStatus::unavailable;
 	result.error = "Match metadata fetching is only implemented on Windows";
+	return result;
+#endif
+}
+
+DeckSequencePreviewResult LocalhostApiClient::fetch_next_deck_sequence(const WorkerEndpoint &endpoint,
+								       const std::string &deck_name) const
+{
+	DeckSequencePreviewResult result;
+
+#ifdef _WIN32
+	const std::string body = "{\"deck_name\":\"" + json_escape(deck_name) + "\"}";
+	const HttpResponse response = http_post_json(endpoint, L"/matches/deck-sequence/next", body);
+	result.http_status = response.status;
+	result.body = response.body;
+
+	if (!response.ok) {
+		result.status = WorkerActionStatus::unavailable;
+		result.error = response.error;
+		return result;
+	}
+	if (response.status == 400 || response.status == 503) {
+		result.status = WorkerActionStatus::rejected;
+		result.error = extract_json_string(response.body, "message");
+		if (result.error.empty()) {
+			result.error = "POST /matches/deck-sequence/next rejected sequence request";
+		}
+		return result;
+	}
+	if (response.status != 200) {
+		result.status = WorkerActionStatus::invalid_response;
+		result.error = "POST /matches/deck-sequence/next returned non-200 status";
+		return result;
+	}
+	const std::string number = extract_json_number(response.body, "deck_sequence_number");
+	result.deck_sequence_number = number.empty() ? 0 : std::stoi(number);
+	result.sequence_number = extract_json_string(response.body, "sequence_number");
+	result.status = WorkerActionStatus::accepted;
+	return result;
+#else
+	result.status = WorkerActionStatus::unavailable;
+	result.error = "Deck sequence preview is only implemented on Windows";
 	return result;
 #endif
 }
