@@ -255,7 +255,7 @@ class UploadApiTests(unittest.TestCase):
         self.assertFalse(target["metadata_confirmed"])
         self.assertEqual(
             target["metadata_missing_fields"],
-            ["deck_name", "opponent_deck", "result", "rank", "dp"],
+            ["deck_name", "opponent_deck", "result"],
         )
         self.assertIn("metadata_deck_name_missing", target["blocking_reasons"])
         self.assertEqual(client.get(f"/queue/items/{item['id']}").json()["state"], "ready_upload")

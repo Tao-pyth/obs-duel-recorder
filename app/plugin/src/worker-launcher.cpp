@@ -1007,6 +1007,50 @@ WorkerActionResult WorkerProcessManager::refresh_upload_oauth_token()
 	return api_client_.refresh_upload_oauth_token(endpoint);
 }
 
+WorkerActionResult WorkerProcessManager::reset_upload_queue()
+{
+	WorkerEndpoint endpoint;
+	{
+		std::lock_guard<std::mutex> lock(mutex_);
+		endpoint = status_.endpoint;
+		if (status_.state != WorkerDiagnosticState::running) {
+			WorkerActionResult result;
+			result.status = WorkerActionStatus::unavailable;
+			result.error = "Worker is not running";
+			return result;
+		}
+	}
+	WorkerActionResult result = api_client_.reset_upload_queue(endpoint);
+	{
+		std::lock_guard<std::mutex> lock(mutex_);
+		if (result.accepted()) {
+			status_.queue_action_item_available = false;
+			status_.queue_action_item = QueueActionFetchResult{};
+			status_.upload_next_target_available = false;
+			status_.upload_next_target = UploadTargetFetchResult{};
+			status_.upload_items_available = false;
+			status_.upload_items = UploadItemsFetchResult{};
+		}
+	}
+	return result;
+}
+
+WorkerActionResult WorkerProcessManager::export_registration_csv(const std::string &save_dir)
+{
+	WorkerEndpoint endpoint;
+	{
+		std::lock_guard<std::mutex> lock(mutex_);
+		endpoint = status_.endpoint;
+		if (status_.state != WorkerDiagnosticState::running) {
+			WorkerActionResult result;
+			result.status = WorkerActionStatus::unavailable;
+			result.error = "Worker is not running";
+			return result;
+		}
+	}
+	return api_client_.export_registration_csv(endpoint, save_dir);
+}
+
 void WorkerProcessManager::stop()
 {
 	stop_requested_ = true;

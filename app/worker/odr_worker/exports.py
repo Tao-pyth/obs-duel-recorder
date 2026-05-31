@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import datetime as _dt
+import csv
 import json
 import re
 import sqlite3
@@ -112,6 +113,59 @@ class ExportStore:
             "path": target.resolve().as_posix(),
             "size_bytes": stat.st_size,
             "manifest": manifest,
+        }
+
+    def create_registration_csv(self, payload: dict[str, Any]) -> dict[str, object]:
+        if not isinstance(payload, dict):
+            raise ExportError("export_payload_invalid", {"payload": "must_be_object"})
+
+        save_dir = _string(payload, "save_dir", str(self.exports_dir))
+        target_dir = Path(save_dir).expanduser().resolve()
+        if target_dir.exists() and not target_dir.is_dir():
+            raise ExportError("csv_export_dir_invalid", {"save_dir": "must_be_directory"})
+        target_dir.mkdir(parents=True, exist_ok=True)
+
+        created_at = _local_now_compact()
+        file_name = f"odr-registration-{created_at}.csv"
+        target = (target_dir / file_name).resolve()
+        if target.parent != target_dir:
+            raise ExportError("csv_export_path_invalid", {"file_name": file_name})
+
+        rows = self._registration_rows()
+        fieldnames = [
+            "match_id",
+            "recording_session_id",
+            "created_at",
+            "updated_at",
+            "started_at",
+            "ended_at",
+            "deck_name",
+            "opponent_deck",
+            "result",
+            "rank",
+            "dp",
+            "memo",
+            "queue_item_id",
+            "queue_status",
+            "video_path",
+            "youtube_video_id",
+            "youtube_url",
+            "last_error_code",
+            "last_error_message",
+            "manual_review_reason",
+        ]
+        with target.open("w", encoding="utf-8-sig", newline="") as handle:
+            writer = csv.DictWriter(handle, fieldnames=fieldnames, extrasaction="ignore")
+            writer.writeheader()
+            writer.writerows(rows)
+
+        stat = target.stat()
+        return {
+            "status": "completed",
+            "file_name": file_name,
+            "path": target.as_posix(),
+            "row_count": len(rows),
+            "size_bytes": stat.st_size,
         }
 
     def _snapshot_db(self, snapshot_path: Path) -> None:
@@ -265,6 +319,42 @@ class ExportStore:
             path = self.videos_dir / path
         return path.resolve()
 
+    def _registration_rows(self) -> list[dict[str, object]]:
+        conn = sqlite3.connect(self.db_path)
+        conn.row_factory = sqlite3.Row
+        try:
+            rows = conn.execute(
+                """
+                SELECT
+                  matches.id AS match_id,
+                  matches.recording_session_id AS recording_session_id,
+                  matches.created_at AS created_at,
+                  matches.updated_at AS updated_at,
+                  matches.started_at AS started_at,
+                  matches.ended_at AS ended_at,
+                  matches.deck_name AS deck_name,
+                  matches.opponent_deck AS opponent_deck,
+                  matches.result AS result,
+                  matches.rank AS rank,
+                  matches.dp AS dp,
+                  matches.memo AS memo,
+                  upload_queue.id AS queue_item_id,
+                  upload_queue.state AS queue_status,
+                  upload_queue.video_path AS video_path,
+                  upload_queue.youtube_video_id AS youtube_video_id,
+                  upload_queue.youtube_url AS youtube_url,
+                  upload_queue.last_error_code AS last_error_code,
+                  upload_queue.last_error_message AS last_error_message,
+                  upload_queue.manual_review_reason AS manual_review_reason
+                FROM matches
+                LEFT JOIN upload_queue ON upload_queue.match_id = matches.id
+                ORDER BY matches.id, upload_queue.id;
+                """
+            ).fetchall()
+            return [{key: row[key] if row[key] is not None else "" for key in row.keys()} for row in rows]
+        finally:
+            conn.close()
+
 
 def _table_rows(conn: sqlite3.Connection, table: str) -> list[dict[str, object]]:
     rows = conn.execute(f"SELECT * FROM {table} ORDER BY id;").fetchall()
@@ -344,6 +434,10 @@ def _json_bytes(value: object) -> bytes:
 
 def _utc_now_iso() -> str:
     return _dt.datetime.now(tz=_dt.timezone.utc).isoformat().replace("+00:00", "Z")
+
+
+def _local_now_compact() -> str:
+    return _dt.datetime.now().strftime("%Y%m%d-%H%M%S")
 
 
 def _timestamp_from_stat(timestamp: float) -> str:

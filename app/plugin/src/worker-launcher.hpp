@@ -110,6 +110,8 @@ public:
 	WorkerActionResult send_detection_frame_base64(const std::string &frame_base64);
 	OAuthAuthorizationUrlResult request_upload_oauth_authorization_url();
 	WorkerActionResult refresh_upload_oauth_token();
+	WorkerActionResult reset_upload_queue();
+	WorkerActionResult export_registration_csv(const std::string &save_dir);
 
 private:
 	void start(WorkerLaunchConfig config);

@@ -483,6 +483,8 @@ public:
 						       const std::string &frame_base64) const;
 	OAuthAuthorizationUrlResult request_upload_oauth_authorization_url(const WorkerEndpoint &endpoint) const;
 	WorkerActionResult refresh_upload_oauth_token(const WorkerEndpoint &endpoint) const;
+	WorkerActionResult reset_upload_queue(const WorkerEndpoint &endpoint) const;
+	WorkerActionResult export_registration_csv(const WorkerEndpoint &endpoint, const std::string &save_dir) const;
 
 private:
 	std::string expected_api_version_;

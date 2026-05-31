@@ -36,6 +36,34 @@ If the target ZIP already exists, the request fails with `export_path_conflict` 
 
 Lists ZIP exports currently present in `user_data/data/exports/`.
 
+### `POST /exports/registration-csv`
+
+Creates a CSV report of current match registration and upload queue status.
+
+Request fields:
+
+- `save_dir`: target directory for the CSV file. The Worker creates the
+  directory when it is missing.
+
+Default file name:
+
+```text
+odr-registration-YYYYMMDD-HHMMSS.csv
+```
+
+The CSV is written with UTF-8 BOM so spreadsheet tools can open Japanese text
+more reliably. The export is read-only against SQLite and does not mutate match
+records or queue state.
+
+CSV fields include match ID, recording session ID, deck names, result, rank,
+DP, memo, queue item ID, queue status, video path, YouTube video ID, YouTube
+URL, and queue error/manual-review fields. OAuth tokens, client secrets, logs,
+and local media bytes are never included.
+
+Beginner note: this CSV export is for checking registration status in a
+spreadsheet. It is separate from the ZIP backup export and does not replace the
+database.
+
 ---
 
 ## ZIP Structure
