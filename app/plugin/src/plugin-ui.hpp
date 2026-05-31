@@ -61,6 +61,10 @@ private:
 	void load_target_video_preview(int frame_index);
 	void load_upload_video_preview(int frame_index);
 	void save_metadata_from_dock();
+	OverlayStatePayload overlay_state_base() const;
+	void apply_overlay_sources_immediately(const OverlayStatePayload &state);
+	void update_overlay_from_metadata(const MatchMetadataPayload &metadata);
+	void update_overlay_for_recording_start();
 	void render_upload_preview_from_dock();
 	void save_inline_settings();
 	void toggle_diagnostics_details();

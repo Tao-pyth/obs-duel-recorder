@@ -89,10 +89,12 @@ public:
 	void record_recording_output_evidence(std::string evidence);
 	RecordingCommandResult send_recording_command(const std::string &action, const std::string &source,
 						      const std::string &video_path = {});
+	WorkerActionResult update_overlay_state(const OverlayStatePayload &state);
 	QueueCommandResult send_queue_command(int item_id, const std::string &action,
 					      const std::string &youtube_video_id = {});
 	MatchFetchResult fetch_match(int match_id);
 	MatchFetchResult fetch_latest_match();
+	DeckSequencePreviewResult fetch_next_deck_sequence(const std::string &deck_name);
 	MetadataUpdateResult update_match_metadata(const MatchMetadataPayload &metadata);
 	UploadMetadataPreviewResult fetch_upload_metadata_preview(int match_id);
 	UploadItemsFetchResult fetch_upload_items();

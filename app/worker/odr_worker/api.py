@@ -13,7 +13,7 @@ from .exports import ExportError, ExportStore
 from .health import API_VERSION, PID, STARTED_AT, WorkerDb, WorkerPaths, build_health_payload
 from .image_recognition import ImageRecognitionError, RecognitionCandidateStore, analyze_fixture_payload
 from .identity import INSTANCE_ID
-from .metadata import MatchMetadataStore, MetadataError
+from .metadata import MatchMetadataRecord, MatchMetadataStore, MetadataError, format_deck_sequence_number
 from .overlay import OverlayPayloadError, OverlayState, apply_overlay_update
 from .queue import QueueCommandError, QueueStore
 from .recording import (
@@ -46,6 +46,17 @@ def _error_response(*, status_code: int, code: str, message: str, details: objec
         status_code=status_code,
         content=_error_payload(code=code, message=message, details=details),
     )
+
+
+def _overlay_payload_from_match(record: MatchMetadataRecord) -> dict[str, str]:
+    payload = {
+        "deck_name": record.deck_name,
+        "sequence_number": format_deck_sequence_number(record.deck_sequence_number),
+        "opponent_deck": record.opponent_deck or "unknown",
+    }
+    if record.result:
+        payload["result"] = record.result
+    return payload
 
 
 def _statistics_group_response(
@@ -664,7 +675,12 @@ def create_app(*, runtime_dirs: RuntimeDirs, loaded_config: LoadedWorkerConfig, 
             payload = await request.json()
             if not isinstance(payload, dict):
                 raise ValueError
-            return app.state.metadata_store.create_match(payload).as_payload()
+            record = app.state.metadata_store.create_match(payload)
+            app.state.overlay_state = apply_overlay_update(
+                app.state.overlay_state,
+                _overlay_payload_from_match(record),
+            )
+            return record.as_payload()
         except MetadataError as exc:
             return _error_response(
                 status_code=400,
@@ -678,6 +694,47 @@ def create_app(*, runtime_dirs: RuntimeDirs, loaded_config: LoadedWorkerConfig, 
                 code="metadata_payload_invalid",
                 message="Match metadata payload must be JSON object",
             )
+
+    @app.get("/matches/deck-sequence/next")
+    def get_next_deck_sequence(deck_name: str = ""):
+        if app.state.metadata_store is None:
+            return _error_response(
+                status_code=503,
+                code="metadata_unavailable",
+                message="Match metadata storage is unavailable",
+            )
+        sequence = app.state.metadata_store.next_deck_sequence_number(deck_name)
+        return {
+            "deck_name": deck_name.strip(),
+            "deck_sequence_number": sequence,
+            "sequence_number": format_deck_sequence_number(sequence),
+        }
+
+    @app.post("/matches/deck-sequence/next")
+    async def post_next_deck_sequence(request: Request):
+        if app.state.metadata_store is None:
+            return _error_response(
+                status_code=503,
+                code="metadata_unavailable",
+                message="Match metadata storage is unavailable",
+            )
+        try:
+            payload = await request.json()
+            if not isinstance(payload, dict):
+                raise ValueError
+            deck_name = str(payload.get("deck_name") or "").strip()
+        except ValueError:
+            return _error_response(
+                status_code=400,
+                code="metadata_payload_invalid",
+                message="Deck sequence request payload must be JSON object",
+            )
+        sequence = app.state.metadata_store.next_deck_sequence_number(deck_name)
+        return {
+            "deck_name": deck_name,
+            "deck_sequence_number": sequence,
+            "sequence_number": format_deck_sequence_number(sequence),
+        }
 
     @app.get("/matches/{match_id}")
     def get_match(match_id: int):
@@ -709,7 +766,12 @@ def create_app(*, runtime_dirs: RuntimeDirs, loaded_config: LoadedWorkerConfig, 
             payload = await request.json()
             if not isinstance(payload, dict):
                 raise ValueError
-            return app.state.metadata_store.update_match(match_id, payload).as_payload()
+            record = app.state.metadata_store.update_match(match_id, payload)
+            app.state.overlay_state = apply_overlay_update(
+                app.state.overlay_state,
+                _overlay_payload_from_match(record),
+            )
+            return record.as_payload()
         except MetadataError as exc:
             return _error_response(
                 status_code=404 if exc.code == "match_not_found" else 400,

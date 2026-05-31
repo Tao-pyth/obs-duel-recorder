@@ -1,82 +1,92 @@
-# Plugin が使う OBS Sources
+# Pluginが使用するOBSソース
 
-ステータス注記: このページは、現在の Plugin が使う OBS Text Source の動作と v1.1.1 のドキュメント目標を説明します。
+このページでは、OBS Duel Recorder Pluginが使用するOBS Text Sourceの現在の動作を説明します。これらのソースは録画画面に文字を表示するための補助表示です。動画ファイル、検出テンプレート画像、スクリーンショット、OAuthファイル、ゲーム素材ではありません。
 
-OBS Duel Recorder Plugin は、overlay 表示用に少数の OBS Text Sources を作成または再利用できます。これらは任意の表示補助です。動画ファイル、ローカル検出テンプレート、スクリーンショット、OAuth ファイル、ゲーム資産ではありません。
+## ソース一覧
 
-## Source 一覧
-
-| Field | 既定の OBS source name | 既定テキスト | 意味 |
+| 項目 | 既定のOBSソース名 | 既定表示 | 意味 |
 |---|---|---|---|
-| deck name | `ODR Deck Name` | `Deck: -` | ユーザー向けのデッキ表示です。 |
-| sequence number | `ODR Sequence` | `#---` | 現在または次の録画番号表示です。 |
-| result | `ODR Result` | `Result: unknown` | 対戦結果表示です。ユーザー確認または認識候補の反映までは unknown のままになる場合があります。 |
-| opponent deck | `ODR Opponent Deck` | `Opponent: unknown` | 相手デッキ表示です。 |
-| recording state | `ODR Recording State` | `Idle` | 表示専用の録画状態テキストです。 |
+| デッキ名 | `ODR Deck Name` | `Deck: -` | 自分のデッキ名です。 |
+| 連番 | `ODR Sequence` | `#---` | 自分のデッキ名ごとの使用回数連番です。 |
+| 勝敗 | `ODR Result` | `Result: unknown` | 対戦結果です。対戦終了後の確認までは `unknown` のままで構いません。 |
+| 相手デッキ | `ODR Opponent Deck` | `Opponent: unknown` | 相手のデッキ名です。 |
+| 録画状態 | `ODR Recording State` | `Idle` | 録画状態の表示です。 |
 
-上記は OBS 上の source name です。ドキュメント、スモークテスト、トラブルシュートで見つけられるように安定させています。
+上記はOBS上のソース名です。ドキュメント、確認作業、トラブルシューティングで見つけやすいよう、安定した名前として扱います。
 
 ## 作成と再利用
 
-overlay が有効な場合:
+Overlayが有効な場合、Pluginは次の順でOBS Text Sourceを扱います。
 
-1. Plugin は設定済み source name を確認します。
-2. その名前の対応 OBS Text Source がすでにある場合、Plugin は再利用します。
-3. source がなく `auto_create_sources` が有効な場合、Plugin は現在の OBS scene に不足している Text Source を作成します。
-4. `auto_create_sources` が無効な場合、Plugin は missing source を診断として報告し、その field をスキップします。
-5. 同じ configured name の source が複数ある場合、Plugin は duplicate-source diagnostic を報告し、その field をスキップします。
-6. configured name の source が存在しても対応 text source ではない場合、Plugin は unsupported-source diagnostic を報告し、置換や削除はしません。
+1. 設定済みのソース名を確認します。
+2. 同じ名前の対応済みOBS Text Sourceが既にあれば再利用します。
+3. ソースがなく、`auto_create_sources` が有効な場合は現在のOBSシーンへ作成します。
+4. `auto_create_sources` が無効な場合は、欠落診断を出してその項目をスキップします。
+5. 同じ名前のソースが複数ある場合は、曖昧なため更新をスキップします。
+6. 同じ名前のソースがText Sourceではない場合は、置き換えずに更新をスキップします。
 
-対応 source kind は OBS build によって異なり、`text_gdiplus` または `text_ft2_source` などの OBS text source です。
+## 更新タイミング
 
-## 更新動作
+WorkerはOBS APIを直接呼びません。WorkerはOverlay stateを保持し、Pluginがそれを取得してOBS Text Sourceへ反映します。
 
-Plugin は Worker overlay state をもとに configured source へテキストを書き込みます。
-
-| Source | 更新元 |
+| ソース | 更新元 |
 |---|---|
-| `ODR Deck Name` | deck name payload または configured default |
-| `ODR Sequence` | sequence number payload または configured default |
-| `ODR Result` | result payload または configured default |
-| `ODR Opponent Deck` | opponent deck payload または configured default |
-| `ODR Recording State` | `idle`, `recording`, `paused`, `unknown` の mapping または configured default |
+| `ODR Deck Name` | Worker overlay stateの `deck_name` |
+| `ODR Sequence` | Worker overlay stateの `sequence_number` |
+| `ODR Result` | Worker overlay stateの `result` |
+| `ODR Opponent Deck` | Worker overlay stateの `opponent_deck` |
+| `ODR Recording State` | Worker overlay stateの `recording_state` |
 
-Worker は OBS API を直接呼びません。Worker は overlay state を保持し、Plugin が OBS Text Sources へ反映します。
+更新のきっかけは次の通りです。
+
+- Plugin起動時に、設定済みOBS Text Sourceを作成または再利用します。
+- Pluginは通常の更新ループでWorkerのOverlay stateを確認し、前回値と差分がある場合だけOBSへ書き込みます。
+- Dockから録画開始したとき、現在の自分デッキ名と次のデッキ別連番をWorker overlay stateへ送り、同じ値をOBS Text Sourceへ即時反映します。
+- メタデータを保存したとき、WorkerはDB保存後にデッキ名、相手デッキ名、連番をOverlay stateへ反映します。Pluginは保存後の値をOBS Text Sourceへ即時反映します。
+- 録画中で、まだ編集対象のmatch行が作られていない場合は、Dockの保存操作で現在の入力欄からOBS Text Sourceだけを更新します。編集対象動画が表示された後、DBへ保存するためにもう一度保存してください。
+- 録画状態は、手動録画または自動録画の状態変更時にWorker側で更新されます。
+- 勝敗は最後に分かる情報なので、確認前は `unknown` のままで問題ありません。
+
+デッキ別連番は、アップロードキューIDやmatch IDとは別の番号です。メタデータ保存時に自分のデッキ名ごとに採番します。保存済みの対戦を別デッキ名へ変更した場合は、新しいデッキ名側の次番号を割り当てます。過去番号は詰め直しません。
 
 ## 安全なカスタマイズ
 
-安全:
-- OBS preview 上で Text Sources を移動する。
-- OBS 上で resize、crop、color、font-style など見た目を調整する。
-- 表示したくない source を非表示にする。
-- 作成後に overlay 専用 scene や group へ整理する。
+安全です。
 
-注意が必要:
-- source name を変更すると、settings 側も同じ名前にしない限り Plugin が見つけられません。
-- 同じ名前で source を複製すると、更新対象が曖昧になります。
-- source type を text 以外に変えると更新できません。
-- source を削除しても構いませんが、auto-create が有効で current scene が対象の場合、Plugin が後で再作成する場合があります。
+- OBSプレビュー上でText Sourceを移動する。
+- OBS上でサイズ、色、フォント、配置を調整する。
+- 表示したくないソースを非表示にする。
+- 作成後に専用のOverlayシーンやグループへ整理する。
 
-## Plugin が作成しないもの
+注意が必要です。
 
-Plugin は以下を作成・配布しません。
-- Yu-Gi-Oh! Master Duel の画像やゲーム資産
-- ローカル start/end 検出テンプレート画像
+- ソース名を変更すると、設定も変更しない限りPluginが見つけられません。
+- 同じ名前のソースを複数作ると、どれを更新すべきか判断できません。
+- Text Source以外の種類へ変更すると更新できません。
+- ソースを削除しても構いませんが、自動作成が有効な場合は後で再作成される場合があります。
+
+## Pluginが作成しないもの
+
+Pluginは次のものを作成・配布しません。
+
+- Yu-Gi-Oh! Master Duelの画像やゲーム素材
+- ローカルの開始・終了検出テンプレート画像
 - スクリーンショットや録画動画
-- YouTube 用 browser source
-- OAuth client ファイル、token、secret
-- OBS scene、scene collection、transition
+- YouTube用のBrowser Source
+- OAuthクライアントファイル、トークン、シークレット
+- OBSシーン、シーンコレクション、トランジション
 
 ## トラブルシューティング
 
 | 症状 | 主な原因 | 対応 |
 |---|---|---|
-| source が見えない | 非表示、他 source の背面、canvas 外、別 scene にある | current scene、source visibility、transform を確認します。 |
-| source text が更新されない | Worker 停止、source name 変更、unsupported source type、duplicate names | Dock diagnostics を確認し、期待される source name に戻します。 |
-| source が作成されない | auto-create 無効、または OBS に対応 text source kind がない | source creation を有効にするか、対応 Text Source を手動作成します。 |
-| duplicate diagnostic が出る | 同じ configured name の source が複数ある | 各 expected name が 1 つだけになるよう rename または削除します。 |
+| ソースが見えない | 非表示、背面、キャンバス外、別シーンにある | 現在のシーン、表示状態、変換を確認します。 |
+| ソース文字が更新されない | Worker停止、メタデータ未保存、ソース名変更、未対応ソース、重複名 | メタデータを保存し、Dock診断とソース名を確認します。 |
+| ソースが作成されない | 自動作成が無効、またはOBSに対応Text Sourceがない | 自動作成を有効にするか、対応Text Sourceを手動作成します。 |
+| 重複診断が出る | 同じ名前のソースが複数ある | 期待される名前のソースを1つだけにします。 |
 
 関連ページ:
-- [操作フローとシステム概要](operation-flow.md)
+
+- [操作フロー](operation-flow.md)
 - [初回セットアップ](first-setup.md)
 - [トラブルシューティング](troubleshooting.md)

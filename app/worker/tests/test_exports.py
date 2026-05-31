@@ -188,6 +188,7 @@ class ExportApiTests(unittest.TestCase):
         self.assertEqual(rows[0]["match_id"], str(match_id))
         self.assertEqual(rows[0]["queue_item_id"], str(queue["id"]))
         self.assertEqual(rows[0]["deck_name"], "Labrynth")
+        self.assertEqual(rows[0]["deck_sequence_number"], "1")
         self.assertEqual(rows[0]["queue_status"], "ready_upload")
         self.assertNotIn("refresh_token", csv_path.read_text(encoding="utf-8-sig"))
 

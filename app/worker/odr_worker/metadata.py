@@ -58,6 +58,7 @@ class MatchMetadataRecord:
     updated_at: str
     recording_session_id: str
     deck_name: str
+    deck_sequence_number: int
     opponent_deck: str
     result: str
     rank: str
@@ -76,6 +77,8 @@ class MatchMetadataRecord:
             "updated_at": self.updated_at,
             "recording_session_id": self.recording_session_id,
             "deck_name": self.deck_name,
+            "deck_sequence_number": self.deck_sequence_number,
+            "sequence_number": format_deck_sequence_number(self.deck_sequence_number),
             "opponent_deck": self.opponent_deck,
             "result": self.result,
             "rank": self.rank,
@@ -104,6 +107,8 @@ class MatchMetadataStore:
         now = _utc_now_iso()
         conn = self._connect()
         try:
+            if values.get("deck_name"):
+                values["deck_sequence_number"] = _next_deck_sequence_number(conn, values["deck_name"])
             columns = ["updated_at", *values.keys()]
             params: dict[str, object] = {"updated_at": now, **values}
             placeholders = ", ".join(f":{column}" for column in columns)
@@ -199,13 +204,30 @@ class MatchMetadataStore:
         finally:
             conn.close()
 
+    def next_deck_sequence_number(self, deck_name: str) -> int:
+        conn = self._connect()
+        try:
+            return _next_deck_sequence_number(conn, deck_name)
+        finally:
+            conn.close()
+
     def update_match(self, match_id: int, payload: dict[str, Any]) -> MatchMetadataRecord:
         values = _metadata_values(payload, partial=True)
         if not values:
             raise MetadataError("metadata_payload_invalid", {"fields": "no_editable_fields"})
         conn = self._connect()
         try:
-            self._get(conn, match_id)
+            existing = self._get(conn, match_id)
+            if "deck_name" in values:
+                deck_name = values["deck_name"]
+                if not deck_name:
+                    values["deck_sequence_number"] = 0
+                elif _deck_key(deck_name) != _deck_key(existing.deck_name) or existing.deck_sequence_number <= 0:
+                    values["deck_sequence_number"] = _next_deck_sequence_number(
+                        conn,
+                        deck_name,
+                        exclude_match_id=match_id,
+                    )
             values["updated_at"] = _utc_now_iso()
             values["id"] = match_id
             assignments = ", ".join(f"{key} = :{key}" for key in values if key != "id")
@@ -220,6 +242,8 @@ class MatchMetadataStore:
         values = {
             "match_id": str(record.id),
             "deck_name": record.deck_name or "Unknown Deck",
+            "deck_sequence_number": str(record.deck_sequence_number or 0),
+            "sequence_number": format_deck_sequence_number(record.deck_sequence_number),
             "opponent_deck": record.opponent_deck or "Unknown Opponent",
             "result": record.result or "unknown",
             "rank": record.rank or "unknown",
@@ -249,6 +273,8 @@ class MatchMetadataStore:
         return {
             "match_id": record.id,
             "deck_name": record.deck_name,
+            "deck_sequence_number": record.deck_sequence_number,
+            "sequence_number": format_deck_sequence_number(record.deck_sequence_number),
             "opponent_deck": record.opponent_deck,
             "result": record.result,
             "rank": record.rank,
@@ -303,6 +329,7 @@ def _record_from_row(row: sqlite3.Row) -> MatchMetadataRecord:
         updated_at=str(row["updated_at"]),
         recording_session_id=str(row["recording_session_id"]),
         deck_name=str(row["deck_name"]),
+        deck_sequence_number=int(row["deck_sequence_number"]),
         opponent_deck=str(row["opponent_deck"]),
         result=str(row["result"]),
         rank=str(row["rank"]),
@@ -314,6 +341,45 @@ def _record_from_row(row: sqlite3.Row) -> MatchMetadataRecord:
         description_template=str(row["description_template"]),
         tags_template=str(row["tags_template"]),
     )
+
+
+def _next_deck_sequence_number(
+    conn: sqlite3.Connection,
+    deck_name: str,
+    *,
+    exclude_match_id: int | None = None,
+) -> int:
+    """Return the next stable usage number for this own-deck name.
+
+    Deck sequence numbers are assigned at save time and are not compacted later.
+    This keeps old recordings stable even if a deck name is corrected afterward.
+    """
+
+    key = _deck_key(deck_name)
+    if not key:
+        return 0
+    params: list[object] = [key]
+    exclude_clause = ""
+    if exclude_match_id is not None:
+        exclude_clause = " AND id != ?"
+        params.append(exclude_match_id)
+    row = conn.execute(
+        f"""
+        SELECT COALESCE(MAX(deck_sequence_number), 0)
+        FROM matches
+        WHERE LOWER(TRIM(deck_name)) = ?{exclude_clause};
+        """,
+        params,
+    ).fetchone()
+    return int(row[0] or 0) + 1
+
+
+def format_deck_sequence_number(value: int) -> str:
+    return f"{value:03d}" if value > 0 else ""
+
+
+def _deck_key(value: object) -> str:
+    return " ".join(str(value or "").strip().casefold().split())
 
 
 def _render_template(template: str, values: dict[str, str]) -> str:

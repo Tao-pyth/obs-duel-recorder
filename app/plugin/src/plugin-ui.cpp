@@ -753,6 +753,18 @@ std::string combo_text(QComboBox *combo)
 	return combo ? utf8_string(combo->currentText().trimmed()) : std::string{};
 }
 
+std::string format_sequence_number(int value)
+{
+	if (value <= 0) {
+		return {};
+	}
+	std::ostringstream out;
+	out.width(3);
+	out.fill('0');
+	out << value;
+	return out.str();
+}
+
 QString json_string_field(const std::string &body, const char *key)
 {
 	const QJsonDocument document = QJsonDocument::fromJson(qstr_utf8(body).toUtf8());
@@ -1239,8 +1251,9 @@ void PluginUiController::register_ui()
 	auto *template_form = new QFormLayout;
 	upload_title_template_input_ = new QLineEdit(qstr_utf8(settings.upload_title_template));
 	upload_description_template_input_ = new QTextEdit(qstr_utf8(settings.upload_description_template));
-	upload_description_template_input_->setMinimumHeight(140);
-	upload_description_template_input_->setMaximumHeight(220);
+	upload_description_template_input_->setMinimumHeight(220);
+	upload_description_template_input_->setMaximumHeight(420);
+	upload_description_template_input_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 	upload_tags_template_input_ = new QLineEdit(qstr_utf8(settings.upload_tags_template));
 	QObject::connect(upload_title_template_input_, &QLineEdit::textChanged,
 			 [this]() { render_upload_preview_from_dock(); });
@@ -1260,8 +1273,9 @@ void PluginUiController::register_ui()
 	upload_template_layout->addWidget(render_upload_preview_button_);
 	upload_preview_description_ = new QTextEdit;
 	upload_preview_description_->setReadOnly(true);
-	upload_preview_description_->setMinimumHeight(170);
-	upload_preview_description_->setMaximumHeight(260);
+	upload_preview_description_->setMinimumHeight(260);
+	upload_preview_description_->setMaximumHeight(520);
+	upload_preview_description_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 	upload_preview_warning_label_ = make_value_label();
 	upload_template_layout->addWidget(upload_preview_description_);
 	upload_template_layout->addWidget(upload_preview_warning_label_);
@@ -1857,7 +1871,7 @@ void PluginUiController::refresh()
 		reload_metadata_button_->setEnabled(worker_running);
 	}
 	if (save_metadata_button_) {
-		save_metadata_button_->setEnabled(worker_running && current_match_id_ > 0);
+		save_metadata_button_->setEnabled(worker_running && (current_match_id_ > 0 || obs_frontend_recording_active()));
 	}
 	if (render_upload_preview_button_) {
 		render_upload_preview_button_->setEnabled(worker_running && current_match_id_ > 0);
@@ -2003,6 +2017,7 @@ void PluginUiController::request_manual_start()
 		refresh();
 		return;
 	}
+	update_overlay_for_recording_start();
 
 	if (obs_frontend_recording_active()) {
 		RecordingCommandResult confirm = worker_manager_.send_recording_command("confirm_started", "manual");
@@ -2966,6 +2981,15 @@ void PluginUiController::save_metadata_from_dock()
 		load_latest_metadata_into_dock();
 	}
 	if (current_match_id_ <= 0) {
+		if (obs_frontend_recording_active()) {
+			update_overlay_for_recording_start();
+			if (metadata_status_label_) {
+				metadata_status_label_->setText(
+					ui_text(ui_language_,
+						"Overlay updated for the active recording. Save metadata again after the match target is created.",
+						"録画中のOverlayを更新しました。編集対象動画が作成された後、メタデータをもう一度保存してください。"));
+			}
+		}
 		return;
 	}
 
@@ -3017,7 +3041,83 @@ void PluginUiController::save_metadata_from_dock()
 		metadata_status_label_->setText(ui_text(ui_language_, "Saved. Previous deck/rank/DP values were retained.",
 							"保存しました。デッキ/ランク/DP は次回入力に引き継がれます。"));
 	}
+	update_overlay_from_metadata(result.match);
 	render_upload_preview_from_dock();
+}
+
+OverlayStatePayload PluginUiController::overlay_state_base() const
+{
+	OverlayStatePayload state;
+	const WorkerStatusSnapshot snapshot = worker_manager_.status_snapshot();
+	if (snapshot.overlay_state_available) {
+		state = snapshot.overlay_state;
+	} else if (overlay_state_applied_) {
+		state = last_applied_overlay_state_;
+	}
+	if (state.result.empty()) {
+		state.result = "unknown";
+	}
+	if (state.opponent_deck.empty()) {
+		state.opponent_deck = "unknown";
+	}
+	if (state.recording_state.empty()) {
+		state.recording_state = "unknown";
+	}
+	return state;
+}
+
+void PluginUiController::apply_overlay_sources_immediately(const OverlayStatePayload &state)
+{
+	const PluginSettings settings = load_plugin_settings();
+	log_overlay_source_result(update_overlay_sources(settings.overlay, state));
+	last_applied_overlay_state_ = state;
+	overlay_state_applied_ = true;
+}
+
+void PluginUiController::update_overlay_from_metadata(const MatchMetadataPayload &metadata)
+{
+	OverlayStatePayload state = overlay_state_base();
+	state.deck_name = metadata.deck_name;
+	state.sequence_number = !metadata.sequence_number.empty() ?
+					metadata.sequence_number :
+					format_sequence_number(metadata.deck_sequence_number);
+	state.opponent_deck = metadata.opponent_deck.empty() ? "unknown" : metadata.opponent_deck;
+	if (!metadata.result.empty()) {
+		state.result = metadata.result;
+	}
+	const WorkerActionResult overlay = worker_manager_.update_overlay_state(state);
+	if (!overlay.accepted()) {
+		blog(LOG_WARNING, "%s overlay metadata_update failed status=%lu error=%s",
+		     kLogPrefix, overlay.http_status, overlay.error.c_str());
+		return;
+	}
+	apply_overlay_sources_immediately(state);
+}
+
+void PluginUiController::update_overlay_for_recording_start()
+{
+	MatchMetadataPayload metadata;
+	metadata.deck_name = combo_text(metadata_deck_input_);
+	metadata.opponent_deck = combo_text(metadata_opponent_input_);
+	metadata.result = "unknown";
+	if (metadata.opponent_deck.empty()) {
+		metadata.opponent_deck = "unknown";
+	}
+	if (metadata.deck_name.empty()) {
+		const PluginSettings settings = load_plugin_settings();
+		metadata.deck_name = settings.last_deck_name;
+	}
+	if (!metadata.deck_name.empty()) {
+		const DeckSequencePreviewResult sequence = worker_manager_.fetch_next_deck_sequence(metadata.deck_name);
+		if (sequence.accepted()) {
+			metadata.deck_sequence_number = sequence.deck_sequence_number;
+			metadata.sequence_number = sequence.sequence_number;
+		} else {
+			blog(LOG_WARNING, "%s overlay sequence_preview failed status=%lu error=%s",
+			     kLogPrefix, sequence.http_status, sequence.error.c_str());
+		}
+	}
+	update_overlay_from_metadata(metadata);
 }
 
 void PluginUiController::render_upload_preview_from_dock()
@@ -3344,6 +3444,7 @@ void PluginUiController::handle_automatic_recording(const WorkerStatusSnapshot &
 	const std::string request_key = state.session_id + ":" + state.state + ":" + state.last_action;
 	if (state.state == "starting") {
 		if (obs_frontend_recording_active()) {
+			update_overlay_for_recording_start();
 			RecordingCommandResult confirm = worker_manager_.send_recording_command("confirm_started", "automatic");
 			log_recording_command_result("confirm_started", confirm);
 			automatic_recording_request_key_.clear();
@@ -3353,6 +3454,7 @@ void PluginUiController::handle_automatic_recording(const WorkerStatusSnapshot &
 			return;
 		}
 		automatic_recording_request_key_ = request_key;
+		update_overlay_for_recording_start();
 		obs_frontend_recording_start();
 		blog(LOG_INFO, "%s recording automatic_start requested_obs_start session_id=%s",
 		     kLogPrefix, state.session_id.c_str());
